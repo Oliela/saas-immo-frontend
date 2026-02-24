@@ -119,10 +119,11 @@ export default function DocumentsHeader({ user }: { user: any }) {
                                         <SelectValue placeholder="Sélectionner le type de document" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="proof_of_income">Justificatif de revenus</SelectItem>
+                                        <SelectItem value="income_proof">Justificatif de revenus</SelectItem>
                                         <SelectItem value="id_document">Pièce d'identité</SelectItem>
                                         <SelectItem value="bank_statement">Relevé bancaire</SelectItem>
-                                        <SelectItem value="reference_letter">Lettre de recommandation</SelectItem>
+                                        <SelectItem value="recommendation_letter">Lettre de recommandation</SelectItem>
+                                        <SelectItem value="work_contract">Contrat de travail</SelectItem>
                                         <SelectItem value="other">Autre</SelectItem>
                                     </SelectContent>
                                 </Select>

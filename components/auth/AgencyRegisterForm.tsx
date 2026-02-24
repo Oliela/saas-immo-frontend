@@ -10,6 +10,7 @@ import {
   MapPin,
   Shield,
 } from "lucide-react"
+import axios from "@/lib/axios"
 
 import {
   Card,
@@ -26,8 +27,12 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@radix-ui/react-separator"
 import Link from "next/link"
+import { toast } from "sonner"
 
-type Specialty = string
+type Specialty = {
+  id: number
+  label: string
+}
 
 interface AgencyFormData {
   agencyName: string
@@ -42,9 +47,9 @@ interface AgencyFormData {
   adminEmail: string
   adminPhone: string
   adminPassword: string
-  adminPasswordConfirm: string
+  adminPassword_confirmation: string
 
-  specialties: Specialty[]
+  specialties: number[]
   agencyDescription: string
   agencyTerms: boolean
   agencyCertify: boolean
@@ -62,12 +67,11 @@ export default function AgencyRegisterForm({ onBack }: AgencyRegisterFormProps):
   const [success, setSuccess] = useState<string | null>(null)
 
   const specialtyOptions: Specialty[] = [
-    "Residential",
-    "Commercial",
-    "Luxury",
-    "Rental",
-    "Investment",
-  ]
+    { id: 1, label: "Residential Sales" },
+    { id: 2, label: "Commercial Leasing" },
+    { id: 3, label: "Property Management" },
+    { id: 4, label: "Real Estate Investment" },
+  ];
 
   const [formData, setFormData] = useState<AgencyFormData>({
     agencyName: "",
@@ -82,7 +86,7 @@ export default function AgencyRegisterForm({ onBack }: AgencyRegisterFormProps):
     adminEmail: "",
     adminPhone: "",
     adminPassword: "",
-    adminPasswordConfirm: "",
+    adminPassword_confirmation: "",
 
     specialties: [],
     agencyDescription: "",
@@ -103,22 +107,35 @@ export default function AgencyRegisterForm({ onBack }: AgencyRegisterFormProps):
     } as unknown as AgencyFormData))
   }
 
-  function toggleSpecialty(specialty: Specialty) {
-    setFormData((prev) => ({
-      ...prev,
-      specialties: prev.specialties.includes(specialty)
-        ? prev.specialties.filter((s) => s !== specialty)
-        : [...prev.specialties, specialty],
-    }))
-  }
+  // function toggleSpecialty(specialty: Specialty) {
+  //   setFormData((prev) => ({
+  //     ...prev,
+  //     specialties: prev.specialties.includes(specialty)
+  //       ? prev.specialties.filter((s) => s !== specialty)
+  //       : [...prev.specialties, specialty],
+  //   }))
+  // }
+  const toggleSpecialty = (id: number) => {
+    setFormData((prev) => {
+      const exists = prev.specialties.includes(id);
+
+      return {
+        ...prev,
+        specialties: exists
+          ? prev.specialties.filter((s) => s !== id)
+          : [...prev.specialties, id],
+      };
+    });
+  };
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
     setSuccess(null)
 
-    if (formData.adminPassword !== formData.adminPasswordConfirm) {
-      setError("Les mots de passe ne correspondent pas")
+    if (formData.adminPassword !== formData.adminPassword_confirmation) {
+      // setError("Les mots de passe ne correspondent pas")
+      toast.error("Les mots de passe ne correspondent pas")
       return
     }
 
@@ -135,55 +152,57 @@ export default function AgencyRegisterForm({ onBack }: AgencyRegisterFormProps):
       "adminLast",
       "adminEmail",
       "adminPassword",
-      "adminPasswordConfirm",
+      "adminPassword_confirmation",
     ].filter((k) => !(formData as any)[k])
 
     if (missingAgency.length) {
-      setError("Veuillez remplir toutes les informations de l'agence.")
+      // setError("Veuillez remplir toutes les informations de l'agence.")
+      toast.error("Veuillez remplir toutes les informations de l'agence.")
+
       return
     }
 
     if (missingAdmin.length) {
-      setError("Veuillez remplir toutes les informations de l'administrateur.")
+      // setError("Veuillez remplir toutes les informations de l'administrateur.")
+      toast.error("Veuillez remplir toutes les informations de l'administrateur.")
+
       return
     }
 
     if (!formData.agencyTerms) {
-      setError("Vous devez accepter les conditions.")
+      // setError("Vous devez accepter les conditions.")
+      toast.error("Vous devez accepter les conditions.")
       return
     }
     if (!formData.agencyCertify) {
-      setError("Vous devez confirmer que les informations sont correctes.")
+      // setError("Vous devez confirmer que les informations sont correctes.")
+      toast.error("Vous devez confirmer que les informations sont correctes.")
       return
     }
     console.log("Soumission du formulaire agence :", formData)
 
-    // setSubmitting(true)
-    // try {
-    //   const payload = { ...formData, role: "agency" }
+    setSubmitting(true)
+    try {
+      const payload = { ...formData, role: "agency" }
 
-    //   const res = await fetch("/api/register-agency", {
-    //     method: "POST",
-    //     headers: { "Content-Type": "application/json" },
-    //     body: JSON.stringify(payload),
-    //   })
+      const res = await axios.post("/api/register/agency", payload)
 
-    //   if (!res.ok) {
-    //     const body = await res.json().catch(() => ({}))
-    //     setError(body?.message || "Erreur lors de la création du compte")
-    //     setSubmitting(false)
-    //     return
-    //   }
+      // setSuccess("Compte agence créé avec succès.")
+      toast.success("Compte agence créé avec succès.")
 
-    //   setSuccess("Compte agence créé avec succès.")
-    //   setSubmitting(false)
-    //   setSubmitted(true)
-    // } catch (err) {
-    //   // eslint-disable-next-line no-console
-    //   console.error(err)
-    //   setError("Impossible de contacter le serveur.")
-    //   setSubmitting(false)
-    // }
+      setSubmitting(false)
+      setSubmitted(true)
+
+      window.location.href = res.data.redirect || '/login';
+
+    } catch (err: any) {
+      // eslint-disable-next-line no-console
+      console.error(err)
+      const message = err?.response?.data?.message || err?.message || "Erreur lors de la création du compte"
+      // setError(message)
+      toast.error(message)
+      setSubmitting(false)
+    }
   }
 
   if (submitted) {
@@ -238,8 +257,8 @@ export default function AgencyRegisterForm({ onBack }: AgencyRegisterFormProps):
                 {step === 1
                   ? "Parlez-nous de votre agence"
                   : step === 2
-                  ? "Créez le compte administrateur pour votre agence"
-                  : "Spécialités et préférences"}
+                    ? "Créez le compte administrateur pour votre agence"
+                    : "Spécialités et préférences"}
               </CardDescription>
             </div>
           </div>
@@ -329,8 +348,8 @@ export default function AgencyRegisterForm({ onBack }: AgencyRegisterFormProps):
                 <Input id="adminPassword" type="password" value={formData.adminPassword} onChange={handleChange} placeholder="Min. 8 caractères" required />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="adminPasswordConfirm">Confirmer le mot de passe <span className="text-destructive">*</span></Label>
-                <Input id="adminPasswordConfirm" type="password" value={formData.adminPasswordConfirm} onChange={handleChange} placeholder="Répétez votre mot de passe" required />
+                <Label htmlFor="adminPassword_confirmation">Confirmer le mot de passe <span className="text-destructive">*</span></Label>
+                <Input id="adminPassword_confirmation" type="password" value={formData.adminPassword_confirmation} onChange={handleChange} placeholder="Répétez votre mot de passe" required />
               </div>
               <Button type="button" onClick={() => setStep(3)} className="w-full" size="lg">
                 Continuer
@@ -346,7 +365,7 @@ export default function AgencyRegisterForm({ onBack }: AgencyRegisterFormProps):
                 <Label>Spécialités</Label>
                 <p className="text-xs text-muted-foreground">Sélectionnez les domaines de spécialisation de votre agence</p>
                 <div className="flex flex-wrap gap-2 pt-1">
-                  {specialtyOptions.map((s) => (
+                  {/* {specialtyOptions.map((s) => (
                     <Badge
                       key={s}
                       variant={formData.specialties.includes(s) ? "default" : "outline"}
@@ -354,6 +373,21 @@ export default function AgencyRegisterForm({ onBack }: AgencyRegisterFormProps):
                       onClick={() => toggleSpecialty(s)}
                     >
                       {s}
+                    </Badge>
+                  ))} */}
+                  {specialtyOptions.map((s) => (
+                    <Badge
+                      key={s.id}
+                      variant={
+                        formData.specialties.includes(s.id) ? "default" : "outline"
+                      }
+                      className={`cursor-pointer transition-colors text-sm py-1.5 px-3 ${formData.specialties.includes(s.id)
+                        ? ""
+                        : "bg-transparent hover:bg-secondary"
+                        }`}
+                      onClick={() => toggleSpecialty(s.id)}
+                    >
+                      {s.label}
                     </Badge>
                   ))}
                 </div>

@@ -33,8 +33,8 @@ export function useProfileCompletion(
         "income_proof",
         "bank_statement",
         "recommendation_letter",
-        "work_contract",
-        "rental_history",
+        // "work_contract",
+        // "rental_history",
       ],
     };
 

@@ -21,9 +21,9 @@ interface Document {
 
 const REQUIRED_TYPES = [
     { type: "id_document", label: "Pièce d'identité", description: "Pièce d'identité officielle (passeport, permis de conduire)" },
-    { type: "proof_of_income", label: "Justificatif de revenus", description: "Fiche de paie, lettre d'emploi ou déclaration d'impôts" },
+    { type: "income_proof", label: "Justificatif de revenus", description: "Fiche de paie, lettre d'emploi ou déclaration d'impôts" },
     { type: "bank_statement", label: "Relevé bancaire", description: "Relevés bancaires des 3 derniers mois" },
-    { type: "reference_letter", label: "Lettre de recommandation", description: "Recommandation d'ancien propriétaire ou employeur" },
+    { type: "recommendation_letter", label: "Lettre de recommandation", description: "Recommandation d'ancien propriétaire ou employeur" },
 ]
 
 function getStatus(doc?: Document) {
