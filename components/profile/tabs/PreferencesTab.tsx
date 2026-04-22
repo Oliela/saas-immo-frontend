@@ -10,27 +10,50 @@ import { Textarea } from "@/components/ui/textarea"
 import { toast } from "sonner"
 import axiosInstance from "@/lib/axios"
 
-// const profileData = {
-//     firstName: "John",
-//     lastName: "Doe",
-//     email: "john.doe@example.com",
-//     phone: "+1 (555) 123-4567",
-//     dateOfBirth: "1990-05-15",
-//     address: "456 Current St, Los Angeles, CA 90001",
-//     occupation: "Software Engineer",
-//     employer: "Tech Corp",
-//     monthlyIncome: "8000",
-//     employmentType: "full-time",
-//     bio: "Recherche un appartement moderne en centre-ville de LA. De préférence proche des transports en commun.",
-// }
+// Formate un nombre avec séparateur de milliers
+function formatNumber(value: string): string {
+    const digits = value.replace(/\D/g, "")
+    if (!digits) return ""
+    return parseInt(digits, 10).toLocaleString("fr-FR")
+}
+
+// Supprime le formatage pour récupérer la valeur brute
+function unformatNumber(value: string): string {
+    return value.replace(/\s/g, "").replace(/\u00a0/g, "")
+}
 
 export default function PreferencesTab({ profileData }: { profileData: any }) {
+    const [acquisitionType, setAcquisitionType] = useState(profileData.acquisition_type || "")
     const [propertyType, setPropertyType] = useState(profileData.property_type || "")
+
+    // Budget : pour "rent" → select, pour "sale" → input texte libre
     const [budget, setBudget] = useState(profileData.monthly_budget || "")
+    const [budgetInput, setBudgetInput] = useState(
+        profileData.monthly_budget
+            ? parseInt(profileData.monthly_budget).toLocaleString("fr-FR")
+            : ""
+    )
+
     const [bedrooms, setBedrooms] = useState(profileData.nb_pieces || "")
+    const [surfaceArea, setSurfaceArea] = useState(
+        profileData.surface_area
+            ? parseInt(profileData.surface_area).toLocaleString("fr-FR")
+            : ""
+    )
     const [moveInDate, setMoveInDate] = useState(profileData.move_in_date || "")
     const [notes, setNotes] = useState(profileData.note || "")
     const [isSubmitting, setIsSubmitting] = useState(false)
+
+    const handleBudgetInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const formatted = formatNumber(e.target.value)
+        setBudgetInput(formatted)
+        setBudget(unformatNumber(formatted))
+    }
+
+    const handleSurfaceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const formatted = formatNumber(e.target.value)
+        setSurfaceArea(formatted)
+    }
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -38,25 +61,23 @@ export default function PreferencesTab({ profileData }: { profileData: any }) {
 
         try {
             const formData = new FormData()
+            formData.append("acquisition_type", acquisitionType)
             formData.append("property_type", propertyType)
-            formData.append("monthly_budget", budget)
-            formData.append("nb_pieces", bedrooms)
+            formData.append("monthly_budget", unformatNumber(budget))
+            formData.append("nb_pieces", bedrooms.toString())
+            formData.append("surface_area", unformatNumber(surfaceArea))
             formData.append("move_in_date", moveInDate)
             formData.append("note", notes)
 
-            const token = localStorage.getItem("token"); // ton JWT
-
-
             const res = await axiosInstance.put("/api/profile/preferences/update", formData, {
                 headers: {
-                    Authorization: token ? `Bearer ${token}` : "",
                     "Content-Type": "multipart/form-data"
                 }
             })
 
             if (res.status === 200) {
                 toast.success("Préférences mises à jour avec succès")
-                window.location.reload() // Rafraîchit la page pour afficher les nouvelles préférences
+                window.location.reload()
             }
         } catch (err: any) {
             const errorMessage =
@@ -68,6 +89,7 @@ export default function PreferencesTab({ profileData }: { profileData: any }) {
             setIsSubmitting(false)
         }
     }
+
     return (
         <Card>
             <CardHeader>
@@ -76,7 +98,21 @@ export default function PreferencesTab({ profileData }: { profileData: any }) {
             </CardHeader>
             <CardContent className="space-y-6">
                 <form onSubmit={handleSubmit} className="space-y-6">
+
+                    {/* Type d'acquisition */}
                     <div className="grid gap-4 sm:grid-cols-2">
+                        <div className="space-y-2">
+                            <Label htmlFor="acquisitionType">Type d'acquisition</Label>
+                            <Select value={acquisitionType} onValueChange={setAcquisitionType}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Sélectionner" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="rent">Location</SelectItem>
+                                    <SelectItem value="sale">Vente</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
                         <div className="space-y-2">
                             <Label htmlFor="propertyType">Type de bien préféré</Label>
                             <Select value={propertyType} onValueChange={setPropertyType}>
@@ -84,74 +120,98 @@ export default function PreferencesTab({ profileData }: { profileData: any }) {
                                     <SelectValue placeholder="Sélectionner un type" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem key="appartement" value="appartement">Appartement</SelectItem>
-                                    <SelectItem key="maison" value="maison">Maison</SelectItem>
-                                    <SelectItem key="villa" value="villa">Villa</SelectItem>
-                                    <SelectItem key="duplex" value="duplex">Duplex</SelectItem>
-                                    <SelectItem key="maison_ville" value="maison_ville">Maison de ville</SelectItem>
-                                    <SelectItem key="copropriete" value="copropriete">Copropriété</SelectItem>
-                                    <SelectItem key="studio" value="studio">Studio</SelectItem>
-                                    <SelectItem key="loft" value="loft">Loft</SelectItem>
-                                    <SelectItem key="penthouse" value="penthouse">Penthouse</SelectItem>
-                                    <SelectItem key="chalet" value="chalet">Chalet</SelectItem>
-                                    <SelectItem key="manoir" value="manoir">Manoir</SelectItem>
-                                    <SelectItem key="ferme" value="ferme">Ferme</SelectItem>
-                                    <SelectItem key="terrain" value="terrain">Terrain</SelectItem>
-                                    <SelectItem key="garage" value="garage">Garage</SelectItem>
-                                    <SelectItem key="parking" value="parking">Parking</SelectItem>
-                                    <SelectItem key="bureaux" value="bureaux">Bureaux</SelectItem>
-                                    <SelectItem key="commerce" value="commerce">Commerce</SelectItem>
-                                    <SelectItem key="entrepot" value="entrepot">Entrepôt</SelectItem>
-                                    <SelectItem key="immeuble" value="immeuble">Immeuble</SelectItem>
-                                    <SelectItem key="autre" value="autre">Autre</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="budget">Budget mensuel</Label>
-                            <Select value={budget} onValueChange={setBudget}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Sélectionner un budget" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem key="less_than_500k" value="500000.00">Moins de 500 000 CFA</SelectItem>
-                                    <SelectItem key="500k_to_1m" value="1000000.00">500 000 CFA - 1 000 000 CFA</SelectItem>
-                                    <SelectItem key="1m_to_2m" value="2000000.00">1 000 000 CFA - 2 000 000 CFA</SelectItem>
-                                    <SelectItem key="2m_to_5m" value="5000000.00">2 000 000 CFA - 5 000 000 CFA</SelectItem>
-                                    <SelectItem key="5m_to_15m" value="15000000.00">5 000 000 CFA - 15 000 000 CFA</SelectItem>
-                                    <SelectItem key="more_than_15m" value="15000001.00">Plus de 15 000 000 CFA</SelectItem>
+                                    <SelectItem value="appartement">Appartement</SelectItem>
+                                    <SelectItem value="villa">Villa</SelectItem>
+                                    <SelectItem value="duplex">Duplex</SelectItem>
+                                    <SelectItem value="studio">Studio</SelectItem>
+                                    <SelectItem value="terrain">Terrain</SelectItem>
+                                    <SelectItem value="bureaux">Bureaux</SelectItem>
+                                    <SelectItem value="commerce">Commerce</SelectItem>
+                                    <SelectItem value="entrepot">Entrepôt</SelectItem>
+                                    <SelectItem value="immeuble">Immeuble</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
                     </div>
+
+                    {/* Budget — conditionnel selon le type d'acquisition */}
+                    <div className="space-y-2">
+                        {acquisitionType === "sale" ? (
+                            <>
+                                <Label htmlFor="budgetInput">Budget d'achat (FCFA)</Label>
+                                <Input
+                                    id="budgetInput"
+                                    type="text"
+                                    inputMode="numeric"
+                                    placeholder="Ex : 25 000 000"
+                                    value={budgetInput}
+                                    onChange={handleBudgetInputChange}
+                                />
+                            </>
+                        ) : (
+                            <>
+                                <Label htmlFor="budget">Budget mensuel (FCFA)</Label>
+                                <Select value={budget} onValueChange={setBudget} disabled={!acquisitionType}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder={!acquisitionType ? "Choisir d'abord le type d'acquisition" : "Sélectionner un budget"} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="500000.00">Moins de 500 000 FCFA</SelectItem>
+                                        <SelectItem value="1000000.00">500 000 – 1 000 000 FCFA</SelectItem>
+                                        <SelectItem value="2000000.00">1 000 000 – 2 000 000 FCFA</SelectItem>
+                                        <SelectItem value="5000000.00">2 000 000 – 5 000 000 FCFA</SelectItem>
+                                        <SelectItem value="15000000.00">5 000 000 – 15 000 000 FCFA</SelectItem>
+                                        <SelectItem value="15000001.00">Plus de 15 000 000 FCFA</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </>
+                        )}
+                    </div>
+
+                    {/* Pièces + Superficie */}
                     <div className="grid gap-4 sm:grid-cols-2">
                         <div className="space-y-2">
-                            <Label htmlFor="bedrooms">Nombre de chambres</Label>
-                            <Select value={bedrooms.toString()} onValueChange={(val) => setBedrooms(parseInt(val))}>
+                            <Label htmlFor="bedrooms">Nombre de pièces</Label>
+                            <Select value={bedrooms.toString()} onValueChange={(val) => setBedrooms(val)}>
                                 <SelectTrigger>
                                     <SelectValue placeholder="Sélectionner" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem key="studio" value="0">Studio</SelectItem>
-                                    <SelectItem key="1" value="1">1 Chambre</SelectItem>
-                                    <SelectItem key="2" value="2">2 Chambres</SelectItem>
-                                    <SelectItem key="3" value="3">3 Chambres</SelectItem>
-                                    <SelectItem key="4" value="4">4 Chambres</SelectItem>
-                                    <SelectItem key="5" value="5">5 Chambres</SelectItem>
-                                    <SelectItem key="6_plus" value="6+">6+ Chambres</SelectItem>
+                                    <SelectItem value="0">Studio</SelectItem>
+                                    <SelectItem value="1">1 Pièce</SelectItem>
+                                    <SelectItem value="2">2 Pièces</SelectItem>
+                                    <SelectItem value="3">3 Pièces</SelectItem>
+                                    <SelectItem value="4">4 Pièces</SelectItem>
+                                    <SelectItem value="5">5 Pièces</SelectItem>
+                                    <SelectItem value="6+">6+ Pièces</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="moveInDate">Date d'emménagement souhaitée</Label>
+                            <Label htmlFor="surfaceArea">Superficie (m²)</Label>
                             <Input
-                                id="moveInDate"
-                                type="date"
-                                value={moveInDate}
-                                onChange={(e) => setMoveInDate(e.target.value)}
+                                id="surfaceArea"
+                                type="text"
+                                inputMode="numeric"
+                                placeholder="Ex : 120"
+                                value={surfaceArea}
+                                onChange={handleSurfaceChange}
                             />
                         </div>
                     </div>
+
+                    {/* Date d'emménagement */}
+                    <div className="space-y-2">
+                        <Label htmlFor="moveInDate">Date d'emménagement souhaitée</Label>
+                        <Input
+                            id="moveInDate"
+                            type="date"
+                            value={moveInDate}
+                            onChange={(e) => setMoveInDate(e.target.value)}
+                        />
+                    </div>
+
+                    {/* Notes */}
                     <div className="space-y-2">
                         <Label htmlFor="notes">Notes supplémentaires</Label>
                         <Textarea
@@ -162,6 +222,7 @@ export default function PreferencesTab({ profileData }: { profileData: any }) {
                             className="min-h-[100px]"
                         />
                     </div>
+
                     <div className="flex justify-end">
                         <Button type="submit" disabled={isSubmitting}>
                             {isSubmitting ? "Enregistrement..." : "Enregistrer les préférences"}

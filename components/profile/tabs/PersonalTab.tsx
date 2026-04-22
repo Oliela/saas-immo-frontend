@@ -10,15 +10,12 @@ import { Textarea } from "@/components/ui/textarea"
 import axiosInstance from "@/lib/axios"
 import { toast } from "sonner";
 
-
-// const profileData = {
-//     firstName: "John",
-//     lastName: "Doe",
-//     email: "john.doe@example.com",
-//     phone: "+1 (555) 123-4567",
-//     dateOfBirth: "1990-05-15",
-//     address: "456 Current St, Los Angeles, CA 90001",
-// }
+// Calcule la date max autorisée : aujourd'hui - 18 ans
+function getMaxBirthDate(): string {
+    const today = new Date()
+    today.setFullYear(today.getFullYear() - 18)
+    return today.toISOString().split("T")[0] // format YYYY-MM-DD
+}
 
 export default function PersonalTab({ profileData, userEmail }: { profileData: any, userEmail: string }) {
     const [isEditing, setIsEditing] = useState(false)
@@ -28,9 +25,13 @@ export default function PersonalTab({ profileData, userEmail }: { profileData: a
     const [phone, setPhone] = useState(profileData.phone || "")
     const [birthDate, setBirthDate] = useState(profileData.birth_date || "")
     const [address, setAddress] = useState(profileData.address || "")
+    const [country, setCountry] = useState(profileData.country || "")
+    const [city, setCity] = useState(profileData.city || "")
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [success, setSuccess] = useState<string | null>(null)
+
+    const maxBirthDate = getMaxBirthDate()
 
     async function handleSave() {
         setError(null);
@@ -45,18 +46,14 @@ export default function PersonalTab({ profileData, userEmail }: { profileData: a
             formData.append("phone", phone);
             formData.append("birth_date", birthDate);
             formData.append("address", address);
+            formData.append("country", country);
+            formData.append("city", city);
 
-            const token = localStorage.getItem("token"); // ton JWT
-
-            const res = await axiosInstance.put("/api/profile", formData, {
-                headers: {
-                    Authorization: token ? `Bearer ${token}` : "",
-                    "Content-Type": "multipart/form-data",
-                },
-            });
+            const res = await axiosInstance.put("/api/profile", formData);
 
             toast.success("Informations mises à jour avec succès 🎉");
             setIsEditing(false);
+            window.location.reload();
 
         } catch (err: any) {
             const message =
@@ -143,7 +140,36 @@ export default function PersonalTab({ profileData, userEmail }: { profileData: a
                         <Input
                             type="date"
                             value={birthDate}
+                            max={maxBirthDate}
                             onChange={(e) => setBirthDate(e.target.value)}
+                            disabled={!isEditing || isLoading}
+                            className="pl-9"
+                        />
+                    </div>
+                </div>
+
+                <div className="space-y-2">
+                    <Label>Pays</Label>
+                    <div className="relative">
+                        <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                        <Input
+                            type="text"
+                            value={country}
+                            onChange={(e) => setCountry(e.target.value)}
+                            disabled={!isEditing || isLoading}
+                            className="pl-9"
+                        />
+                    </div>
+                </div>
+
+                <div className="space-y-2">
+                    <Label>Ville</Label>
+                    <div className="relative">
+                        <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                        <Input
+                            type="text"
+                            value={city}
+                            onChange={(e) => setCity(e.target.value)}
                             disabled={!isEditing || isLoading}
                             className="pl-9"
                         />
@@ -159,9 +185,11 @@ export default function PersonalTab({ profileData, userEmail }: { profileData: a
                             value={address}
                             onChange={(e) => setAddress(e.target.value)}
                             disabled={!isEditing || isLoading}
-                            className="pl-9 min-h-[80px]" />
+                            className="pl-9 min-h-[80px]"
+                        />
                     </div>
                 </div>
+
                 {error && <p className="text-destructive text-sm">{error}</p>}
                 {success && <p className="text-green-600 text-sm">{success}</p>}
             </CardContent>

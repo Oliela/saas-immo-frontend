@@ -1,24 +1,22 @@
-import React from "react"
+"use client";
+import React, { useEffect } from "react"
 import { DashboardSidebar } from "@/components/dashboard/sidebar"
 import { DashboardHeader } from "@/components/dashboard/header"
+import PortalGuard from "./PortalGuard";
 
-export const metadata = {
-  title: "Dashboard | SAS IMO",
-  description: "Manage your real estate agency properties, messages, and appointments.",
-}
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+
+export default function DashboardLayout({children,}: {children: React.ReactNode}) {
+ 
   return (
-    <div className="min-h-screen bg-background">
-      <DashboardSidebar />
-      <div className="lg:pl-64">
-        <DashboardHeader />
-        <main className="p-4 lg:p-6">{children}</main>
+    // <PortalGuard>
+      <div className="min-h-screen bg-gray-100">
+        <DashboardSidebar />
+        <div className="lg:pl-64">
+          <DashboardHeader />
+          <main className="p-4 lg:p-6">{children}</main>
+        </div>
       </div>
-    </div>
+    // </PortalGuard>
   )
 }

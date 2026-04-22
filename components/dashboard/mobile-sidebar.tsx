@@ -17,32 +17,55 @@ import {
   UserCircle,
   Shield,
   BarChart3,
+  ClipboardList,
+  Heart,
+  PlayCircle,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { SheetClose } from "@/components/ui/sheet"
+import { useTache } from "@/hooks/agence/useTache"
+import axiosInstance from "@/lib/axios"
 
 const navigation = [
-  { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Properties", href: "/dashboard/properties", icon: Building2 },
-  { name: "Clients & Leads", href: "/dashboard/clients", icon: Users },
-  { name: "Visits", href: "/dashboard/visits", icon: Calendar },
-  { name: "Calendar", href: "/dashboard/calendar", icon: CalendarDays },
-  { name: "Contracts", href: "/dashboard/contracts", icon: FileText },
-  { name: "Invoices", href: "/dashboard/invoices", icon: Receipt },
-  { name: "Owners", href: "/dashboard/owners", icon: UserCircle },
+  { name: "Tableau de bord", href: "/dashboard", icon: LayoutDashboard },
+  { name: "Propriétés", href: "/dashboard/properties", icon: Building2 },
+  { name: "Clients et Prospects", href: "/dashboard/clients", icon: Users },
+  { name: "Visites", href: "/dashboard/visits", icon: Calendar },
+  { name: "Intérêts clients", href: "/dashboard/interests", icon: Heart },
+  { name: "Tâches", href: "/dashboard/tasks", icon: ClipboardList },
+  { name: "Calendrier", href: "/dashboard/calendar", icon: CalendarDays },
+  { name: "Contrats", href: "/dashboard/contracts", icon: FileText },
+  { name: "Factures", href: "/dashboard/invoices", icon: Receipt },
+  { name: "Propriétaires", href: "/dashboard/owners", icon: UserCircle },
   { name: "Agents", href: "/dashboard/agents", icon: Shield },
-  { name: "Messages", href: "/dashboard/messages", icon: MessageSquare },
+  // { name: "Messages", href: "/dashboard/messages", icon: MessageSquare },
 ]
 
 const secondaryNavigation = [
-  { name: "Settings", href: "/dashboard/settings", icon: Settings },
+   { name: "Tutorials", href: "/dashboard/tutorials", icon: PlayCircle },
+  { name: "Paramètres", href: "/dashboard/settings", icon: Settings },
 ]
 
 export function MobileSidebar() {
   const pathname = usePathname()
+  const { data: tache, loading: tacheLoading } = useTache()
+  // console.log("Tâches :", tache) // Debug: log tache data
+
+
+  const handleLogout = async () => {
+    try {
+      await axiosInstance.post("/api/logout")
+    } catch (err) {
+      console.error(err)
+    } finally {
+      document.cookie = "account_type=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"
+      window.location.href = "/login"
+    }
+  }
+
 
   return (
     <div className="flex flex-col h-full bg-card">
@@ -53,7 +76,7 @@ export function MobileSidebar() {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
               <Home className="h-4 w-4 text-primary-foreground" />
             </div>
-            <span className="text-lg font-semibold text-foreground">SAS IMO</span>
+            <span className="text-lg font-semibold text-foreground">Galle Connect Pro</span>
           </Link>
         </SheetClose>
       </div>
@@ -76,6 +99,11 @@ export function MobileSidebar() {
                 >
                   <item.icon className="h-5 w-5" />
                   {item.name}
+                  {item.name === "Tâches" && (
+                    <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-accent text-[10px] font-medium text-accent-foreground">
+                      {tache?.pendingTasksCount ?? 0}
+                    </span>
+                  )}
                 </Link>
               </SheetClose>
             )
@@ -121,11 +149,11 @@ export function MobileSidebar() {
               <p className="text-xs text-muted-foreground truncate">Agency Account</p>
             </div>
             <SheetClose asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
-                <Link href="/">
-                  <LogOut className="h-4 w-4" />
-                  <span className="sr-only">Log out</span>
-                </Link>
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleLogout} >
+                {/* <Link href="/"> */}
+                <LogOut className="h-4 w-4" />
+                <span className="sr-only">Se déconnecter</span>
+                {/* </Link> */}
               </Button>
             </SheetClose>
           </div>

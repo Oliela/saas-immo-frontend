@@ -4,87 +4,76 @@ import React, { useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
-import axiosInstance from "@/lib/axios"  // ton axios avec baseURL + withCredentials
+import axiosInstance from "@/lib/axios"
 
 interface LoginFormProps {
-    onSuccess?: () => void
+  onSuccess?: () => void
 }
 
 export default function LoginForm({ onSuccess }: LoginFormProps) {
-    const [email, setEmail] = useState("")
-    const [password, setPassword] = useState("")
-    const [error, setError] = useState<string | null>(null)
-    const [submitting, setSubmitting] = useState(false)
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [error, setError] = useState<string | null>(null)
+  const [submitting, setSubmitting] = useState(false)
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError(null);
-        setSubmitting(true);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError(null)
+    setSubmitting(true)
 
-        try {
-            // Envoi des identifiants au backend
-            const res = await axiosInstance.post("/api/login", {
-                email,
-                password,
-            });
+    try {
+      await axiosInstance.get("/sanctum/csrf-cookie")
+      const res = await axiosInstance.post("/api/login", { email, password })
+      if (res.status === 200) {
+        onSuccess?.()
+        window.location.href = res.data.redirect || "/portal"
+      }
+    } catch (err: any) {
+      setError(
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        "Impossible de se connecter."
+      )
+    } finally {
+      setSubmitting(false)
+    }
+  }
 
-            // Vérifie que la requête a réussi
-            if (res.status === 200) {
-                const { token, redirect } = res.data;
+  return (
+    <form className="space-y-4" onSubmit={handleSubmit}>
+      {error && (
+        <p className="text-sm text-red-500 bg-red-50 px-3 py-2 rounded-md">
+          {error}
+        </p>
+      )}
 
-                // Stockage du token dans localStorage pour les requêtes futures
-                localStorage.setItem("token", token);
+      <div className="space-y-2">
+        <Label htmlFor="email">Adresse e-mail</Label>
+        <Input
+          id="email"
+          type="email"
+          placeholder="nom@exemple.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+      </div>
 
-                // Callback pour actions après succès (optionnel)
-                onSuccess?.();
-                
+      <div className="space-y-2">
+        <Label htmlFor="password">Mot de passe</Label>
+        <Input
+          id="password"
+          type="password"
+          placeholder="Entrez votre mot de passe"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+      </div>
 
-                // Redirection dynamique selon le backend
-                window.location.href = redirect || "/portal";
-            }
-        } catch (err: any) {
-            // Gestion des erreurs
-            setError(
-                err.response?.data?.error || err.response?.data?.message ||
-                "Impossible de se connecter."
-            );
-        } finally {
-            setSubmitting(false);
-        }
-    };
-
-
-    return (
-        <form className="space-y-4" onSubmit={handleSubmit}>
-            {error && <p className="text-sm text-red-500">{error}</p>}
-
-            <div className="space-y-2">
-                <Label htmlFor="email">Adresse e-mail</Label>
-                <Input
-                    id="email"
-                    type="email"
-                    placeholder="nom@exemple.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                />
-            </div>
-
-            <div className="space-y-2">
-                <Label htmlFor="password">Mot de passe</Label>
-                <Input
-                    id="password"
-                    type="password"
-                    placeholder="Entrez votre mot de passe"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                />
-            </div>
-
-            <Button type="submit" className="w-full" size="lg" disabled={submitting}>
-                {submitting ? "Connexion..." : "Se connecter"}
-            </Button>
-        </form>
-    )
+      <Button type="submit" className="w-full" size="lg" disabled={submitting}>
+        {submitting ? "Connexion..." : "Se connecter"}
+      </Button>
+    </form>
+  )
 }

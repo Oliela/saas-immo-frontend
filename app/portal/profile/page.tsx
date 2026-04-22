@@ -3,7 +3,7 @@
 import ProfileHeader from "@/components/profile/ProfileHeader"
 import ProfileCompletionCard from "@/components/profile/ProfileCompletionCard"
 import ProfileTabs from "@/components/profile/ProfilTabs"
-import { useProfile } from "@/hooks/useProfile"
+import { useProfile } from "@/hooks/clients/useProfile"
 import { useState } from "react"
 
 
@@ -15,11 +15,11 @@ export default function ProfilePage() {
   if (loading) return <p>Chargement...</p>
   if (error) return <p>{error}</p>
 
-  const user = data
+  const user = data.user
   const profile = data.profile
 
   console.log("User:", user)
-  console.log("Profile:", profile)
+  // console.log("Profile:", profile)
 
   return (
     <div className="space-y-6">
@@ -28,7 +28,7 @@ export default function ProfilePage() {
       <ProfileHeader />
 
       {/* Profile Completion Card */}
-      <ProfileCompletionCard user={user} />
+      <ProfileCompletionCard profil={profile}  />
 
       {/* composant qui doit etre modifiable  */}
       <ProfileTabs user={profile} userEmail={user.email} />

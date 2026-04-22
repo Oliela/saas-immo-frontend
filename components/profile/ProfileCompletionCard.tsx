@@ -6,14 +6,17 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { useProfileCompletion } from "@/hooks/useProfileCompletion"
+import { useProfileCompletion } from "@/hooks/clients/useProfileCompletion"
 
-export default function ProfileCompletionCard({ user }: { user: any }) {
-    if (!user) return null // sécurité si user n'existe pas
+export default function ProfileCompletionCard({ profil }: { profil: any }) {
+    if (!profil) return null // sécurité si user n'existe pas
 
-    const { profile } = user
+    const  profile  = profil
     const { percentage, completed, incomplete } = useProfileCompletion(profile)
 
+
+    // console.log("Profile Completion:", { percentage, completed, incomplete })
+    console.log("User in ProfileCompletionCard:", profile)
     return (
         <Card>
             <CardContent className="p-6">
@@ -24,17 +27,17 @@ export default function ProfileCompletionCard({ user }: { user: any }) {
                             {profile?.avatar ? (
                                 <AvatarImage src={profile.avatar} />
                             ) : (
-                                <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
+                                <AvatarFallback className="text-2xl bg-secondary text-secondary-foreground">
                                     {user.nom?.[0]}{user.prenom?.[0]}
                                 </AvatarFallback>
                             )}
                         </Avatar> */}
                         <Avatar className="h-24 w-24">
 
-                            <AvatarImage src={profile.avatar} />
+                            {/* <AvatarImage src={profile.avatar} /> */}
 
-                            <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
-                                {user.nom?.[0]}{user.prenom?.[0]}
+                            <AvatarFallback className="text-2xl bg-secondary text-secondary-foreground">
+                                {profile.nom?.[0]}{profile.prenom?.[0]}
                             </AvatarFallback>
 
                         </Avatar>
@@ -49,9 +52,9 @@ export default function ProfileCompletionCard({ user }: { user: any }) {
                         <div className="flex justify-between mb-4">
                             <div>
                                 <h2 className="text-xl font-semibold">
-                                    {user.nom} {user.prenom}
+                                    {profile.nom} {profile.prenom}
                                 </h2>
-                                <p className="text-sm text-muted-foreground">{user.email}</p>
+                                <p className="text-sm text-muted-foreground">{profile.email}</p>
                             </div>
                             <Badge variant="secondary">
                                 {percentage}% complété

@@ -13,13 +13,13 @@ interface AdditionalDocument {
     type: string
     file_path?: string
     original_name?: string
-    is_verified?: number
+    status?: "pending" | "approved" | "rejected"
     uploaded_at?: string
     verified_at?: string | null
 }
 
 export default function AdditionalDocumentsCard({ documents }: { documents: AdditionalDocument[] }) {
-    console.log("Additional Documents in Card:", documents)
+    // console.log("Additional Documents in Card:", documents)
         const [localDocuments, setLocalDocuments] = useState<AdditionalDocument[]>(documents)
     
 

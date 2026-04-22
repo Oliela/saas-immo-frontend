@@ -8,16 +8,10 @@ export function useClient() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const token = localStorage.getItem("token")
-    if (!token) {
-      setLoading(false)
-      return
-    }
+    
 
     axiosInstance
-      .get("/api/user", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      .get("/api/user")
       .then((res) => setClient(res.data))
       .catch((err) => console.error(err))
       .finally(() => setLoading(false))

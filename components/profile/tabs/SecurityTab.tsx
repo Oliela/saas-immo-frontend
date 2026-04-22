@@ -68,7 +68,7 @@ export default function SecurityTab() {
             </Card>
 
             {/* composant double facteur authentication */}
-            <Card>
+            {/* <Card>
                 <CardHeader>
                     <CardTitle>Authentification à deux facteurs</CardTitle>
                     <CardDescription>Ajoutez une couche de sécurité supplémentaire à votre compte.</CardDescription>
@@ -87,7 +87,7 @@ export default function SecurityTab() {
                         <Button variant="outline" className="bg-transparent">Activer</Button>
                     </div>
                 </CardContent>
-            </Card>
+            </Card> */}
 
             {/* delete account */}
             <Card className="border-destructive/50">

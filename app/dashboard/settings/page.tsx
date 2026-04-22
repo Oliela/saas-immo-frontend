@@ -1,7 +1,7 @@
 "use client"
 
 
-import {  Bell, Lock, Building2, CreditCard, Users } from "lucide-react"
+import { Bell, Lock, Building2, CreditCard, Users } from "lucide-react"
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
@@ -10,9 +10,25 @@ import NotificationsForm from "@/components/settings/NotificationsForm"
 import SecurityForm from "@/components/settings/SecurityForm"
 import TeamSettings from "@/components/settings/TeamSettings"
 import BillingSettings from "@/components/settings/BillingSettings"
+import { useAgency } from "@/hooks/agence/useAgency"
+import { useState } from "react"
 
 export default function SettingsPage() {
-   
+    const { data, loading } = useAgency()
+    
+    const [isEditing, setIsEditing] = useState(false)
+
+    if (loading) return <p>Chargement...</p>
+    // if (error) return <p>{error}</p>
+
+    const user = data
+    const profile = data.agency
+    const agent = data?.agency.users
+
+    console.log("Agency data:", data)
+    // console.log("agent data:", agent)
+    // console.log("profile data:", profile)
+    // console.log("user data:", user)
 
     return (
         <div className="space-y-6">
@@ -53,7 +69,7 @@ export default function SettingsPage() {
 
                 {/* Agency Profile */}
                 <TabsContent value="profile" className="space-y-6">
-                    <AgencyProfileForm />
+                    <AgencyProfileForm agency={profile}/>
                 </TabsContent>
 
                 {/* Notifications */}
@@ -63,17 +79,17 @@ export default function SettingsPage() {
 
                 {/* Security */}
                 <TabsContent value="security" className="space-y-6">
-                   <SecurityForm />
+                    <SecurityForm />
                 </TabsContent>
 
                 {/* Team */}
                 <TabsContent value="team" className="space-y-6">
-                   <TeamSettings />
+                    <TeamSettings agent={agent} />
                 </TabsContent>
 
                 {/* Billing */}
                 <TabsContent value="billing" className="space-y-6">
-                     <BillingSettings />
+                    <BillingSettings />
                 </TabsContent>
             </Tabs>
         </div>

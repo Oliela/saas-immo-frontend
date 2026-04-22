@@ -67,8 +67,8 @@ export default function ClientRegisterForm({ onBack }: ClientRegisterFormProps):
 
         try {
             const payload = {
-                nom: form.firstName,
-                prenom: form.lastName,
+                nom: form.lastName,
+                prenom: form.firstName,
                 email: form.email,
                 phone: form.phone,
                 password: form.password,
@@ -121,11 +121,11 @@ export default function ClientRegisterForm({ onBack }: ClientRegisterFormProps):
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <Label htmlFor="firstName">Prénom</Label>
-                            <Input id="firstName" value={form.firstName} onChange={handleChange} placeholder="Jean" required />
+                            <Input id="firstName" value={form.firstName} onChange={handleChange} placeholder="Jamil" required />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="lastName">Nom</Label>
-                            <Input id="lastName" value={form.lastName} onChange={handleChange} placeholder="Dupont" required />
+                            <Input id="lastName" value={form.lastName} onChange={handleChange} placeholder="Seye" required />
                         </div>
                     </div>
 
@@ -136,7 +136,7 @@ export default function ClientRegisterForm({ onBack }: ClientRegisterFormProps):
 
                     <div className="space-y-2">
                         <Label htmlFor="phone">Téléphone</Label>
-                        <Input id="phone" type="tel" value={form.phone} onChange={handleChange} placeholder="+33 6 12 34 56 78" />
+                        <Input id="phone" type="tel" value={form.phone} onChange={handleChange} placeholder="+221 77 123 45 67" />
                     </div>
 
                     <div className="space-y-2">

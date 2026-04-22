@@ -1,17 +1,16 @@
-// components/ProtectedRoute.tsx
-import { useRouter } from "next/navigation";
+"use client"
+
 import { useAuth } from "@/hooks/useAuth";
+import { redirect, useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
-  const router = useRouter();
+ 
 
-  if (loading) return <p>Chargement...</p>; // ou un spinner
-
-  if (!user) {
-    router.push("/login"); // redirige vers login si pas connecté
-    return null;
+ if (!loading && (!user )) {
+    redirect("/login");
   }
-
+  
   return <>{children}</>;
 }

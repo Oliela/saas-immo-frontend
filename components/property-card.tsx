@@ -10,48 +10,98 @@ export interface Property {
   title: string
   price: number
   location: string
+  neighborhood: string
+  features: string[]
   type: "apartment" | "house" | "villa" | "studio" | "commercial"
-  listingType: "buy" | "rent"
+  listingType: "sale" | "rent"
   bedrooms: number
   bathrooms: number
   area: number
   image: string
   featured?: boolean
+  status?: "available" | "pending" | "sold"
 }
 
 interface PropertyCardProps {
   property: Property
 }
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? ""
+
 export function PropertyCard({ property }: PropertyCardProps) {
-  const formatPrice = (price: number, listingType: "buy" | "rent") => {
-    const formatted = new Intl.NumberFormat("en-US", {
+  const formatPrice = (price: number, listingType: "sale" | "rent") => {
+    const formatted = new Intl.NumberFormat("fr-FR", {
       style: "currency",
-      currency: "USD",
+      currency: "XOF",
       maximumFractionDigits: 0,
     }).format(price)
-    return listingType === "rent" ? `${formatted}/mo` : formatted
+    return listingType === "rent" ? `${formatted}/mois` : formatted
   }
 
+  const getStatusText = (status?: string, listingType?: "sale" | "rent") => {
+    switch (status) {
+      case "available":
+        return "Disponible"
+      case "pending":
+        return "En négociation"
+      case "sold":
+        return listingType === "rent" ? "Loué" : "Vendu"
+      default:
+        return null
+    }
+  }
+
+  const getStatusStyle = (status?: string) => {
+    switch (status) {
+      case "available":
+        return "bg-emerald-500/10 text-emerald-700 border-emerald-200"
+      case "pending":
+        return "bg-amber-500/10 text-amber-700 border-amber-200"
+      case "sold":
+        return "bg-red-500/10 text-red-700 border-red-200"
+      default:
+        return "bg-muted text-muted-foreground border-border"
+    }
+  }
+
+  const imageUrl = property.image
+    ? `${API_BASE_URL}${property.image}`
+    : "/placeholder.svg"
+
+  const statusText = getStatusText(property.status, property.listingType)
+
   return (
-    <Card className="group overflow-hidden transition-all duration-300 hover:shadow-lg">
+    <Card className="group overflow-hidden transition-all duration-300 hover:shadow-lg flex flex-col">
       <div className="relative aspect-[4/3] overflow-hidden">
         <Image
-          src={property.image || "/placeholder.svg"}
+          src={imageUrl}
           alt={property.title}
           fill
           className="object-cover transition-transform duration-300 group-hover:scale-105"
         />
         <div className="absolute top-3 left-3 flex gap-2">
-          <Badge variant={property.listingType === "rent" ? "secondary" : "default"}>
-            {property.listingType === "rent" ? "For Rent" : "For Sale"}
-          </Badge>
+          {property.status === "available" || !property.status ? (
+            <Badge variant={property.listingType === "rent" ? "secondary" : "default"}>
+              {property.listingType === "rent" ? "À louer" : "À vendre"}
+            </Badge>
+          ) : (
+            <Badge className={`border-0 ${
+              property.status === "pending"
+                ? "bg-amber-500/90 text-white"
+                : property.status === "sold"
+                  ? "bg-red-500/90 text-white"
+                  : ""
+            }`}>
+              {getStatusText(property.status, property.listingType)}
+            </Badge>
+          )}
           {property.featured && (
-            <Badge className="bg-accent text-accent-foreground">Featured</Badge>
+            <Badge className="bg-accent text-accent-foreground">En vedette</Badge>
           )}
         </div>
       </div>
-      <CardContent className="p-4">
+
+      <CardContent className="p-4 flex-1">
         <div className="space-y-3">
           <div>
             <p className="text-xl font-bold text-foreground">
@@ -68,25 +118,28 @@ export function PropertyCard({ property }: PropertyCardProps) {
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
             <div className="flex items-center gap-1">
               <Bed className="h-4 w-4" />
-              <span>{property.bedrooms} beds</span>
+              <span>{property.bedrooms} ch.</span>
             </div>
             <div className="flex items-center gap-1">
               <Bath className="h-4 w-4" />
-              <span>{property.bathrooms} baths</span>
+              <span>{property.bathrooms} sdb.</span>
             </div>
             <div className="flex items-center gap-1">
               <Square className="h-4 w-4" />
-              <span>{property.area} sqft</span>
+              <span>{property.area} m²</span>
             </div>
           </div>
         </div>
       </CardContent>
-      <CardFooter className="p-4 pt-0 gap-2">
-        <Button asChild className="flex-1">
-          <Link href={`/property/${property.id}`}>View Property</Link>
-        </Button>
-        <Button variant="outline" className="flex-1 bg-transparent">
-          Show Interest
+
+      <CardFooter className="p-4 pt-0 flex flex-col gap-2">
+        {property.status === "available" && (
+          <div className={`w-full text-center rounded-md border px-3 py-1.5 text-xs font-medium ${getStatusStyle(property.status)}`}>
+            Disponible
+          </div>
+        )}
+        <Button asChild className="w-full">
+          <Link href={`/property/${property.id}`}>Voir le bien</Link>
         </Button>
       </CardFooter>
     </Card>

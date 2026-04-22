@@ -10,7 +10,7 @@ interface Document {
     type: string
     file_path: string
     original_name: string
-    is_verified: number // 0 ou 1
+    status: "pending" | "approved" | "rejected"
     uploaded_at: string
     verified_at: string | null
     created_at: string
@@ -21,7 +21,7 @@ export default function DocumentsProgressCard({ documents }: { documents: Docume
     // console.log("Documents in Progress Card:", documents)
 
     // 🔹 Calcul du nombre de documents vérifiés
-    const verifiedCount = documents.filter((d) => d.is_verified === 1).length
+    const verifiedCount = documents.filter((d) => d.status === "approved").length
     const totalDocuments = documents.length
     const progressPercentage = totalDocuments > 0 ? Math.round((verifiedCount / totalDocuments) * 100) : 0
 

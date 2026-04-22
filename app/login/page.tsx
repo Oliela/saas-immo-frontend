@@ -20,7 +20,7 @@ export default function LoginPage() {
 
 
   return (
-    <PublicOnly>
+    <>
       <div className="min-h-screen flex flex-col bg-muted">
         {/* Header */}
         <header className="py-6 px-4">
@@ -29,7 +29,7 @@ export default function LoginPage() {
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
                 <Home className="h-5 w-5 text-primary-foreground" />
               </div>
-              <span className="text-xl font-semibold text-foreground">SAS IMO</span>
+              <span className="text-xl font-semibold text-foreground">Galle Connect Pro</span>
             </Link>
           </div>
         </header>
@@ -44,34 +44,7 @@ export default function LoginPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {/* <form className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Adresse e-mail</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="nom@exemple.com"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Password</Label>
-                  <Link href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                    Mot de passe oublié ?
-                  </Link>
-                </div>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="Entrez votre mot de passe"
-                  required
-                />
-              </div>
-              <Button type="submit" className="w-full" size="lg">
-                Se connecter
-              </Button>
-            </form> */}
+              
               <LoginForm />
 
               <div className="relative my-6">
@@ -132,6 +105,6 @@ export default function LoginPage() {
           </div>
         </footer>
       </div>
-    </PublicOnly>
+    </>
   )
 }

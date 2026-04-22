@@ -14,45 +14,51 @@ interface Document {
     type: string
     file_path?: string
     original_name?: string
-    is_verified?: number
+    status?: "pending" | "approved" | "rejected"
     uploaded_at?: string
     verified_at?: string | null
 }
 
 const REQUIRED_TYPES = [
-    { type: "id_document", label: "Pièce d'identité", description: "Pièce d'identité officielle (passeport, permis de conduire)" },
+    { type: "id_document", label: "Pièce d'identité", description: "Pièce d'identité officielle (CNI ou passeport)" },
     { type: "income_proof", label: "Justificatif de revenus", description: "Fiche de paie, lettre d'emploi ou déclaration d'impôts" },
     { type: "bank_statement", label: "Relevé bancaire", description: "Relevés bancaires des 3 derniers mois" },
-    { type: "recommendation_letter", label: "Lettre de recommandation", description: "Recommandation d'ancien propriétaire ou employeur" },
+    // { type: "recommendation_letter", label: "Lettre de recommandation", description: "Recommandation d'ancien propriétaire ou employeur" },
 ]
 
-function getStatus(doc?: Document) {
-    if (!doc || !doc.file_path) return "pending"
-    if (doc.is_verified) return "verified"
-    return "under_review"
+function getStatus(doc?: Document): "to_upload" | "pending" | "approved" | "rejected" {
+    if (!doc || !doc.file_path) return "to_upload"
+    return doc.status ?? "pending"
 }
 
-function getStatusBadge(status: string) {
+function getStatusBadge(status: "to_upload" | "pending" | "approved" | "rejected") {
     switch (status) {
-        case "verified":
+        case "approved":
             return (
                 <Badge className="bg-green-100 text-green-700 hover:bg-green-100">
                     <CheckCircle className="mr-1 h-3 w-3" />
-                    Vérifié
-                </Badge>
-            )
-        case "under_review":
-            return (
-                <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100">
-                    <Clock className="mr-1 h-3 w-3" />
-                    En cours d'examen
+                    Approuvé
                 </Badge>
             )
         case "pending":
             return (
+                <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100">
+                    <Clock className="mr-1 h-3 w-3" />
+                    En attente
+                </Badge>
+            )
+        case "rejected":
+            return (
                 <Badge className="bg-red-100 text-red-700 hover:bg-red-100">
                     <AlertCircle className="mr-1 h-3 w-3" />
-                    Requis
+                    Rejeté
+                </Badge>
+            )
+        case "to_upload":
+            return (
+                <Badge className="bg-red-100 text-red-700 hover:bg-red-100">
+                    <Upload className="mr-1 h-3 w-3" />
+                    A telecharger
                 </Badge>
             )
         default:
@@ -64,7 +70,7 @@ export default function RequiredDocumentsCard({ documents }: { documents: Docume
     const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
 
     const [uploadDialogOpen, setUploadDialogOpen] = useState(false)
-    console.log("Documents in RequiredDocumentsCard:", documents)
+    // console.log("Documents in RequiredDocumentsCard:", documents)
     const [localDocuments, setLocalDocuments] = useState<Document[]>(documents)
 
     const handleView = (doc?: Document) => {
@@ -126,23 +132,27 @@ export default function RequiredDocumentsCard({ documents }: { documents: Docume
                         return (
                             <div
                                 key={req.type}
-                                className={`flex flex-col sm:flex-row sm:items-center gap-4 p-4 rounded-lg border ${status === "pending" ? "border-destructive/50 bg-destructive/5" : "border-border"
+                                className={`flex flex-col sm:flex-row sm:items-center gap-4 p-4 rounded-lg border ${status === "to_upload" ? "border-destructive/50 bg-destructive/5" : "border-border"
                                     }`}
                             >
                                 <div
-                                    className={`flex h-10 w-10 items-center justify-center rounded-lg flex-shrink-0 ${status === "verified"
+                                    className={`flex h-10 w-10 items-center justify-center rounded-lg flex-shrink-0 ${status === "approved"
                                         ? "bg-green-100"
-                                        : status === "under_review"
+                                        : status === "pending"
                                             ? "bg-amber-100"
-                                            : "bg-muted"
+                                        : status === "rejected"
+                                            ? "bg-red-100"
+                                            : "bg-red-100"
                                         }`}
                                 >
                                     <FileText
-                                        className={`h-5 w-5 ${status === "verified"
+                                        className={`h-5 w-5 ${status === "approved"
                                             ? "text-green-600"
-                                            : status === "under_review"
+                                            : status === "pending"
                                                 ? "text-amber-600"
-                                                : "text-muted-foreground"
+                                            : status === "rejected"
+                                                ? "text-red-600"
+                                                : "text-red-600"
                                             }`}
                                     />
                                 </div>
@@ -159,11 +169,12 @@ export default function RequiredDocumentsCard({ documents }: { documents: Docume
                                     )}
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    {status === "pending" ? (
-                                        <Button size="sm" onClick={() => setUploadDialogOpen(true)}>
-                                            <Upload className="mr-2 h-4 w-4" />
-                                            Télécharger
-                                        </Button>
+                                    {status === "to_upload" ? (
+                                        // <Button size="sm" onClick={() => setUploadDialogOpen(true)}>
+                                        //     <Upload className="mr-2 h-4 w-4" />
+                                        //     Charger un document
+                                        // </Button>
+                                        null
                                     ) : (
                                         <>
                                             <Button
@@ -183,7 +194,7 @@ export default function RequiredDocumentsCard({ documents }: { documents: Docume
                                                 <Download className="h-4 w-4" />
                                                 <span className="sr-only">Télécharger</span>
                                             </Button> */}
-                                            {/* {status !== "verified" && (
+                                            {/* {status !== "approved" && (
                                                 <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDelete(doc)}>
                                                     <Trash2 className="h-4 w-4" />
                                                     <span className="sr-only">Supprimer</span>

@@ -22,6 +22,7 @@ export default function EmploymentTab({ profileData }: { profileData: any }) {
     const [employer, setEmployer] = useState(profileData.employer || "")
     const [monthlyIncome, setMonthlyIncome] = useState(profileData.monthly_income || "")
     const [employmentType, setEmploymentType] = useState(profileData.type_employment || "")
+    const [professionalSituation, setProfessionalSituation] = useState(profileData.professional_situation || "")
     const [isSubmitting, setIsSubmitting] = useState(false)
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -34,18 +35,15 @@ export default function EmploymentTab({ profileData }: { profileData: any }) {
             formData.append("employer", employer)
             formData.append("monthlyIncome", monthlyIncome)
             formData.append("employmentType", employmentType)
+            formData.append("professionalSituation", professionalSituation)
 
             const token = localStorage.getItem("token"); // ton JWT
 
-            const res = await axiosInstance.put("/api/profile/employment/update", formData, {
-                headers: {
-                    Authorization: token ? `Bearer ${token}` : "",
-                    "Content-Type": "multipart/form-data"
-                }
-            })
+            const res = await axiosInstance.put("/api/profile/employment/update", formData)
 
             if (res.status === 200) {
                 toast.success("Informations professionnelles mises à jour avec succès")
+                window.location.reload() // Recharge la page pour afficher les nouvelles données
             }
         } catch (err: any) {
             const errorMessage =
@@ -66,6 +64,22 @@ export default function EmploymentTab({ profileData }: { profileData: any }) {
 
             <CardContent className="space-y-6">
                 <form onSubmit={handleSubmit} className="space-y-6">
+                    <div className="space-y-2">
+                        <Label>Situation professionnelle</Label>
+                        <Select value={professionalSituation} onValueChange={setProfessionalSituation}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Sélectionnez votre situation" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="Sans emploi">Sans emploi</SelectItem>
+                                <SelectItem value="Salarié">Salarié</SelectItem>
+                                <SelectItem value="Entrepreneur/Chef d'entreprise">Entrepreneur/Chef d'entreprise</SelectItem>
+                                <SelectItem value="Profession Libérale">Profession libérale</SelectItem>
+                                <SelectItem value="Consultant">Consultant</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+
                     <div className="grid gap-4 sm:grid-cols-2">
                         <div className="space-y-2">
                             <Label>Profession</Label>
@@ -80,15 +94,38 @@ export default function EmploymentTab({ profileData }: { profileData: any }) {
                             </div>
                         </div>
 
-                        <div className="space-y-2">
-                            <Label>Employeur</Label>
-                            <Input
-                                value={employer}
-                                onChange={(e) => setEmployer(e.target.value)}
-                                required
-                            />
-                        </div>
+                        {professionalSituation === "Salarié" && (
+                            <div className="space-y-2">
+                                <Label>Employeur</Label>
+                                <Input
+                                    value={employer}
+                                    onChange={(e) => setEmployer(e.target.value)}
+                                    required
+                                />
+                            </div>
+                        )}
                     </div>
+
+                    {professionalSituation === "Salarié" && (
+                        <div className="grid gap-4 sm:grid-cols-2">
+                            <div className="space-y-2">
+                                <Label>Type d'emploi</Label>
+                                <Select value={employmentType} onValueChange={setEmploymentType}>
+                                    <SelectTrigger>
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="Temps plein">Temps plein</SelectItem>
+                                        <SelectItem value="Temps partiel">Temps partiel</SelectItem>
+                                        <SelectItem value="Contrat">Contrat</SelectItem>
+                                        <SelectItem value="Travailleur indépendant">Travailleur indépendant</SelectItem>
+                                        <SelectItem value="Retraité">Retraité</SelectItem>
+                                        <SelectItem value="Étudiant">Étudiant</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                    )}
 
                     <div className="grid gap-4 sm:grid-cols-2">
                         <div className="space-y-2">
@@ -101,24 +138,6 @@ export default function EmploymentTab({ profileData }: { profileData: any }) {
                                 required
                             />
                         </div>
-                        <div className="space-y-2">
-                            <Label>Type d'emploi</Label>
-                            <Select value={employmentType} onValueChange={setEmploymentType}>
-                                <SelectTrigger>
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="temps-plein">Temps plein</SelectItem>
-                                    <SelectItem value="temps-partiel">Temps partiel</SelectItem>
-                                    <SelectItem value="contrat">Contrat</SelectItem>
-                                    <SelectItem value="independant">Travailleur indépendant</SelectItem>
-                                    <SelectItem value="retraite">Retraité</SelectItem>
-                                    <SelectItem value="etudiant">Étudiant</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-
                     </div>
 
                     <div className="flex justify-end">

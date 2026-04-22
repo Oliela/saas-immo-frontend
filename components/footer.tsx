@@ -3,21 +3,21 @@ import { Home } from "lucide-react"
 
 const footerNavigation = {
   properties: [
-    { name: "Buy Property", href: "/buy" },
-    { name: "Rent Property", href: "/rent" },
-    { name: "New Listings", href: "/buy" },
-    { name: "Featured Properties", href: "/buy" },
+    { name: "Acheter un bien", href: "/buy" },
+    { name: "Louer un bien", href: "/rent" },
+    { name: "Nouvelles annonces", href: "/buy" },
+    { name: "Biens en vedette", href: "/buy" },
   ],
   company: [
-    { name: "About Us", href: "#" },
-    { name: "Our Agencies", href: "/agencies" },
-    { name: "Careers", href: "#" },
-    { name: "Contact", href: "#" },
+    { name: "A propos de nous", href: "https://galle-connect-pro.vercel.app/" },
+    { name: "Nos agences", href: "/agencies" },
+    { name: "Solutions", href: "https://galle-connect-pro.vercel.app/solutions" },
+    { name: "Contact", href: "https://galle-connect-pro.vercel.app/contact" },
   ],
   support: [
-    { name: "Help Center", href: "#" },
-    { name: "Privacy Policy", href: "#" },
-    { name: "Terms of Service", href: "#" },
+    { name: "Centre d'aide", href: "#" },
+    { name: "Politique de confidentialite", href: "#" },
+    { name: "Conditions d'utilisation", href: "#" },
     { name: "FAQ", href: "#" },
   ],
 }
@@ -32,16 +32,16 @@ export function Footer() {
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-foreground">
                 <Home className="h-5 w-5 text-primary" />
               </div>
-              <span className="text-xl font-semibold">SAS IMO</span>
+              <span className="text-xl font-semibold">GalleConnectPro</span>
             </Link>
             <p className="text-sm leading-relaxed text-primary-foreground/80 max-w-xs">
-              Your trusted partner in finding the perfect property. We connect buyers, renters, and agencies for seamless real estate experiences.
+              Votre partenaire de confiance pour trouver le bien ideal. Nous connectons acheteurs, locataires et agences pour une experience immobiliere fluide.
             </p>
           </div>
           <div className="mt-12 grid grid-cols-2 gap-8 xl:col-span-2 xl:mt-0 xl:justify-end">
             <div className="md:grid md:grid-cols-2 md:gap-8">
               <div>
-                <h3 className="text-sm font-semibold">Properties</h3>
+                <h3 className="text-sm font-semibold">Biens</h3>
                 <ul role="list" className="mt-4 space-y-3">
                   {footerNavigation.properties.map((item) => (
                     <li key={item.name}>
@@ -56,7 +56,7 @@ export function Footer() {
                 </ul>
               </div>
               <div className="mt-10 md:mt-0">
-                <h3 className="text-sm font-semibold">Company</h3>
+                <h3 className="text-sm font-semibold">Entreprise</h3>
                 <ul role="list" className="mt-4 space-y-3">
                   {footerNavigation.company.map((item) => (
                     <li key={item.name}>
@@ -72,7 +72,7 @@ export function Footer() {
               </div>
             </div>
             <div>
-              <h3 className="text-sm font-semibold">Support</h3>
+              <h3 className="text-sm font-semibold">Assistance</h3>
               <ul role="list" className="mt-4 space-y-3">
                 {footerNavigation.support.map((item) => (
                   <li key={item.name}>
@@ -90,7 +90,7 @@ export function Footer() {
         </div>
         <div className="mt-12 border-t border-primary-foreground/20 pt-8">
           <p className="text-sm text-primary-foreground/60 text-center">
-            &copy; {new Date().getFullYear()} SAS IMO. All rights reserved.
+            &copy; {new Date().getFullYear()} GalleConnectPro. Tous droits reserves.
           </p>
         </div>
       </div>

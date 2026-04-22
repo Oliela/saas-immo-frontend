@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -11,12 +12,48 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
-export default function TeamSettings() {
-  const members = [
-    { name: "John Anderson", email: "john@premierproperties.com", role: "Admin" },
-    { name: "Sarah Miller", email: "sarah@premierproperties.com", role: "Agent" },
-    { name: "Mike Thompson", email: "mike@premierproperties.com", role: "Agent" },
-  ]
+interface Role {
+  id: number
+  name: string
+}
+
+interface User {
+  id: number
+  nom: string
+  prenom: string
+  email: string
+  account_type: string
+  is_active: number
+  roles: Role[] // 🔥 AJOUT
+  profile?: any
+  pivot: {
+    agency_id: number
+    user_id: number
+    created_at: string
+    updated_at: string
+  }
+}
+
+interface Props {
+  agent: {
+    users: User[]
+  }
+}
+
+export default function TeamSettings({ agent }: Props) {
+  const members = agent || []
+  const getRoleLabel = (role?: string) => {
+    switch (role) {
+      case "admin_agence":
+        return "Admin"
+      case "agent":
+        return "Agent"
+      default:
+        return "Agent"
+    }
+  }
+ 
+  console.log("Team members:", agent)
 
   return (
     <Card>
@@ -28,26 +65,28 @@ export default function TeamSettings() {
           </CardDescription>
         </div>
 
-        <Button>Ajouter un membre</Button>
+        <Button asChild>
+          <Link href="/dashboard/agents">Ajouter un membre</Link>
+        </Button>
       </CardHeader>
 
       <CardContent>
         <div className="space-y-4">
           {members.map((member) => (
             <div
-              key={member.email}
+              key={member.id}
               className="flex items-center justify-between p-4 border border-border rounded-lg"
             >
               <div className="flex items-center gap-4">
                 <Avatar>
                   <AvatarFallback>
-                    {member.name.charAt(0)}
+                    {member.prenom?.charAt(0) || member.nom?.charAt(0)}
                   </AvatarFallback>
                 </Avatar>
 
                 <div>
                   <p className="font-medium text-foreground">
-                    {member.name}
+                    {member.prenom} {member.nom}
                   </p>
                   <p className="text-sm text-muted-foreground">
                     {member.email}
@@ -56,16 +95,26 @@ export default function TeamSettings() {
               </div>
 
               <div className="flex items-center gap-4">
-                <Select defaultValue={member.role.toLowerCase()}>
+                {/* <Select defaultValue={
+                  member?.roles?.[0]?.name === "admin_agence"
+                    ? "admin_agence"
+                    : member?.roles?.[0]?.name || "agent"
+                }>
                   <SelectTrigger className="w-[120px]">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="admin">Admin</SelectItem>
+                    <SelectItem value="agent_admin">Admin</SelectItem>
                     <SelectItem value="agent">Agent</SelectItem>
                     <SelectItem value="viewer">Lecteur</SelectItem>
                   </SelectContent>
-                </Select>
+                </Select> */}
+                <input
+                  type="text"
+                  disabled
+                  value={getRoleLabel(member?.roles?.[0]?.name)}
+                  className="w-[140px] px-3 py-2 text-sm border border-border rounded-md bg-muted text-muted-foreground"
+                />
 
                 <Button
                   variant="ghost"

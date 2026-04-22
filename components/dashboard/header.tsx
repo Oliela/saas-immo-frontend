@@ -17,9 +17,26 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { MobileSidebar } from "./mobile-sidebar"
+import { useTache } from "@/hooks/agence/useTache"
+import { useAuthAgent } from "@/hooks/agence/useAuthAgent"
+import axiosInstance from "@/lib/axios"
 
 export function DashboardHeader() {
   const [searchOpen, setSearchOpen] = useState(false)
+  const { user, loading } = useAuthAgent()
+  const { data: tache, loading: tacheLoading } = useTache()
+  // console.log("Tâches :", tache)
+  // console.log("User :", user)
+   const handleLogout = async () => {
+    try {
+      await axiosInstance.post("/api/logout")
+    } catch (err) {
+      console.error(err)
+    } finally {
+      document.cookie = "account_type=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"
+      window.location.href = "/login"
+    }
+  }
 
   return (
     <header className="sticky top-0 z-40 h-16 bg-card border-b border-border">
@@ -41,7 +58,7 @@ export function DashboardHeader() {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
               <Home className="h-4 w-4 text-primary-foreground" />
             </div>
-            <span className="text-lg font-semibold text-foreground">SAS IMO</span>
+            <span className="text-lg font-semibold text-foreground">Galle Connect Pro</span>
           </Link>
         </div>
 
@@ -97,12 +114,12 @@ export function DashboardHeader() {
               <Button variant="ghost" size="icon" className="relative">
                 <Bell className="h-5 w-5" />
                 <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs">
-                  3
+                  {tache?.pendingTasksCount ?? 0}
                 </Badge>
                 <span className="sr-only">Notifications</span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-80">
+            {/* <DropdownMenuContent align="end" className="w-80">
               <DropdownMenuLabel>Notifications</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem className="flex flex-col items-start gap-1 py-3">
@@ -121,7 +138,7 @@ export function DashboardHeader() {
               <DropdownMenuItem className="text-center text-sm text-primary">
                 View all notifications
               </DropdownMenuItem>
-            </DropdownMenuContent>
+            </DropdownMenuContent> */}
           </DropdownMenu>
 
           {/* User Menu */}
@@ -137,22 +154,22 @@ export function DashboardHeader() {
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>
                 <div className="flex flex-col">
-                  <span>Premier Properties</span>
+                  <span>{user?.agency?.name || "No agency name available"}</span>
                   <span className="text-xs font-normal text-muted-foreground">
-                    info@premierproperties.com
+                    {user?.agency?.email || "No email available"}
                   </span>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <Link href="/dashboard/settings">Settings</Link>
+                <Link href="/dashboard/settings">Paramètres</Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link href="/">View Public Site</Link>
+                <Link href="/">Voir le site public</Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link href="/">Log out</Link>
+              <DropdownMenuItem onClick={handleLogout}>
+                Se déconnecter
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

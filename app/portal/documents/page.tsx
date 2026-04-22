@@ -20,13 +20,8 @@ export default function DocumentsPage() {
     const fetchDocuments = async () => {
       try {
         setIsLoading(true)
-        const token = localStorage.getItem("token")
-
-        const res = await axiosInstance.get("/api/profile/documents", {
-          headers: {
-            Authorization: token ? `Bearer ${token}` : "",
-          }
-        })
+        // await axiosInstance.get("/sanctum/csrf-cookie")
+        const res = await axiosInstance.get("/api/profile/documents")
 
         if (res.status === 200) {
           setRequiredDocuments(res.data.required_documents || [])
