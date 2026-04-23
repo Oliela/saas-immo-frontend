@@ -31,7 +31,7 @@ export function DashboardHeader() {
     try {
       await axiosInstance.post("/api/logout")
     } catch (err) {
-      console.error(err)
+      // console.error(err)
     } finally {
       document.cookie = "account_type=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"
       window.location.href = "/login"

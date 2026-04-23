@@ -23,22 +23,7 @@ export default function ListingRentPage() {
     [data]
   )
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-muted-foreground animate-pulse">Chargement des biens...</p>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-destructive">{error}</p>
-      </div>
-    )
-  }
-  console.log("Rent Properties:", rentProperties)
+  // console.log("Rent Properties:", rentProperties)
 
 
   return (
@@ -50,6 +35,7 @@ export default function ListingRentPage() {
           features={features}
           title="Biens en location"
           description="Trouvez la location parfaite qui correspond à votre style de vie et à votre budget"
+          isLoading={loading || featuresLoading}
         />
       </main>
       <Footer />

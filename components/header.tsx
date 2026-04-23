@@ -34,7 +34,7 @@ export function Header() {
 
   const isClient = user?.user?.account_type === "client"
   const isAgency = user?.user?.account_type === "agency_user"
-  console.log("User data in Header:", user, "isClient:", isClient, "isAgency:", isAgency)
+  // console.log("User data in Header:", user, "isClient:", isClient, "isAgency:", isAgency)
 
   return (
     <header className="sticky top-0 z-50 bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80 border-b border-border">

@@ -32,6 +32,7 @@ interface PropertiesListingProps {
   features: ApiFeature[]
   title: string
   description: string
+  isLoading?: boolean  // ← ajouter
 }
 
 const PROPERTY_TYPE_LABELS: Record<string, string> = {

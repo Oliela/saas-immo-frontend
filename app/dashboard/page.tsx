@@ -10,8 +10,8 @@ import { useGetApercu } from "@/hooks/agence/useGetApercu"
 export default function DashboardPage() {
   const { data, loading, error } = useGetApercu();
   const { user, loading: userLoading } = useAuthAgent();
-  console.log("DashboardPage - data:", data);
-  console.log("DashboardPage - user:", user);
+  // console.log("DashboardPage - data:", data);
+  // console.log("DashboardPage - user:", user);
 
   if (loading) return <div>Chargement...</div>;
 

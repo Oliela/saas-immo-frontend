@@ -13,26 +13,9 @@ export default function ListingBuyPage() {
   const { data: features, loading: featuresLoading } = useFeatures()
 
   const buyProperties = useMemo(
-    () => biensToProperties(data).filter((p) => p.listingType === "sale"),
-    [data]
+    () => (error || !data ? [] : biensToProperties(data).filter((p) => p.listingType === "sale")),
+    [data, error]
   )
-
-  if (loading || featuresLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-muted-foreground animate-pulse">Chargement des biens...</p>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-destructive">{error}</p>
-      </div>
-    )
-  }
-  console.log("Buy Properties:", buyProperties)
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -43,6 +26,7 @@ export default function ListingBuyPage() {
           features={features}
           title="Biens à vendre"
           description="Découvrez notre sélection de biens immobiliers disponibles à l'achat"
+          isLoading={loading || featuresLoading}
         />
       </main>
       <Footer />
