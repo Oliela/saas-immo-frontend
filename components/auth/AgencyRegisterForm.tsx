@@ -67,10 +67,10 @@ export default function AgencyRegisterForm({ onBack }: AgencyRegisterFormProps):
   const [success, setSuccess] = useState<string | null>(null)
 
   const specialtyOptions: Specialty[] = [
-    { id: 1, label: "Residential Sales" },
-    { id: 2, label: "Commercial Leasing" },
-    { id: 3, label: "Property Management" },
-    { id: 4, label: "Real Estate Investment" },
+    { id: 1, label: "Ventes résidentielles" },
+    { id: 2, label: "Location commerciale" },
+    { id: 3, label: "Gestion immobilière" },
+    { id: 4, label: "Investissement immobilier" },
   ];
 
   const [formData, setFormData] = useState<AgencyFormData>({
