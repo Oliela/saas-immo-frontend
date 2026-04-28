@@ -13,9 +13,9 @@ export default function VisitsPage() {
   const { visits, loading: visitsLoading } = useGetVisits({ clientId: client?.profile?.id })
   console.log("visits", visits, visitsLoading)
 
-  if (loading || clientLoading || visitsLoading) {
-    return <div>Loading...</div>
-  }
+  // if (loading || clientLoading || visitsLoading) {
+  //   return <div>Loading...</div>
+  // }
 
   
 
