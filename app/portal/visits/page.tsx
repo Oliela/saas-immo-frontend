@@ -6,21 +6,13 @@ import { useGetVisits } from "@/hooks/clients/useGetVisit"
 import { useAuth } from "@/hooks/useAuth"
 
 export default function VisitsPage() {
-  const {user, loading} = useAuth()
-  // console.log("user", user, loading)
-  const {client, loading: clientLoading} = useClient()
-  // console.log("client", client, clientLoading)
+  const { user, loading } = useAuth()
+  const { client, loading: clientLoading } = useClient()
   const { visits, loading: visitsLoading } = useGetVisits({ clientId: client?.profile?.id })
-  console.log("visits", visits, visitsLoading)
 
-  // if (loading || clientLoading || visitsLoading) {
-  //   return <div>Loading...</div>
-  // }
-
-  
-
+  const isLoading = loading || clientLoading || visitsLoading
 
   return (
-    <ListingVisitsPage visits={visits} />
+    <ListingVisitsPage visits={visits ?? []} loading={isLoading} />
   )
 }

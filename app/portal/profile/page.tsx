@@ -1,9 +1,8 @@
 "use client"
-import ProfileCompletionCard from "@/components/profile/ProfileCompletionCard"
+
 import ProfileHeader from "@/components/profile/ProfileHeader"
+import ProfileCompletionCard from "@/components/profile/ProfileCompletionCard"
 import ProfileTabs from "@/components/profile/ProfilTabs"
-import { PageLoader } from "@/components/ui/PageLoader"
-import { ProfileSkeleton } from "@/components/ui/skeletons/ProfileSkeleton"
 import { useProfile } from "@/hooks/clients/useProfile"
 import { useState } from "react"
 
@@ -11,13 +10,16 @@ export default function ProfilePage() {
   const { data, loading, error } = useProfile()
   const [isEditing, setIsEditing] = useState(false)
 
+  if (error) return <p>{error}</p>
+
   return (
-    <PageLoader loading={loading} error={error} skeleton={<ProfileSkeleton />}>
-      <div className="space-y-6">
-        <ProfileHeader />
-        <ProfileCompletionCard profil={data?.profile} />
-        <ProfileTabs user={data?.profile} userEmail={data?.user.email} />
-      </div>
-    </PageLoader>
+    <div className="space-y-6">
+      {/* Pas de données → pas de loading */}
+      <ProfileHeader />
+
+      {/* Chacun gère son propre skeleton */}
+      <ProfileCompletionCard profil={data?.profile} loading={loading} />
+      <ProfileTabs user={data?.profile} userEmail={data?.user?.email} loading={loading} />
+    </div>
   )
 }

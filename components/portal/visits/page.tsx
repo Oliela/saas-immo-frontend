@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import {
@@ -22,7 +23,6 @@ import {
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import axiosInstance from "@/lib/axios"
-import { refresh } from "next/cache"
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -77,26 +77,21 @@ interface Visit {
 
 interface Props {
     visits: Visit[]
+    loading?: boolean
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 const STORAGE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
 
-// Après
 const isPast = (visit: Visit): boolean => {
     const { visit_date, end_time } = visit.visit_schedule
-
-    // Visite dont la date/heure de fin est dépassée
     const dateDepasee = new Date(`${visit_date}T${end_time}`) < new Date()
-
-    // Visites pending ou confirmed dont le jour est strictement avant aujourd'hui
     const aujourdhui = new Date()
     aujourdhui.setHours(0, 0, 0, 0)
     const dateVisite = new Date(visit_date)
     dateVisite.setHours(0, 0, 0, 0)
     const jourDepasse = dateVisite < aujourdhui
-
     return dateDepasee || (jourDepasse && (visit.status === "pending" || visit.status === "confirmed"))
 }
 
@@ -150,9 +145,6 @@ function StarRating({ rating, interactive = false, onRate }: {
 
 function BienThumbnail({ bien, size = "lg" }: { bien: Bien; size?: "sm" | "lg" }) {
     const imageUrl = bien.images?.length > 0 ? `${STORAGE_URL}${bien.images[0].url}` : null
-    const sizeClass = size === "lg"
-        ? "w-full md:w-48 h-48 md:h-full flex-shrink-0 rounded-t-lg md:rounded-l-lg md:rounded-t-none"
-        : "w-full sm:w-32 h-32 flex-shrink-0 rounded-t-lg sm:rounded-l-lg sm:rounded-t-none"
 
     return (
         <div className="relative w-full md:w-48 h-48 md:h-auto flex-shrink-0 bg-muted rounded-t-lg md:rounded-l-lg md:rounded-t-none flex items-center justify-center">
@@ -171,7 +163,7 @@ function BienThumbnail({ bien, size = "lg" }: { bien: Bien; size?: "sm" | "lg" }
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
-export default function ListingVisitsPage({ visits }: Props) {
+export default function ListingVisitsPage({ visits, loading }: Props) {
 
     const [cancelDialogId, setCancelDialogId]     = useState<number | null>(null)
     const [feedbackDialogId, setFeedbackDialogId] = useState<number | null>(null)
@@ -179,7 +171,6 @@ export default function ListingVisitsPage({ visits }: Props) {
     const [cancelReason, setCancelReason]         = useState("")
     const [isCancelling, setIsCancelling]         = useState(false)
 
-    // Fonction pour annuler une visite
     const handleCancelVisit = async (visitId: number, bien: Bien) => {
         try {
             setIsCancelling(true)
@@ -187,12 +178,11 @@ export default function ListingVisitsPage({ visits }: Props) {
                 reason: cancelReason || null,
             })
             toast.success(`Visite pour ${bien.title} annulée avec succès`)
-            window.location.reload() // Simple mais efficace pour rafraîchir les données après annulation
+            window.location.reload()
             setCancelDialogId(null)
             setCancelReason("")
-            // Note: Dans une vraie application, il faudrait rafraîchir la liste des visites
         } catch (error) {
-            console.error("Erreur lors de l'annulation:", error.response.message || error)
+            console.error("Erreur lors de l'annulation:", error)
             toast.error("Impossible d'annuler la visite. Veuillez réessayer.")
         } finally {
             setIsCancelling(false)
@@ -209,7 +199,7 @@ export default function ListingVisitsPage({ visits }: Props) {
     return (
         <div className="space-y-6">
 
-            {/* ── Header ── */}
+            {/* ── Header — toujours visible ── */}
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
                     <h1 className="text-2xl font-semibold text-foreground">Mes Visites</h1>
@@ -223,338 +213,391 @@ export default function ListingVisitsPage({ visits }: Props) {
                 </Button>
             </div>
 
-            <Tabs defaultValue="upcoming" className="space-y-6">
-                <TabsList>
-                    <TabsTrigger value="upcoming">À venir ({upcoming.length})</TabsTrigger>
-                    <TabsTrigger value="past">Passées ({past.length})</TabsTrigger>
-                </TabsList>
-
-                {/* ── Visites à venir ── */}
-                <TabsContent value="upcoming" className="space-y-4">
-                    {upcoming.length === 0 ? (
-                        <Card className="p-12">
-                            <div className="text-center">
-                                <Calendar className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-                                <h3 className="text-lg font-medium text-foreground mb-2">Aucune visite prévue</h3>
-                                <p className="text-muted-foreground mb-4">
-                                    Planifiez une visite pour découvrir vos propriétés préférées en personne.
-                                </p>
-                                <Button asChild>
-                                    <Link href="/portal/favorites">Consulter les favoris</Link>
-                                </Button>
-                            </div>
-                        </Card>
-                    ) : (
-                        upcoming.map((visit) => {
-                            const { bien, agent, agency, visit_date, start_time, end_time } = visit.visit_schedule
-                            return (
-                                <Card key={visit.id}>
-                                    <CardContent className="p-0">
-                                        <div className="flex flex-col md:flex-row">
-
-                                            <BienThumbnail bien={bien} size="lg" />
-
-                                            <div className="p-6 flex-1">
-                                                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
-                                                    <div>
-                                                        <div className="flex items-center gap-2 mb-1 flex-wrap">
-                                                            <h3 className="font-semibold text-foreground">{bien.title}</h3>
-                                                            {getStatusBadge(visit.status)}
-                                                        </div>
-                                                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                                                            <MapPin className="h-3 w-3 shrink-0" />
-                                                            {bien.address}, {bien.neighborhood}, {bien.city}
-                                                        </div>
-                                                    </div>
-                                                    <div className="text-right shrink-0">
-                                                        <p className="text-sm font-semibold text-foreground capitalize">
-                                                            {formatDate(visit_date)}
-                                                        </p>
-                                                        <p className="text-sm text-muted-foreground flex items-center justify-end gap-1 mt-0.5">
-                                                            <Clock className="h-3 w-3" />
-                                                            {formatTime(start_time)} – {formatTime(end_time)}
-                                                        </p>
-                                                    </div>
+            {/* ── Skeleton inline ── */}
+            {loading ? (
+                <div className="space-y-6">
+                    <div className="flex gap-2">
+                        <Skeleton className="h-9 w-32 rounded-md" />
+                        <Skeleton className="h-9 w-28 rounded-md" />
+                    </div>
+                    {[...Array(3)].map((_, i) => (
+                        <Card key={i}>
+                            <CardContent className="p-0">
+                                <div className="flex flex-col md:flex-row">
+                                    <Skeleton className="w-full md:w-48 h-48 rounded-t-lg md:rounded-l-lg md:rounded-t-none shrink-0" />
+                                    <div className="p-6 flex-1 space-y-4">
+                                        <div className="flex justify-between gap-4">
+                                            <div className="space-y-2">
+                                                <div className="flex items-center gap-2">
+                                                    <Skeleton className="h-5 w-48" />
+                                                    <Skeleton className="h-5 w-20 rounded-full" />
                                                 </div>
-
-                                                {/* Agent */}
-                                                <div className="flex items-center gap-4 mb-4 p-3 bg-secondary/50 rounded-lg">
-                                                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 shrink-0">
-                                                        <User className="h-5 w-5 text-primary" />
-                                                    </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <p className="text-sm font-medium text-foreground">
-                                                            { agent ? `${agent.prenom} ${agent.nom}` : agency.name }
-                                                        </p>
-                                                        <p className="text-xs text-muted-foreground">{agency.name}</p>
-                                                    </div>
-                                                    <Button variant="outline" size="sm" className="bg-transparent shrink-0" asChild>
-                                                        { agent ? (
-                                                            <a href={`tel:${agent?.phone}`}>
-                                                                <Phone className="mr-2 h-4 w-4" />
-                                                                Appeler
-                                                            </a>
-                                                        ) : (
-                                                            <a href={`tel:${agency?.phone}`}>
-                                                                <Phone className="mr-2 h-4 w-4" />
-                                                                Appeler
-                                                            </a>
-                                                        )}
-                                                    </Button>
-                                                </div>
-
-                                                {/* Prix + type */}
-                                                <div className="flex items-center gap-3 mb-4 flex-wrap">
-                                                    <Badge variant="outline" className="capitalize">{bien.propertyType}</Badge>
-                                                    <Badge variant={bien.listingType === "rent" ? "secondary" : "default"}>
-                                                        {bien.listingType === "rent" ? "À louer" : "À vendre"}
-                                                    </Badge>
-                                                    <span className="text-sm font-semibold text-foreground">
-                                                        {formatPrice(bien.price, bien.listingType)}
-                                                    </span>
-                                                </div>
-
-                                                {/* Notes */}
-                                                {visit.notes && (
-                                                    <div className="mb-4 p-3 bg-accent/10 rounded-lg">
-                                                        <p className="text-sm text-foreground">
-                                                            <span className="font-medium">Note :</span> {visit.notes}
-                                                        </p>
-                                                    </div>
-                                                )}
-
-                                                {/* Actions */}
-                                                <div className="flex flex-wrap gap-2">
-                                                    <Button variant="outline" size="sm" className="bg-transparent" asChild>
-                                                        <Link href={`/property/${bien.id}`}>Voir la propriété</Link>
-                                                    </Button>
-                                                    <Button variant="outline" size="sm" className="bg-transparent">
-                                                        <MessageSquare className="mr-2 h-4 w-4" />
-                                                        Contacter l'agent
-                                                    </Button>
-
-                                                    <Dialog
-                                                        open={cancelDialogId === visit.id}
-                                                        onOpenChange={(open) => {
-                                                            setCancelDialogId(open ? visit.id : null)
-                                                            if (!open) setCancelReason("")
-                                                        }}
-                                                    >
-                                                        <DialogTrigger asChild>
-                                                            <Button variant="ghost" size="sm" className="text-destructive">
-                                                                <XCircle className="mr-2 h-4 w-4" />
-                                                                Annuler la visite
-                                                            </Button>
-                                                        </DialogTrigger>
-                                                        <DialogContent>
-                                                            <DialogHeader>
-                                                                <DialogTitle>Annuler la visite</DialogTitle>
-                                                                <DialogDescription>
-                                                                    Êtes-vous sûr d'annuler votre visite pour{" "}
-                                                                    <span className="font-medium">{bien.title}</span>{" "}
-                                                                    le {formatDate(visit_date)} ?
-                                                                </DialogDescription>
-                                                            </DialogHeader>
-                                                            <div className="space-y-4 py-4">
-                                                                <div className="space-y-2">
-                                                                    <Label>Raison de l'annulation (optionnel)</Label>
-                                                                    <Textarea
-                                                                        placeholder="Dites-nous pourquoi vous annulez..."
-                                                                        value={cancelReason}
-                                                                        onChange={(e) => setCancelReason(e.target.value)}
-                                                                    />
-                                                                </div>
-                                                            </div>
-                                                            <DialogFooter>
-                                                                <Button variant="outline" className="bg-transparent" onClick={() => setCancelDialogId(null)} disabled={isCancelling}>
-                                                                    Garder la visite
-                                                                </Button>
-                                                                <Button variant="destructive" onClick={() => handleCancelVisit(visit.id, bien)} disabled={isCancelling}>
-                                                                    {isCancelling ? "Annulation en cours..." : "Confirmer l'annulation"}
-                                                                </Button>
-                                                            </DialogFooter>
-                                                        </DialogContent>
-                                                    </Dialog>
-                                                </div>
+                                                <Skeleton className="h-4 w-64" />
+                                            </div>
+                                            <div className="space-y-2 shrink-0">
+                                                <Skeleton className="h-4 w-36" />
+                                                <Skeleton className="h-4 w-24 ml-auto" />
                                             </div>
                                         </div>
-                                    </CardContent>
-                                </Card>
-                            )
-                        })
-                    )}
-                </TabsContent>
-
-                {/* ── Visites passées ── */}
-                <TabsContent value="past" className="space-y-4">
-                    {past.length === 0 ? (
-                        <Card className="p-12">
-                            <div className="text-center text-muted-foreground">
-                                <Calendar className="mx-auto h-12 w-12 mb-4 opacity-40" />
-                                <p>Aucune visite passée.</p>
-                            </div>
+                                        <div className="flex items-center gap-4 p-3 rounded-lg bg-secondary/50">
+                                            <Skeleton className="h-10 w-10 rounded-full shrink-0" />
+                                            <div className="flex-1 space-y-2">
+                                                <Skeleton className="h-4 w-32" />
+                                                <Skeleton className="h-3 w-24" />
+                                            </div>
+                                            <Skeleton className="h-8 w-24 rounded-md shrink-0" />
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <Skeleton className="h-6 w-20 rounded-full" />
+                                            <Skeleton className="h-6 w-16 rounded-full" />
+                                            <Skeleton className="h-6 w-28" />
+                                        </div>
+                                        <div className="flex gap-2 pt-4 border-t border-border">
+                                            <Skeleton className="h-8 w-36 rounded-md" />
+                                            <Skeleton className="h-8 w-36 rounded-md" />
+                                            <Skeleton className="h-8 w-32 rounded-md" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </CardContent>
                         </Card>
-                    ) : (
-                        past.map((visit) => {
-                            const { bien, agent, visit_date, start_time, end_time, agency } = visit.visit_schedule
-                            return (
-                                <Collapsible key={visit.id}>
-                                    <Card>
+                    ))}
+                </div>
+
+            ) : (
+
+                <Tabs defaultValue="upcoming" className="space-y-6">
+                    <TabsList>
+                        <TabsTrigger value="upcoming">À venir ({upcoming.length})</TabsTrigger>
+                        <TabsTrigger value="past">Passées ({past.length})</TabsTrigger>
+                    </TabsList>
+
+                    {/* ── Visites à venir ── */}
+                    <TabsContent value="upcoming" className="space-y-4">
+                        {upcoming.length === 0 ? (
+                            <Card className="p-12">
+                                <div className="text-center">
+                                    <Calendar className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                                    <h3 className="text-lg font-medium text-foreground mb-2">Aucune visite prévue</h3>
+                                    <p className="text-muted-foreground mb-4">
+                                        Planifiez une visite pour découvrir vos propriétés préférées en personne.
+                                    </p>
+                                    <Button asChild>
+                                        <Link href="/portal/favorites">Consulter les favoris</Link>
+                                    </Button>
+                                </div>
+                            </Card>
+                        ) : (
+                            upcoming.map((visit) => {
+                                const { bien, agent, agency, visit_date, start_time, end_time } = visit.visit_schedule
+                                return (
+                                    <Card key={visit.id}>
                                         <CardContent className="p-0">
-                                            <div className="flex flex-col sm:flex-row">
+                                            <div className="flex flex-col md:flex-row">
 
-                                                <BienThumbnail bien={bien} size="sm" />
+                                                <BienThumbnail bien={bien} size="lg" />
 
-                                                <div className="p-4 flex-1">
-                                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                                                <div className="p-6 flex-1">
+                                                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
                                                         <div>
                                                             <div className="flex items-center gap-2 mb-1 flex-wrap">
-                                                                <h3 className="font-medium text-foreground">{bien.title}</h3>
+                                                                <h3 className="font-semibold text-foreground">{bien.title}</h3>
                                                                 {getStatusBadge(visit.status)}
                                                             </div>
-                                                            <p className="text-sm text-muted-foreground capitalize">
-                                                                {formatDate(visit_date)} · {formatTime(start_time)} – {formatTime(end_time)}
+                                                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                                                                <MapPin className="h-3 w-3 shrink-0" />
+                                                                {bien.address}, {bien.neighborhood}, {bien.city}
+                                                            </div>
+                                                        </div>
+                                                        <div className="text-right shrink-0">
+                                                            <p className="text-sm font-semibold text-foreground capitalize">
+                                                                {formatDate(visit_date)}
                                                             </p>
-                                                            <p className="text-xs text-muted-foreground mt-0.5">
-                                                
-                                                                {agent ? `${agent.prenom} ${agent.nom}` : agency?.name || "Agence"}
+                                                            <p className="text-sm text-muted-foreground flex items-center justify-end gap-1 mt-0.5">
+                                                                <Clock className="h-3 w-3" />
+                                                                {formatTime(start_time)} – {formatTime(end_time)}
                                                             </p>
                                                         </div>
-                                                        <CollapsibleTrigger asChild>
-                                                            <Button variant="ghost" size="sm" className="shrink-0">
-                                                                Détails
-                                                                <ChevronDown className="ml-1 h-4 w-4" />
-                                                            </Button>
-                                                        </CollapsibleTrigger>
+                                                    </div>
+
+                                                    {/* Agent */}
+                                                    <div className="flex items-center gap-4 mb-4 p-3 bg-secondary/50 rounded-lg">
+                                                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 shrink-0">
+                                                            <User className="h-5 w-5 text-primary" />
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="text-sm font-medium text-foreground">
+                                                                {agent ? `${agent.prenom} ${agent.nom}` : agency.name}
+                                                            </p>
+                                                            <p className="text-xs text-muted-foreground">{agency.name}</p>
+                                                        </div>
+                                                        <Button variant="outline" size="sm" className="bg-transparent shrink-0" asChild>
+                                                            {agent ? (
+                                                                <a href={`tel:${agent?.phone}`}>
+                                                                    <Phone className="mr-2 h-4 w-4" />
+                                                                    Appeler
+                                                                </a>
+                                                            ) : (
+                                                                <a href={`tel:${agency?.phone}`}>
+                                                                    <Phone className="mr-2 h-4 w-4" />
+                                                                    Appeler
+                                                                </a>
+                                                            )}
+                                                        </Button>
+                                                    </div>
+
+                                                    {/* Prix + type */}
+                                                    <div className="flex items-center gap-3 mb-4 flex-wrap">
+                                                        <Badge variant="outline" className="capitalize">{bien.propertyType}</Badge>
+                                                        <Badge variant={bien.listingType === "rent" ? "secondary" : "default"}>
+                                                            {bien.listingType === "rent" ? "À louer" : "À vendre"}
+                                                        </Badge>
+                                                        <span className="text-sm font-semibold text-foreground">
+                                                            {formatPrice(bien.price, bien.listingType)}
+                                                        </span>
+                                                    </div>
+
+                                                    {/* Notes */}
+                                                    {visit.notes && (
+                                                        <div className="mb-4 p-3 bg-accent/10 rounded-lg">
+                                                            <p className="text-sm text-foreground">
+                                                                <span className="font-medium">Note :</span> {visit.notes}
+                                                            </p>
+                                                        </div>
+                                                    )}
+
+                                                    {/* Actions */}
+                                                    <div className="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t border-border">
+                                                        <Button variant="outline" size="sm" className="bg-transparent" asChild>
+                                                            <Link href={`/property/${bien.id}`}>Voir la propriété</Link>
+                                                        </Button>
+                                                        <Button variant="outline" size="sm" className="bg-transparent">
+                                                            <MessageSquare className="mr-2 h-4 w-4" />
+                                                            Contacter l'agent
+                                                        </Button>
+
+                                                        <Dialog
+                                                            open={cancelDialogId === visit.id}
+                                                            onOpenChange={(open) => {
+                                                                setCancelDialogId(open ? visit.id : null)
+                                                                if (!open) setCancelReason("")
+                                                            }}
+                                                        >
+                                                            <DialogTrigger asChild>
+                                                                <Button variant="ghost" size="sm" className="text-destructive">
+                                                                    <XCircle className="mr-2 h-4 w-4" />
+                                                                    Annuler la visite
+                                                                </Button>
+                                                            </DialogTrigger>
+                                                            <DialogContent>
+                                                                <DialogHeader>
+                                                                    <DialogTitle>Annuler la visite</DialogTitle>
+                                                                    <DialogDescription>
+                                                                        Êtes-vous sûr d'annuler votre visite pour{" "}
+                                                                        <span className="font-medium">{bien.title}</span>{" "}
+                                                                        le {formatDate(visit_date)} ?
+                                                                    </DialogDescription>
+                                                                </DialogHeader>
+                                                                <div className="space-y-4 py-4">
+                                                                    <div className="space-y-2">
+                                                                        <Label>Raison de l'annulation (optionnel)</Label>
+                                                                        <Textarea
+                                                                            placeholder="Dites-nous pourquoi vous annulez..."
+                                                                            value={cancelReason}
+                                                                            onChange={(e) => setCancelReason(e.target.value)}
+                                                                        />
+                                                                    </div>
+                                                                </div>
+                                                                <DialogFooter>
+                                                                    <Button variant="outline" className="bg-transparent" onClick={() => setCancelDialogId(null)} disabled={isCancelling}>
+                                                                        Garder la visite
+                                                                    </Button>
+                                                                    <Button variant="destructive" onClick={() => handleCancelVisit(visit.id, bien)} disabled={isCancelling}>
+                                                                        {isCancelling ? "Annulation en cours..." : "Confirmer l'annulation"}
+                                                                    </Button>
+                                                                </DialogFooter>
+                                                            </DialogContent>
+                                                        </Dialog>
                                                     </div>
                                                 </div>
                                             </div>
-
-                                            <CollapsibleContent>
-                                                <div className="border-t border-border p-4 space-y-4">
-                                                    <div className="grid grid-cols-2 gap-3 text-sm">
-                                                        <div>
-                                                            <p className="text-muted-foreground text-xs">Adresse</p>
-                                                            <p className="font-medium">{bien.address}, {bien.neighborhood}, {bien.city}</p>
-                                                        </div>
-                                                        <div>
-                                                            <p className="text-muted-foreground text-xs">Prix</p>
-                                                            <p className="font-medium">{formatPrice(bien.price, bien.listingType)}</p>
-                                                        </div>
-                                                        <div>
-                                                            <p className="text-muted-foreground text-xs">Type</p>
-                                                            <p className="font-medium capitalize">{bien.propertyType}</p>
-                                                        </div>
-                                                        <div>
-                                                            <p className="text-muted-foreground text-xs">Surface / Pièces</p>
-                                                            <p className="font-medium">{bien.surface} m² · {bien.rooms} pièces</p>
-                                                        </div>
-                                                    </div>
-
-                                                    {visit.notes && (
-                                                        <div className="p-3 bg-muted/50 rounded-lg text-sm">
-                                                            <span className="font-medium">Notes : </span>
-                                                            <span className="text-muted-foreground">{visit.notes}</span>
-                                                        </div>
-                                                    )}
-
-                                                    {visit.status === "cancelled" && (
-                                                        <p className="text-sm text-muted-foreground italic">
-                                                            Cette visite a été annulée.
-                                                        </p>
-                                                    )}
-
-                                                    {visit.feedback && (
-                                                        <div className="p-3 bg-muted/50 rounded-lg text-sm">
-                                                            <span className="font-medium">Retour : </span>
-                                                            <span className="text-muted-foreground">{visit.feedback}</span>
-                                                        </div>
-                                                    )}
-
-                                                    {!visit.feedback && visit.status !== "cancelled" && (
-                                                        <div className="flex items-center justify-between gap-4">
-                                                            <p className="text-sm text-muted-foreground">
-                                                                Vous n'avez pas encore partagé votre avis.
-                                                            </p>
-                                                            <Dialog
-                                                                open={feedbackDialogId === visit.id}
-                                                                onOpenChange={(open) => {
-                                                                    setFeedbackDialogId(open ? visit.id : null)
-                                                                    if (!open) setSelectedRating(0)
-                                                                }}
-                                                            >
-                                                                <DialogTrigger asChild>
-                                                                    <Button size="sm">
-                                                                        <Star className="mr-2 h-4 w-4" />
-                                                                        Partager votre avis
-                                                                    </Button>
-                                                                </DialogTrigger>
-                                                                <DialogContent className="sm:max-w-lg">
-                                                                    <DialogHeader>
-                                                                        <DialogTitle>Avis sur la visite</DialogTitle>
-                                                                        <DialogDescription>
-                                                                            Partagez vos impressions sur {bien.title}
-                                                                        </DialogDescription>
-                                                                    </DialogHeader>
-                                                                    <div className="space-y-4 py-4">
-                                                                        <div className="space-y-2">
-                                                                            <Label>Évaluation globale</Label>
-                                                                            <StarRating rating={selectedRating} interactive onRate={setSelectedRating} />
-                                                                        </div>
-                                                                        <div className="space-y-2">
-                                                                            <Label>Ce que vous avez aimé</Label>
-                                                                            <Textarea placeholder="Superbes caractéristiques, emplacement..." />
-                                                                        </div>
-                                                                        <div className="space-y-2">
-                                                                            <Label>Ce qui pourrait être mieux</Label>
-                                                                            <Textarea placeholder="Préoccupations ou inconvénients..." />
-                                                                        </div>
-                                                                        <div className="space-y-2">
-                                                                            <Label>Êtes-vous intéressé par cette propriété ?</Label>
-                                                                            <RadioGroup defaultValue="no">
-                                                                                <div className="flex items-center space-x-2">
-                                                                                    <RadioGroupItem value="yes" id={`yes-${visit.id}`} />
-                                                                                    <Label htmlFor={`yes-${visit.id}`} className="font-normal">Oui, je suis intéressé</Label>
-                                                                                </div>
-                                                                                <div className="flex items-center space-x-2">
-                                                                                    <RadioGroupItem value="maybe" id={`maybe-${visit.id}`} />
-                                                                                    <Label htmlFor={`maybe-${visit.id}`} className="font-normal">Peut-être, j'ai besoin de plus d'info</Label>
-                                                                                </div>
-                                                                                <div className="flex items-center space-x-2">
-                                                                                    <RadioGroupItem value="no" id={`no-${visit.id}`} />
-                                                                                    <Label htmlFor={`no-${visit.id}`} className="font-normal">Non, ce n'est pas pour moi</Label>
-                                                                                </div>
-                                                                            </RadioGroup>
-                                                                        </div>
-                                                                        <div className="space-y-2">
-                                                                            <Label>Commentaires supplémentaires</Label>
-                                                                            <Textarea placeholder="Autres réflexions..." />
-                                                                        </div>
-                                                                    </div>
-                                                                    <DialogFooter>
-                                                                        <Button variant="outline" className="bg-transparent" onClick={() => setFeedbackDialogId(null)}>
-                                                                            Annuler
-                                                                        </Button>
-                                                                        <Button onClick={() => setFeedbackDialogId(null)}>
-                                                                            Envoyer mon avis
-                                                                        </Button>
-                                                                    </DialogFooter>
-                                                                </DialogContent>
-                                                            </Dialog>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </CollapsibleContent>
                                         </CardContent>
                                     </Card>
-                                </Collapsible>
-                            )
-                        })
-                    )}
-                </TabsContent>
-            </Tabs>
+                                )
+                            })
+                        )}
+                    </TabsContent>
 
-            {/* ── Conseils ── */}
+                    {/* ── Visites passées ── */}
+                    <TabsContent value="past" className="space-y-4">
+                        {past.length === 0 ? (
+                            <Card className="p-12">
+                                <div className="text-center text-muted-foreground">
+                                    <Calendar className="mx-auto h-12 w-12 mb-4 opacity-40" />
+                                    <p>Aucune visite passée.</p>
+                                </div>
+                            </Card>
+                        ) : (
+                            past.map((visit) => {
+                                const { bien, agent, visit_date, start_time, end_time, agency } = visit.visit_schedule
+                                return (
+                                    <Collapsible key={visit.id}>
+                                        <Card>
+                                            <CardContent className="p-0">
+                                                <div className="flex flex-col sm:flex-row">
+
+                                                    <BienThumbnail bien={bien} size="sm" />
+
+                                                    <div className="p-4 flex-1">
+                                                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                                                            <div>
+                                                                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                                                    <h3 className="font-medium text-foreground">{bien.title}</h3>
+                                                                    {getStatusBadge(visit.status)}
+                                                                </div>
+                                                                <p className="text-sm text-muted-foreground capitalize">
+                                                                    {formatDate(visit_date)} · {formatTime(start_time)} – {formatTime(end_time)}
+                                                                </p>
+                                                                <p className="text-xs text-muted-foreground mt-0.5">
+                                                                    {agent ? `${agent.prenom} ${agent.nom}` : agency?.name || "Agence"}
+                                                                </p>
+                                                            </div>
+                                                            <CollapsibleTrigger asChild>
+                                                                <Button variant="ghost" size="sm" className="shrink-0">
+                                                                    Détails
+                                                                    <ChevronDown className="ml-1 h-4 w-4" />
+                                                                </Button>
+                                                            </CollapsibleTrigger>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <CollapsibleContent>
+                                                    <div className="border-t border-border p-4 space-y-4">
+                                                        <div className="grid grid-cols-2 gap-3 text-sm">
+                                                            <div>
+                                                                <p className="text-muted-foreground text-xs">Adresse</p>
+                                                                <p className="font-medium">{bien.address}, {bien.neighborhood}, {bien.city}</p>
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-muted-foreground text-xs">Prix</p>
+                                                                <p className="font-medium">{formatPrice(bien.price, bien.listingType)}</p>
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-muted-foreground text-xs">Type</p>
+                                                                <p className="font-medium capitalize">{bien.propertyType}</p>
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-muted-foreground text-xs">Surface / Pièces</p>
+                                                                <p className="font-medium">{bien.surface} m² · {bien.rooms} pièces</p>
+                                                            </div>
+                                                        </div>
+
+                                                        {visit.notes && (
+                                                            <div className="p-3 bg-muted/50 rounded-lg text-sm">
+                                                                <span className="font-medium">Notes : </span>
+                                                                <span className="text-muted-foreground">{visit.notes}</span>
+                                                            </div>
+                                                        )}
+
+                                                        {visit.status === "cancelled" && (
+                                                            <p className="text-sm text-muted-foreground italic">
+                                                                Cette visite a été annulée.
+                                                            </p>
+                                                        )}
+
+                                                        {visit.feedback && (
+                                                            <div className="p-3 bg-muted/50 rounded-lg text-sm">
+                                                                <span className="font-medium">Retour : </span>
+                                                                <span className="text-muted-foreground">{visit.feedback}</span>
+                                                            </div>
+                                                        )}
+
+                                                        {!visit.feedback && visit.status !== "cancelled" && (
+                                                            <div className="flex items-center justify-between gap-4">
+                                                                <p className="text-sm text-muted-foreground">
+                                                                    Vous n'avez pas encore partagé votre avis.
+                                                                </p>
+                                                                <Dialog
+                                                                    open={feedbackDialogId === visit.id}
+                                                                    onOpenChange={(open) => {
+                                                                        setFeedbackDialogId(open ? visit.id : null)
+                                                                        if (!open) setSelectedRating(0)
+                                                                    }}
+                                                                >
+                                                                    <DialogTrigger asChild>
+                                                                        <Button size="sm">
+                                                                            <Star className="mr-2 h-4 w-4" />
+                                                                            Partager votre avis
+                                                                        </Button>
+                                                                    </DialogTrigger>
+                                                                    <DialogContent className="sm:max-w-lg">
+                                                                        <DialogHeader>
+                                                                            <DialogTitle>Avis sur la visite</DialogTitle>
+                                                                            <DialogDescription>
+                                                                                Partagez vos impressions sur {bien.title}
+                                                                            </DialogDescription>
+                                                                        </DialogHeader>
+                                                                        <div className="space-y-4 py-4">
+                                                                            <div className="space-y-2">
+                                                                                <Label>Évaluation globale</Label>
+                                                                                <StarRating rating={selectedRating} interactive onRate={setSelectedRating} />
+                                                                            </div>
+                                                                            <div className="space-y-2">
+                                                                                <Label>Ce que vous avez aimé</Label>
+                                                                                <Textarea placeholder="Superbes caractéristiques, emplacement..." />
+                                                                            </div>
+                                                                            <div className="space-y-2">
+                                                                                <Label>Ce qui pourrait être mieux</Label>
+                                                                                <Textarea placeholder="Préoccupations ou inconvénients..." />
+                                                                            </div>
+                                                                            <div className="space-y-2">
+                                                                                <Label>Êtes-vous intéressé par cette propriété ?</Label>
+                                                                                <RadioGroup defaultValue="no">
+                                                                                    <div className="flex items-center space-x-2">
+                                                                                        <RadioGroupItem value="yes" id={`yes-${visit.id}`} />
+                                                                                        <Label htmlFor={`yes-${visit.id}`} className="font-normal">Oui, je suis intéressé</Label>
+                                                                                    </div>
+                                                                                    <div className="flex items-center space-x-2">
+                                                                                        <RadioGroupItem value="maybe" id={`maybe-${visit.id}`} />
+                                                                                        <Label htmlFor={`maybe-${visit.id}`} className="font-normal">Peut-être, j'ai besoin de plus d'info</Label>
+                                                                                    </div>
+                                                                                    <div className="flex items-center space-x-2">
+                                                                                        <RadioGroupItem value="no" id={`no-${visit.id}`} />
+                                                                                        <Label htmlFor={`no-${visit.id}`} className="font-normal">Non, ce n'est pas pour moi</Label>
+                                                                                    </div>
+                                                                                </RadioGroup>
+                                                                            </div>
+                                                                            <div className="space-y-2">
+                                                                                <Label>Commentaires supplémentaires</Label>
+                                                                                <Textarea placeholder="Autres réflexions..." />
+                                                                            </div>
+                                                                        </div>
+                                                                        <DialogFooter>
+                                                                            <Button variant="outline" className="bg-transparent" onClick={() => setFeedbackDialogId(null)}>
+                                                                                Annuler
+                                                                            </Button>
+                                                                            <Button onClick={() => setFeedbackDialogId(null)}>
+                                                                                Envoyer mon avis
+                                                                            </Button>
+                                                                        </DialogFooter>
+                                                                    </DialogContent>
+                                                                </Dialog>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </CollapsibleContent>
+                                            </CardContent>
+                                        </Card>
+                                    </Collapsible>
+                                )
+                            })
+                        )}
+                    </TabsContent>
+                </Tabs>
+            )}
+
+            {/* ── Conseils — toujours visible ── */}
             <Card className="bg-secondary/30">
                 <CardContent className="p-6">
                     <h3 className="font-medium text-foreground mb-3">Conseils pour les visites de propriétés</h3>

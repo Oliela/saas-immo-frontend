@@ -33,8 +33,8 @@ export interface Notification {
 
 interface Props {
   notifications: Notification[]
+   loading?: boolean 
 }
-
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 function getNotificationIcon(type: string) {
@@ -62,7 +62,7 @@ function getIconBgColor(type: string, priority?: string) {
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
-export function NotificationsList({ notifications }: Props) {
+export function NotificationsList({ notifications, loading }: Props) {
   const [filterType, setFilterType] = useState("all")
   const [items, setItems]           = useState<Notification[]>(notifications)
 
