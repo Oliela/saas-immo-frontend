@@ -6,11 +6,7 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  experimental: {
-  turbo: {
-    enabled: false
-  }
-}
+  
 }
 
 
