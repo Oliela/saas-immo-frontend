@@ -40,15 +40,15 @@ axiosInstance.interceptors.response.use(
       window.location.href = '/login'
     }
 
-    // if (error.response?.status === 401) {
-    //   console.log("401 détecté :", error.response);
+    if (error.response?.status === 401) {
+      console.log("401 détecté :", error.response);
 
-    //   // option : vérifier message backend
-    //   if (error.response.data?.error === "Unauthenticated") {
-    //     clearAuthCookies();
-    //     window.location.href = "/login";
-    //   }
-    // }
+      // option : vérifier message backend
+      if (error.response.data?.error === "Unauthenticated") {
+        clearAuthCookies();
+        window.location.href = "/login";
+      }
+    }
     return Promise.reject(error)
   }
 )

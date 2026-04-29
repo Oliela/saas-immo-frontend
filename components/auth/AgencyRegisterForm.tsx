@@ -28,6 +28,7 @@ import { Label } from "@/components/ui/label"
 import { Separator } from "@radix-ui/react-separator"
 import Link from "next/link"
 import { toast } from "sonner"
+import axiosInstance from "@/lib/axios"
 
 type Specialty = {
   id: number
@@ -183,9 +184,11 @@ export default function AgencyRegisterForm({ onBack }: AgencyRegisterFormProps):
 
     setSubmitting(true)
     try {
+      await axiosInstance.get("/sanctum/csrf-cookie")
+
       const payload = { ...formData, role: "agency" }
 
-      const res = await axios.post("/api/register/agency", payload)
+      const res = await axiosInstance.post("/api/register/agency", payload)
 
       // setSuccess("Compte agence créé avec succès.")
       toast.success("Compte agence créé avec succès.")
