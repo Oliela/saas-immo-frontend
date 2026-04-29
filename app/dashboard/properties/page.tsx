@@ -19,9 +19,8 @@ export default function PropertiesPage() {
   const [propertiesData, setPropertiesData] = useState<PropertyResponse | null>(null)
   const [loading, setLoading] = useState(false)
 
-
   useEffect(() => {
-    if (!user?.agency?.id) return  // ← attendre que user soit chargé
+    if (!user?.agency?.id) return
 
     const fetchProperties = async () => {
       setLoading(true)
@@ -36,16 +35,14 @@ export default function PropertiesPage() {
     }
 
     fetchProperties()
-  }, [user?.agency?.id])  // ← dépendance cohérente avec l'URL
-
- if (authLoading || loading) return <div>Chargement…</div>
+  }, [user?.agency?.id])
 
   return (
     <div className="space-y-6">
       <PropertiesListing
         properties={propertiesData?.biens ?? []}
         stats={propertiesData?.stats}
-        
+        loading={authLoading || loading}
       />
     </div>
   )

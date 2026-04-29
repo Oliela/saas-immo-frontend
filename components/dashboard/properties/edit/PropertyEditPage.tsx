@@ -147,7 +147,7 @@ export default function PropertyEditPage({ propertyTypes, existingProperty }: Pr
     const { commodite, loading: commoditeLoading } = useGetCommodite()
 
 
-    const owners: Owner[] = (owner as Owner[])
+    const owners: Owner[] = (owner as Owner[]) ?? []
 
     const [currentStep, setCurrentStep] = useState(1)
     const [formData, setFormData] = useState({
@@ -308,7 +308,7 @@ export default function PropertyEditPage({ propertyTypes, existingProperty }: Pr
     // ─── Owner search ─────────────────────────────────────────────────────────
 
     // ✅ FIX 2 — on protège aussi lastName contre undefined
-    const filteredOwners = owners.filter((o) => {
+    const filteredOwners = (owners ?? []).filter((o) => {
         const search = ownerSearch.toLowerCase()
         return (
             (o.firstName ?? "").toLowerCase().includes(search) ||
