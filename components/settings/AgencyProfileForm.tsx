@@ -118,6 +118,8 @@ export default function AgencyProfileForm({ agency }: Props) {
       formData.append("specialties", JSON.stringify(selectedSpecialties))
       if (logoFile) formData.append("logo", logoFile)
 
+      await axiosInstance.get("/sanctum/csrf-cookie")
+
       const res = await axiosInstance.put(`/api/agency/update/profile/${agency.id}`, formData)
 
       toast.success("Profil de l'agence mis à jour")
