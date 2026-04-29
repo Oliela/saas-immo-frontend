@@ -310,7 +310,7 @@ export default function PropertiesNew({
 
   // ─── Owner filter ─────────────────────────────────────────────────────────────
 
-  const filteredOwners = owners.filter(
+  const filteredOwners =  (owners ?? []).filter(
     (o) =>
       `${o.firstName} ${o.lastName}`.toLowerCase().includes(ownerSearch.toLowerCase()) ||
       o.email.toLowerCase().includes(ownerSearch.toLowerCase())
