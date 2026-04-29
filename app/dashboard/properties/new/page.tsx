@@ -46,7 +46,7 @@ const propertyTypes = [
 
 export default function NewPropertyPage() {
   const { user, loading } = useAuthAgent()
-   const { owner, loading: ownersLoading } = useOwners({ agencyId: parseInt(user?.agency.id, 10) })
+  const { owner, loading: ownersLoading } = useOwners({ agencyId: parseInt(user?.agency.id, 10) })
   const { commodite, loading: commoditeLoading } = useGetCommodite()
 
 
@@ -54,7 +54,7 @@ export default function NewPropertyPage() {
   // console.log("Owners from useOwners:", owner, "Loading:", ownersLoading)
   console.log("Commodite from useGetCommodite:", commodite, "Loading:", commoditeLoading)
 
-  if (loading) {
+  if (loading || ownersLoading || commoditeLoading) {
     return <div>Loading...</div>
   }
 
