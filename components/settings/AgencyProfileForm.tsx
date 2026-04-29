@@ -94,7 +94,7 @@ export default function AgencyProfileForm({ agency }: Props) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSaving(false)
-    const token = localStorage.getItem("token")
+   
 
     console.log("Submitting form with data:", {
       agencyName,
@@ -118,12 +118,7 @@ export default function AgencyProfileForm({ agency }: Props) {
       formData.append("specialties", JSON.stringify(selectedSpecialties))
       if (logoFile) formData.append("logo", logoFile)
 
-      const res = await axiosInstance.put(`/api/agency/update/profile/${agency.id}`, formData, {
-        headers: {
-          Authorization: token ? `Bearer ${token}` : "",
-          "Content-Type": "multipart/form-data"
-        }
-      })
+      const res = await axiosInstance.put(`/api/agency/update/profile/${agency.id}`, formData)
 
       toast.success("Profil de l'agence mis à jour")
       window.location.reload() // Reload to fetch updated data, ideally should update state instead
