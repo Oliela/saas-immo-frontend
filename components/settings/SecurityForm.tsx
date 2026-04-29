@@ -34,7 +34,7 @@ export default function SecurityForm() {
             </Card>
 
             {/* 2FA */}
-            <Card>
+            {/* <Card>
                 <CardHeader>
                     <CardTitle>Authentification à deux facteurs</CardTitle>
                     <CardDescription>Ajoutez une couche de sécurité supplémentaire à votre compte</CardDescription>
@@ -48,7 +48,7 @@ export default function SecurityForm() {
                         <Button variant="outline" className="bg-transparent">Configurer 2FA</Button>
                     </div>
                 </CardContent>
-            </Card>
+            </Card> */}
         </div>
     )
 }

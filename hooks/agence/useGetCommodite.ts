@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import axiosInstance from "@/lib/axios";
 
 export function useGetCommodite() {
-  const [commodite, setCommodite] = useState<any>(null);
+  const [commodite, setCommodite] = useState<any>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -12,7 +12,7 @@ export function useGetCommodite() {
         const res = await axiosInstance.get("/api/features"); // plus de token
         setCommodite(res.data);
       } catch (error) {
-        setCommodite(null);
+        setCommodite([]);
       } finally {
         setLoading(false);
       }

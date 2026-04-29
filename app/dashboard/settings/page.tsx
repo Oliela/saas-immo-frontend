@@ -45,11 +45,11 @@ export default function SettingsPage() {
                         <span className="hidden sm:inline">Profil de l'agence</span>
                         <span className="sm:hidden">Profil</span>
                     </TabsTrigger>
-                    <TabsTrigger value="notifications" className="gap-2">
+                    {/* <TabsTrigger value="notifications" className="gap-2">
                         <Bell className="h-4 w-4" />
                         <span className="hidden sm:inline">Notifications</span>
                         <span className="sm:hidden">Notif</span>
-                    </TabsTrigger>
+                    </TabsTrigger> */}
                     <TabsTrigger value="security" className="gap-2">
                         <Lock className="h-4 w-4" />
                         <span className="hidden sm:inline">Sécurité</span>
@@ -60,11 +60,11 @@ export default function SettingsPage() {
                         <span className="hidden sm:inline">Équipe</span>
                         <span className="sm:hidden">Équipe</span>
                     </TabsTrigger>
-                    <TabsTrigger value="billing" className="gap-2">
+                    {/* <TabsTrigger value="billing" className="gap-2">
                         <CreditCard className="h-4 w-4" />
                         <span className="hidden sm:inline">Facturation</span>
                         <span className="sm:hidden">Facturation</span>
-                    </TabsTrigger>
+                    </TabsTrigger> */}
                 </TabsList>
 
                 {/* Agency Profile */}
@@ -73,9 +73,9 @@ export default function SettingsPage() {
                 </TabsContent>
 
                 {/* Notifications */}
-                <TabsContent value="notifications" className="space-y-6">
+                {/* <TabsContent value="notifications" className="space-y-6">
                     <NotificationsForm />
-                </TabsContent>
+                </TabsContent> */}
 
                 {/* Security */}
                 <TabsContent value="security" className="space-y-6">
@@ -88,9 +88,9 @@ export default function SettingsPage() {
                 </TabsContent>
 
                 {/* Billing */}
-                <TabsContent value="billing" className="space-y-6">
+                {/* <TabsContent value="billing" className="space-y-6">
                     <BillingSettings />
-                </TabsContent>
+                </TabsContent> */}
             </Tabs>
         </div>
     )
