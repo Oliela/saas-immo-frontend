@@ -28,26 +28,24 @@ axiosInstance.interceptors.request.use((config) => {
   return config;
 });
 
-// ✅ Ajoutez ceci
 let isRedirecting = false;
 
-async function clearSessionAndRedirect() {
+function clearSessionAndRedirect() {
   if (isRedirecting) return;
   isRedirecting = true;
-
-  console.log("🔴 401 détecté - tentative effacement cookie");
-
-  try {
-    const res = await fetch("/api/clear-session", { method: "POST" });
-    console.log("✅ clear-session response:", res.status);
-
-    // Vérifiez que le cookie est bien effacé
-    console.log("🍪 cookies après clear:", document.cookie);
-  } finally {
-    console.log("➡️ redirect vers /login");
-    window.location.href = "/login";
-  }
+  // Le middleware va intercepter ce paramètre et effacer le cookie serveur
+  window.location.href = "/login?expired=1";
 }
+
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401 && typeof window !== "undefined") {
+      clearSessionAndRedirect();
+    }
+    return Promise.reject(error);
+  },
+);
 
 // 🗑️ Remplacez tout le bloc interceptors.response par celui-ci
 axiosInstance.interceptors.response.use(

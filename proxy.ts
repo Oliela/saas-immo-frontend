@@ -1,4 +1,3 @@
-// app/proxy.ts
 import { NextRequest, NextResponse } from 'next/server'
 
 const PROTECTED_ROUTES: Record<string, string[]> = {
@@ -19,20 +18,30 @@ export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl
   const accountType = req.cookies.get('account_type')?.value
 
-  // Si connecté et va sur /login → redirige vers son espace
   if (pathname === '/login') {
+    // ✅ Session expirée : on efface le cookie ici côté serveur
+    const expired = req.nextUrl.searchParams.get('expired')
+    if (expired === '1') {
+      const response = NextResponse.next()
+      response.cookies.set('account_type', '', {
+        expires: new Date(0),
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+      })
+      return response
+    }
+
     if (accountType && HOME_ROUTES[accountType]) {
       return NextResponse.redirect(new URL(HOME_ROUTES[accountType], req.url))
     }
     return NextResponse.next()
   }
 
-  // Pas connecté → login
   if (!accountType) {
     return NextResponse.redirect(new URL('/login', req.url))
   }
 
-  // Vérifie l'accès à la route
   const allowedPrefixes = PROTECTED_ROUTES[accountType] ?? []
   const hasAccess = allowedPrefixes.some(prefix => pathname.startsWith(prefix))
 
@@ -46,12 +55,8 @@ export function proxy(req: NextRequest) {
 export const config = {
   matcher: [
     '/login',
-    '/portal',
     '/portal/:path*',
-    '/dashboard',
     '/dashboard/:path*',
-    '/super-admin',
     '/super-admin/:path*',
-    '/api/clear-session'
   ],
 }
