@@ -481,14 +481,14 @@ export default function PropertyEditPage({ propertyTypes, existingProperty }: Pr
                                         Prix <span className="text-destructive">*</span>
                                     </Label>
                                     <div className="relative">
-                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">€</span>
+                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">xof</span>
                                         <Input
                                             id="price"
                                             type="number"
                                             placeholder="0"
                                             value={formData.price}
                                             onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
-                                            className={cn("pl-7", errors.price ? "border-destructive" : "")}
+                                            className={cn("pl-9", errors.price ? "border-destructive" : "")}
                                         />
                                         {formData.listingType === "rent" && (
                                             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">/mois</span>

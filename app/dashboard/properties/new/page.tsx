@@ -129,7 +129,7 @@ function NewPropertySkeleton() {
 
 export default function NewPropertyPage() {
   const { user, loading } = useAuthAgent()
-  const { owner, loading: ownersLoading } = useOwners({
+  const { owners: owner, loading: ownersLoading } = useOwners({
     agencyId: parseInt(user?.agency?.id, 10),
   })
   const { commodite, loading: commoditeLoading } = useGetCommodite()
