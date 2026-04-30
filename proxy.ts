@@ -1,3 +1,4 @@
+// app/proxy.ts
 import { NextRequest, NextResponse } from 'next/server'
 
 const PROTECTED_ROUTES: Record<string, string[]> = {
@@ -51,5 +52,6 @@ export const config = {
     '/dashboard/:path*',
     '/super-admin',
     '/super-admin/:path*',
+    '/api/clear-session'
   ],
 }

@@ -6,9 +6,7 @@ function getCookie(name: string): string | null {
   return match ? decodeURIComponent(match[2]) : null
 }
 
-function clearAuthCookies() {
-  document.cookie = "account_type=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"
-}
+// 🗑️ Supprimez clearAuthCookies() entièrement
 
 const axiosInstance = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000",
@@ -30,24 +28,26 @@ axiosInstance.interceptors.request.use((config) => {
   return config
 })
 
+// ✅ Ajoutez ceci
+let isRedirecting = false
+
+async function clearSessionAndRedirect() {
+  if (isRedirecting) return
+  isRedirecting = true
+
+  try {
+    await fetch('/api/clear-session', { method: 'POST' })
+  } finally {
+    window.location.href = '/login'
+  }
+}
+
+// 🗑️ Remplacez tout le bloc interceptors.response par celui-ci
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
-    const isUserEndpoint = error.config?.url?.includes('/api/user')
-
-    if (error.response?.status === 401 && typeof window !== 'undefined' && !isUserEndpoint) {
-      clearAuthCookies()
-      window.location.href = '/login'
-    }
-
-    if (error.response?.status === 401) {
-      console.log("401 détecté :", error.response);
-
-      // option : vérifier message backend
-      if (error.response.data?.error === "Unauthenticated") {
-        clearAuthCookies();
-        window.location.href = "/login";
-      }
+    if (error.response?.status === 401 && typeof window !== 'undefined') {
+      clearSessionAndRedirect()
     }
     return Promise.reject(error)
   }
