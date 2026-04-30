@@ -194,7 +194,8 @@ export default function CreateInvoicePage() {
   const agencyId = user?.agency?.id ? parseInt(user.agency.id, 10) : undefined
 
   const { client,    loading: loadingClient    } = useGetClient()
-  const { owner,     loading: loadingOwners    } = useOwners({ agencyId })
+  const { owners,     loading: loadingOwners    } = useOwners({ agencyId })
+  
   const { contracts, loading: loadingContracts } = useGetContractSigned({ agencyId })
   const { biens,     loading: loadingBiens     } = useGetBiens({ agencyId })
 
@@ -202,12 +203,13 @@ export default function CreateInvoicePage() {
     || loadingClient || loadingOwners || loadingContracts || loadingBiens
 
   if (isLoading) return <CreateInvoiceSkeleton />
+  console.log("owner from useOwners:", owners)
 
   return (
     <CreateInvoice
       agencyId={agencyId}
       clients={client?.map((item: any) => item.client) || []}
-      owners={owner      || []}
+      owners={owners      || []}
       contracts={contracts || []}
       biens={biens       || []}
     />
