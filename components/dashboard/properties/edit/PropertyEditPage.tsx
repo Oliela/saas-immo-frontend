@@ -115,7 +115,7 @@ const steps = [
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function PropertyEditPage({ propertyTypes, existingProperty }: Props) {
-    const STORAGE_URL = process.env.NEXT_PUBLIC_STORAGE_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
+    const STORAGE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
 
     const getImagePath = (imageValue: unknown): string => {
         if (typeof imageValue === "string") return imageValue
@@ -143,7 +143,7 @@ export default function PropertyEditPage({ propertyTypes, existingProperty }: Pr
         return `${STORAGE_URL}${normalizedUrl}`
     }
     // useProperties peut être asynchrone — on utilise mockOwners comme fallback
-    const { owner, loading: ownersLoading } = useOwners({ agencyId: parseInt(existingProperty.agency_id, 10) })
+    const { owners: owner, loading: ownersLoading } = useOwners({ agencyId: parseInt(existingProperty.agency_id, 10) })
     const { commodite, loading: commoditeLoading } = useGetCommodite()
 
 
