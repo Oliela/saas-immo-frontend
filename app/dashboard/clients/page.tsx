@@ -19,6 +19,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import axiosInstance from "@/lib/axios"
 import { toast } from "sonner"
+import { Skeleton } from "@/components/ui/skeleton"
 
 // ─── TYPES ───────────────────────────────────────────────────────────────────
 
@@ -478,7 +479,7 @@ const QualifiesTab = ({ qualifies, search }: { qualifies: any[]; search: string 
                   <td className="py-4 px-4">
                     <div className="flex items-center gap-1.5">
                       <CheckCircle className="h-3.5 w-3.5 text-green-500 flex-shrink-0" />
-                      <span className="text-xs font-medium text-foreground">{q.interet_confirme==="-" ? "Non" : "Oui"}</span>
+                      <span className="text-xs font-medium text-foreground">{q.interet_confirme === "-" ? "Non" : "Oui"}</span>
                     </div>
                     <p className="text-xs text-muted-foreground mt-0.5 ml-5">{q.type_client}</p>
                   </td>
@@ -827,9 +828,99 @@ export default function ClientsPage() {
   // ─── États de chargement ──────────────────────────────────
 
   if (loading) return (
-    <div className="flex items-center justify-center h-64 gap-2 text-muted-foreground">
-      <Loader2 className="h-5 w-5 animate-spin" />
-      <span className="text-sm">Chargement...</span>
+    <div className="space-y-6">
+
+      {/* Header */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="space-y-2">
+          <Skeleton className="h-7 w-52" />
+          <Skeleton className="h-4 w-64" />
+        </div>
+        <div className="flex gap-2">
+          <Skeleton className="h-9 w-28 rounded-md" />
+          <Skeleton className="h-9 w-36 rounded-md" />
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
+        {[...Array(5)].map((_, i) => (
+          <Card key={i}>
+            <CardContent className="p-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <Skeleton className="h-3 w-20" />
+                <Skeleton className="h-4 w-4 rounded" />
+              </div>
+              <Skeleton className="h-7 w-10" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Tabs bar + search */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex gap-2">
+          {[...Array(5)].map((_, i) => (
+            <Skeleton key={i} className="h-9 w-24 rounded-md" />
+          ))}
+        </div>
+        <Skeleton className="h-9 w-full sm:w-[220px] rounded-md" />
+      </div>
+
+      {/* Table */}
+      <Card>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-border bg-muted/30">
+                  {[...Array(5)].map((_, i) => (
+                    <th key={i} className="py-3 px-4">
+                      <Skeleton className="h-3 w-20" />
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {[...Array(6)].map((_, i) => (
+                  <tr key={i} className="border-b border-border last:border-0">
+                    {/* Client */}
+                    <td className="py-4 px-4">
+                      <div className="flex items-center gap-3">
+                        <Skeleton className="h-9 w-9 rounded-full shrink-0" />
+                        <div className="space-y-1.5">
+                          <Skeleton className="h-4 w-32" />
+                          <Skeleton className="h-3 w-20" />
+                        </div>
+                      </div>
+                    </td>
+                    {/* Contact */}
+                    <td className="py-4 px-4 hidden md:table-cell">
+                      <div className="space-y-1.5">
+                        <Skeleton className="h-3 w-40" />
+                        <Skeleton className="h-3 w-28" />
+                      </div>
+                    </td>
+                    {/* Statut */}
+                    <td className="py-4 px-4">
+                      <Skeleton className="h-5 w-20 rounded-full" />
+                    </td>
+                    {/* Aperçu */}
+                    <td className="py-4 px-4 hidden lg:table-cell">
+                      <Skeleton className="h-3 w-48" />
+                    </td>
+                    {/* Actions */}
+                    <td className="py-4 px-4 text-right">
+                      <Skeleton className="h-8 w-8 rounded-md ml-auto" />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+
     </div>
   )
 
@@ -847,9 +938,9 @@ export default function ClientsPage() {
           <p className="text-muted-foreground text-sm">Gérez et suivez votre portefeuille client</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" className="bg-transparent">
+          {/* <Button variant="outline" className="bg-transparent">
             <Download className="mr-2 h-4 w-4" /> Exporter
-          </Button>
+          </Button> */}
           <Button>
             <UserPlus className="mr-2 h-4 w-4" /> Ajouter un client
           </Button>

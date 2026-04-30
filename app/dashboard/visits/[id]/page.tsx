@@ -14,6 +14,7 @@ import { useParams } from "next/navigation"
 import { useEffect, useState } from "react"
 import axiosInstance from "@/lib/axios"
 import { toast } from "sonner"
+import { Skeleton } from "@/components/ui/skeleton"
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -167,8 +168,169 @@ export default function VisitViewPage() {
   // ── Loading / Error states ────────────────────────────────────────────────
 
   if (loading) return (
-    <div className="flex items-center justify-center h-64">
-      <p className="text-muted-foreground">Chargement...</p>
+    <div className="space-y-6">
+
+      {/* Header */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-4">
+          <Skeleton className="h-9 w-9 rounded-md" />
+          <div className="space-y-2">
+            <div className="flex items-center gap-3">
+              <Skeleton className="h-7 w-48" />
+              <Skeleton className="h-5 w-20 rounded-full" />
+            </div>
+            <Skeleton className="h-4 w-56" />
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <Skeleton className="h-8 w-36 rounded-md" />
+          <Skeleton className="h-8 w-36 rounded-md" />
+        </div>
+      </div>
+
+      {/* Date Banner */}
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex items-center gap-4">
+            <Skeleton className="h-16 w-16 rounded-xl shrink-0" />
+            <div className="space-y-2">
+              <Skeleton className="h-5 w-64" />
+              <div className="flex gap-4">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-4 w-20" />
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-2 space-y-6">
+
+          {/* Propriété */}
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-5 w-28" />
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {[...Array(5)].map((_, i) => (
+                <div key={i}>
+                  <div className="flex justify-between py-1">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-4 w-40" />
+                  </div>
+                  {i < 4 && <Separator />}
+                </div>
+              ))}
+              <Skeleton className="h-8 w-44 rounded-md mt-2" />
+            </CardContent>
+          </Card>
+
+          {/* Notes */}
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-5 w-44" />
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-5/6" />
+              <Skeleton className="h-4 w-3/4" />
+            </CardContent>
+          </Card>
+
+          {/* Historique */}
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-5 w-44" />
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-0">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="flex gap-4 pb-6 last:pb-0">
+                    <div className="flex flex-col items-center">
+                      <Skeleton className="h-3 w-3 rounded-full shrink-0 mt-0.5" />
+                      {i < 4 && <div className="w-px flex-1 mt-1 bg-border" />}
+                    </div>
+                    <div className="flex-1 space-y-1.5 pb-2">
+                      <Skeleton className="h-4 w-40" />
+                      <Skeleton className="h-3 w-64" />
+                      <Skeleton className="h-3 w-32" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Sidebar */}
+        <div className="space-y-6">
+
+          {/* Client */}
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-5 w-20" />
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-3 mb-4">
+                <Skeleton className="h-12 w-12 rounded-full shrink-0" />
+                <div className="space-y-1.5">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-3 w-40" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-48" />
+                <Skeleton className="h-4 w-32" />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Agent */}
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-5 w-32" />
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-3 mb-4">
+                <Skeleton className="h-10 w-10 rounded-full shrink-0" />
+                <div className="space-y-1.5">
+                  <Skeleton className="h-4 w-28" />
+                  <Skeleton className="h-3 w-40" />
+                </div>
+              </div>
+              <Skeleton className="h-4 w-28" />
+            </CardContent>
+          </Card>
+
+          {/* Checklist */}
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-5 w-40" />
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <Skeleton className="h-5 w-5 rounded-full shrink-0" />
+                  <Skeleton className="h-4 w-full" />
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          {/* Actions rapides */}
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-5 w-32" />
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <Skeleton className="h-8 w-full rounded-md" />
+              <Skeleton className="h-8 w-full rounded-md" />
+              <Skeleton className="h-8 w-full rounded-md" />
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   )
 

@@ -28,6 +28,7 @@ import {
 import { cn } from "@/lib/utils"
 import axiosInstance from "@/lib/axios"
 import { useAgencyClientDetails } from "@/hooks/agence/useAgencyClientDetails"
+import { Skeleton } from "@/components/ui/skeleton"
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 
@@ -248,9 +249,151 @@ export default function ClientDetailPage() {
   }
 
   if (loading) return (
-    <div className="flex items-center justify-center h-64 gap-2 text-muted-foreground">
-      <Loader2 className="h-5 w-5 animate-spin" />
-      <span className="text-sm">Chargement...</span>
+    <div className="space-y-6">
+
+      {/* Header */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-4">
+          <Skeleton className="h-9 w-9 rounded-md" />
+          <Skeleton className="h-14 w-14 rounded-full" />
+          <div className="space-y-2">
+            <div className="flex items-center gap-3">
+              <Skeleton className="h-7 w-48" />
+              <Skeleton className="h-5 w-20 rounded-full" />
+            </div>
+            <Skeleton className="h-4 w-72" />
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <Skeleton className="h-9 w-36 rounded-md" />
+          <Skeleton className="h-9 w-28 rounded-md" />
+        </div>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-3">
+
+        {/* Colonne principale */}
+        <div className="lg:col-span-2 space-y-6">
+
+          {/* Tabs bar */}
+          <div className="flex gap-2 flex-wrap">
+            {[...Array(5)].map((_, i) => (
+              <Skeleton key={i} className="h-9 w-28 rounded-md" />
+            ))}
+          </div>
+
+          {/* Informations personnelles */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <Skeleton className="h-5 w-48" />
+                <Skeleton className="h-8 w-24 rounded-md" />
+              </div>
+            </CardHeader>
+            <CardContent className="grid gap-4 sm:grid-cols-2">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="flex items-start gap-3">
+                  <Skeleton className="h-4 w-4 rounded mt-0.5 shrink-0" />
+                  <div className="space-y-1.5">
+                    <Skeleton className="h-3 w-20" />
+                    <Skeleton className="h-4 w-36" />
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          {/* Situation professionnelle */}
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-5 w-52" />
+            </CardHeader>
+            <CardContent className="grid gap-4 sm:grid-cols-2">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="flex items-start gap-3">
+                  <Skeleton className="h-4 w-4 rounded mt-0.5 shrink-0" />
+                  <div className="space-y-1.5">
+                    <Skeleton className="h-3 w-24" />
+                    <Skeleton className="h-4 w-32" />
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          {/* Préférences immobilières */}
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-5 w-52" />
+            </CardHeader>
+            <CardContent className="grid gap-4 sm:grid-cols-2">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="flex items-start gap-3">
+                  <Skeleton className="h-4 w-4 rounded mt-0.5 shrink-0" />
+                  <div className="space-y-1.5">
+                    <Skeleton className="h-3 w-24" />
+                    <Skeleton className="h-4 w-28" />
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Sidebar */}
+        <div className="space-y-6">
+
+          {/* Statut pipeline */}
+          <Card>
+            <CardHeader className="pb-3">
+              <Skeleton className="h-5 w-32" />
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <Skeleton className="h-5 w-5 rounded-full shrink-0" />
+                  <Skeleton className="h-4 w-24" />
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          {/* Complétion profil */}
+          <Card>
+            <CardHeader className="pb-3">
+              <Skeleton className="h-5 w-44" />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Skeleton className="h-8 w-14" />
+                <Skeleton className="h-5 w-20 rounded-full" />
+              </div>
+              <Skeleton className="h-2 w-full rounded-full" />
+              <Separator />
+              <div className="space-y-2">
+                {[...Array(8)].map((_, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <Skeleton className="h-5 w-5 rounded-full shrink-0" />
+                    <Skeleton className="h-3 w-32" />
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Actions rapides */}
+          <Card>
+            <CardHeader className="pb-3">
+              <Skeleton className="h-5 w-32" />
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {[...Array(4)].map((_, i) => (
+                <Skeleton key={i} className="h-9 w-full rounded-md" />
+              ))}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   )
 

@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import axiosInstance from "@/lib/axios"
 import { toast } from "sonner"
+import { Skeleton } from "@/components/ui/skeleton"
 
 // ─── TYPE ─────────────────────────────────────────────────────────────────────
 
@@ -230,9 +231,121 @@ export default function ClientEditPage() {
   // ─── États ────────────────────────────────────────────
 
   if (loading) return (
-    <div className="flex items-center justify-center h-64 gap-2 text-muted-foreground">
-      <Loader2 className="h-5 w-5 animate-spin" />
-      <span className="text-sm">Chargement...</span>
+    <div className="space-y-6">
+
+      {/* Header */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-4">
+          <Skeleton className="h-9 w-9 rounded-md" />
+          <div className="space-y-2">
+            <Skeleton className="h-7 w-48" />
+            <Skeleton className="h-4 w-32" />
+          </div>
+        </div>
+        <div className="flex gap-3">
+          <Skeleton className="h-9 w-24 rounded-md" />
+          <Skeleton className="h-9 w-32 rounded-md" />
+        </div>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-2 space-y-6">
+
+          {/* Informations personnelles */}
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-5 w-48" />
+              <Skeleton className="h-4 w-64" />
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 sm:grid-cols-2">
+                {[...Array(8)].map((_, i) => (
+                  <div key={i} className="space-y-2">
+                    <Skeleton className="h-3 w-24" />
+                    <Skeleton className="h-10 w-full rounded-md" />
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Situation professionnelle */}
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-5 w-52" />
+              <Skeleton className="h-4 w-44" />
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 sm:grid-cols-2">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="space-y-2">
+                    <Skeleton className="h-3 w-32" />
+                    <Skeleton className="h-10 w-full rounded-md" />
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Préférences immobilières */}
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-5 w-52" />
+              <Skeleton className="h-4 w-48" />
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 sm:grid-cols-2">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="space-y-2">
+                    <Skeleton className="h-3 w-28" />
+                    <Skeleton className="h-10 w-full rounded-md" />
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Note interne */}
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-5 w-32" />
+              <Skeleton className="h-4 w-64" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-36 w-full rounded-md" />
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Sidebar */}
+        <div className="space-y-6">
+
+          {/* Récapitulatif */}
+          <Card>
+            <CardHeader className="pb-3">
+              <Skeleton className="h-5 w-32" />
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {[...Array(7)].map((_, i) => (
+                <div key={i} className="flex justify-between gap-2">
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-4 w-24" />
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          {/* Zone de danger */}
+          <Card className="border-destructive/30">
+            <CardHeader className="pb-3">
+              <Skeleton className="h-5 w-32" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-9 w-full rounded-md" />
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   )
 

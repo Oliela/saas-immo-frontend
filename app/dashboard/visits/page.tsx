@@ -13,19 +13,15 @@ export default function VisitsPage() {
     agencyId: user?.agency?.id,
   })
 
-  if (loading || loadingVisits) return (
-    <div className="flex items-center justify-center h-64">
-      <p className="text-muted-foreground">Chargement...</p>
-    </div>
-  )
+  const isLoading = loading || loadingVisits
 
   return (
     <div className="space-y-6">
       <VisitsHeader />
-      <VisitsStats statistics={statistics} />
+      <VisitsStats statistics={statistics} loading={isLoading} />
       <div className="grid gap-6 lg:grid-cols-3">
-        <VisitsTodaySchedule visits={statistics?.today_visits ?? []} />
-        <VisitsAllList visits={visits} />
+        <VisitsTodaySchedule visits={statistics?.today_visits ?? []} loading={isLoading} />
+        <VisitsAllList visits={visits} loading={isLoading} />
       </div>
     </div>
   )

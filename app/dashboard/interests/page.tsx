@@ -13,13 +13,11 @@ export default function InterestsPage() {
     agencyId: user?.agency?.id,
   })
 
-  if (authLoading) return <div>Chargement…</div>
-
   return (
     <ListingInterestsPage
       interets={interets ?? []}
       stats={stats ?? DEFAULT_STATS}
-      loading={loading}
+      loading={authLoading || loading}
       refetch={refetch}
     />
   )

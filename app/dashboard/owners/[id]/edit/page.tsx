@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useParams } from "next/navigation"
 import axiosInstance from "@/lib/axios"
 import { toast } from "sonner"
+import { Skeleton } from "@/components/ui/skeleton"
 
 
 interface OwnerFormData {
@@ -80,7 +81,113 @@ export default function OwnerEditPage() {
     fetchOwner()
   }, [id])
 
-  if (loading) return <p>Chargement...</p>
+  if (loading) return (
+    <div className="space-y-6">
+
+      {/* Header */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-4">
+          <Skeleton className="h-9 w-9 rounded-md" />
+          <div className="space-y-2">
+            <Skeleton className="h-7 w-72" />
+            <Skeleton className="h-4 w-40" />
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <Skeleton className="h-8 w-28 rounded-md" />
+          <Skeleton className="h-8 w-48 rounded-md" />
+        </div>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+
+        {/* Informations personnelles */}
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-5 w-48" />
+            <Skeleton className="h-4 w-56" />
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              {[...Array(2)].map((_, i) => (
+                <div key={i} className="space-y-2">
+                  <Skeleton className="h-3 w-20" />
+                  <Skeleton className="h-10 w-full rounded-md" />
+                </div>
+              ))}
+            </div>
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="space-y-2">
+                <Skeleton className="h-3 w-24" />
+                <Skeleton className="h-10 w-full rounded-md" />
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        {/* Adresse */}
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-5 w-20" />
+            <Skeleton className="h-4 w-48" />
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Skeleton className="h-3 w-16" />
+              <Skeleton className="h-10 w-full rounded-md" />
+            </div>
+            <div className="grid gap-4 sm:grid-cols-3">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="space-y-2">
+                  <Skeleton className="h-3 w-16" />
+                  <Skeleton className="h-10 w-full rounded-md" />
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Bio */}
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-5 w-24" />
+          </CardHeader>
+          <CardContent>
+            <Skeleton className="h-32 w-full rounded-md" />
+          </CardContent>
+        </Card>
+
+        {/* Informations bancaires */}
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-5 w-44" />
+            <Skeleton className="h-4 w-56" />
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Skeleton className="h-3 w-32" />
+              <Skeleton className="h-10 w-full rounded-md" />
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {[...Array(2)].map((_, i) => (
+                <div key={i} className="space-y-2">
+                  <Skeleton className="h-3 w-28" />
+                  <Skeleton className="h-10 w-full rounded-md" />
+                </div>
+              ))}
+            </div>
+            {[...Array(2)].map((_, i) => (
+              <div key={i} className="space-y-2">
+                <Skeleton className="h-3 w-24" />
+                <Skeleton className="h-10 w-full rounded-md" />
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+      </div>
+    </div>
+  )
   if (error) return <p>{error}</p>
   if (!formData) return <p>Propriétaire introuvable</p>
 
@@ -93,7 +200,7 @@ export default function OwnerEditPage() {
       console.log("res", res)
       toast.success("Propriétaire modifié avec succès")
       window.location.href = `/dashboard/owners/${formData.id}`
-      
+
     } catch (err: any) {
       console.log("err", err)
       toast.error("Erreur lors de la modification du propriétaire")
@@ -105,16 +212,16 @@ export default function OwnerEditPage() {
 
 
     try {
-        await axiosInstance.delete(`/api/owners/${id}`)
-        
-        toast.success("")
-        window.location.href = `/dashboard/owners/`
+      await axiosInstance.delete(`/api/owners/${id}`)
+
+      toast.success("")
+      window.location.href = `/dashboard/owners/`
 
     } catch (error) {
-        console.error("Erreur suppression", error)
-        toast.error("")
+      console.error("Erreur suppression", error)
+      toast.error("")
     }
-}
+  }
 
 
   return (

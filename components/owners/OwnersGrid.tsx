@@ -119,10 +119,10 @@ export default function OwnersGrid({ owners, getStatusBadge }: Props) {
                                             Modifier
                                         </Link>
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem>
+                                    {/* <DropdownMenuItem>
                                         <Building2 className="mr-2 h-4 w-4" />
                                         Voir les propriétés
-                                    </DropdownMenuItem>
+                                    </DropdownMenuItem> */}
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem
                                         className="text-destructive focus:text-destructive"

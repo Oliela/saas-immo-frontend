@@ -51,6 +51,7 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import axiosInstance from "@/lib/axios"
 import { toast } from "sonner"
+import { Skeleton } from "@/components/ui/skeleton"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -151,7 +152,7 @@ export default function ListingAgentsPage({
         license_number: "",
         role: "agent",
 
-        
+
       })
       // Maybe reload the page or update the agents list
       toast.success("Agent créé avec succès un mail lui sera envoyé avec les informations de connexion !")
@@ -171,10 +172,10 @@ export default function ListingAgentsPage({
 
   // Stats cards construites depuis les vraies données API
   const statsCards = [
-    { label: "Agents Totaux",     value: stats?.nombreAgents  ?? 0, icon: Users },
-    { label: "Actifs Maintenant", value: stats?.agentsActifs  ?? 0, icon: ShieldCheck },
-    { label: "Note Moyenne",      value: stats?.notesMoyennes ?? 0, icon: Star },
-    { label: "Total des Ventes",  value: stats?.totalVentes   ?? 0, icon: TrendingUp },
+    { label: "Agents Totaux", value: stats?.nombreAgents ?? 0, icon: Users },
+    { label: "Actifs Maintenant", value: stats?.agentsActifs ?? 0, icon: ShieldCheck },
+    { label: "Note Moyenne", value: stats?.notesMoyennes ?? 0, icon: Star },
+    { label: "Total des Ventes", value: stats?.totalVentes ?? 0, icon: TrendingUp },
   ]
 
   // Filtrage sur les données réelles
@@ -370,22 +371,39 @@ export default function ListingAgentsPage({
       </div>
 
       {/* Stats Cards */}
+      {/* Stats Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {statsCards.map((stat) => (
-          <Card key={stat.label}>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">{stat.label}</p>
-                  <p className="text-2xl font-bold text-foreground mt-1">{stat.value}</p>
+        {loading ? (
+          [...Array(4)].map((_, i) => (
+            <Card key={i}>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-2">
+                    <Skeleton className="h-3 w-32" />
+                    <Skeleton className="h-7 w-16" />
+                  </div>
+                  <Skeleton className="h-10 w-10 rounded-lg shrink-0" />
                 </div>
-                <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
-                  <stat.icon className="h-5 w-5 text-muted-foreground" />
+              </CardContent>
+            </Card>
+          ))
+        ) : (
+          statsCards.map((stat) => (
+            <Card key={stat.label}>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">{stat.label}</p>
+                    <p className="text-2xl font-bold text-foreground mt-1">{stat.value}</p>
+                  </div>
+                  <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
+                    <stat.icon className="h-5 w-5 text-muted-foreground" />
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+              </CardContent>
+            </Card>
+          ))
+        )}
       </div>
 
       {/* Filters */}
@@ -423,10 +441,42 @@ export default function ListingAgentsPage({
         </CardContent>
       </Card>
 
+
       {/* Agents List */}
       <div className="grid gap-4">
         {loading ? (
-          <p className="text-muted-foreground text-sm text-center py-8">Chargement des agents...</p>
+          [...Array(4)].map((_, i) => (
+            <Card key={i}>
+              <CardContent className="p-6">
+                <div className="flex flex-col lg:flex-row lg:items-center gap-6">
+
+                  {/* Avatar + infos */}
+                  <div className="flex items-center gap-4 flex-1">
+                    <div className="relative shrink-0">
+                      <Skeleton className="h-14 w-14 rounded-full" />
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Skeleton className="h-4 w-36" />
+                        <Skeleton className="h-5 w-20 rounded-full" />
+                      </div>
+                      <div className="flex gap-4">
+                        <Skeleton className="h-3 w-40" />
+                        <Skeleton className="h-3 w-28 hidden sm:block" />
+                      </div>
+                      <Skeleton className="h-3 w-12" />
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-8 w-28 rounded-md" />
+                    <Skeleton className="h-8 w-8 rounded-md" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))
         ) : filteredAgents.length === 0 ? (
           <p className="text-muted-foreground text-sm text-center py-8">Aucun agent trouvé.</p>
         ) : (
@@ -449,9 +499,8 @@ export default function ListingAgentsPage({
                           </AvatarFallback>
                         </Avatar>
                         <span
-                          className={`absolute bottom-0 right-0 h-4 w-4 rounded-full border-2 border-background ${
-                            isActive ? "bg-green-500" : "bg-gray-400"
-                          }`}
+                          className={`absolute bottom-0 right-0 h-4 w-4 rounded-full border-2 border-background ${isActive ? "bg-green-500" : "bg-gray-400"
+                            }`}
                         />
                       </div>
                       <div className="min-w-0">
@@ -545,11 +594,11 @@ export default function ListingAgentsPage({
                           <div className="space-y-4 py-4">
                             {[
                               { key: "properties", label: "Propriétés" },
-                              { key: "clients",    label: "Clients" },
-                              { key: "contracts",  label: "Contrats" },
-                              { key: "invoices",   label: "Factures" },
-                              { key: "settings",   label: "Paramètres" },
-                              { key: "team",       label: "Équipe" },
+                              { key: "clients", label: "Clients" },
+                              { key: "contracts", label: "Contrats" },
+                              { key: "invoices", label: "Factures" },
+                              { key: "settings", label: "Paramètres" },
+                              { key: "team", label: "Équipe" },
                             ].map(({ key, label }) => (
                               <div key={key} className="flex items-center justify-between">
                                 <Label htmlFor={`perm-${agent.id}-${key}`}>{label}</Label>
@@ -570,7 +619,7 @@ export default function ListingAgentsPage({
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem asChild>
+                          {/* <DropdownMenuItem asChild>
                             <Link href={`/dashboard/agents/${agent.id}`}>
                               <Eye className="mr-2 h-4 w-4" />
                               Voir le Profil
@@ -581,7 +630,7 @@ export default function ListingAgentsPage({
                               <Pencil className="mr-2 h-4 w-4" />
                               Modifier les Détails
                             </Link>
-                          </DropdownMenuItem>
+                          </DropdownMenuItem> */}
                           <DropdownMenuItem>
                             <Mail className="mr-2 h-4 w-4" />
                             Envoyer un Message

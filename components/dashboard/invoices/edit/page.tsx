@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/popover"
 import { Separator } from "@/components/ui/separator"
 import axiosInstance from "@/lib/axios"
+import { Skeleton } from "@/components/ui/skeleton"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -107,29 +108,29 @@ function getOwnerName(o: any): string {
 
 const categoriesByType: Record<string, { value: string; label: string }[]> = {
   Vente: [
-    { value: "honoraires_vente",    label: "Honoraires de vente" },
-    { value: "commission_vente",    label: "Commission de vente" },
-    { value: "frais_dossier",       label: "Frais de dossier" },
-    { value: "autres",              label: "Autres" },
+    { value: "honoraires_vente", label: "Honoraires de vente" },
+    { value: "commission_vente", label: "Commission de vente" },
+    { value: "frais_dossier", label: "Frais de dossier" },
+    { value: "autres", label: "Autres" },
   ],
   Location: [
-    { value: "loyer",               label: "Loyer" },
-    { value: "mensualite",          label: "Mensualité" },
-    { value: "caution",             label: "Caution" },
+    { value: "loyer", label: "Loyer" },
+    { value: "mensualite", label: "Mensualité" },
+    { value: "caution", label: "Caution" },
     { value: "honoraires_location", label: "Honoraires de location" },
-    { value: "frais_dossier",       label: "Frais de dossier" },
-    { value: "charges",             label: "Charges locatives" },
-    { value: "autres",              label: "Autres" },
+    { value: "frais_dossier", label: "Frais de dossier" },
+    { value: "charges", label: "Charges locatives" },
+    { value: "autres", label: "Autres" },
   ],
 }
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 interface Props {
-  clients:   any[]
-  owners:    any[]
+  clients: any[]
+  owners: any[]
   contracts: any[]
-  biens:     any[]
+  biens: any[]
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -138,33 +139,33 @@ export default function InvoiceEditPage({ clients = [], owners = [], contracts =
   const params = useParams<{ id: string }>()
   const router = useRouter()
 
-  const [facture,    setFacture]    = useState<Facture | null>(null)
-  const [loading,    setLoading]    = useState(true)
-  const [isSaving,   setIsSaving]   = useState(false)
+  const [facture, setFacture] = useState<Facture | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
-  const [error,      setError]      = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   const [form, setForm] = useState({
-    date_emission:     "",
-    date_echeance:     "",
-    type_facture:      "",
-    categorie:         "",
-    sous_categorie:    "",
+    date_emission: "",
+    date_echeance: "",
+    type_facture: "",
+    categorie: "",
+    sous_categorie: "",
     destinataire_type: "" as "client" | "proprietaire" | "",
-    destinataire_id:   "" as number | "",
-    bien_id:           "" as number | "",
-    contract_id:       "" as number | "",
-    remise:            "0",
-    taux_tva:          "0",
-    devise:            "XOF",
-    notes:             "",
+    destinataire_id: "" as number | "",
+    bien_id: "" as number | "",
+    contract_id: "" as number | "",
+    remise: "0",
+    taux_tva: "0",
+    devise: "XOF",
+    notes: "",
   })
 
   const [articles, setArticles] = useState<Article[]>([])
 
   const [destinataireOpen, setDestinataireOpen] = useState(false)
-  const [propertyOpen,     setPropertyOpen]     = useState(false)
-  const [contractOpen,     setContractOpen]     = useState(false)
+  const [propertyOpen, setPropertyOpen] = useState(false)
+  const [contractOpen, setContractOpen] = useState(false)
 
   // ─── Fetch ───────────────────────────────────────────────────────────────────
 
@@ -172,32 +173,32 @@ export default function InvoiceEditPage({ clients = [], owners = [], contracts =
     if (!params.id) return
     const fetchFacture = async () => {
       try {
-       
-        const res   = await axiosInstance.get(`/api/factures/${params.id}`)
+
+        const res = await axiosInstance.get(`/api/factures/${params.id}`)
         const data: Facture = await res.data
         setFacture(data)
         setForm({
-          date_emission:     data.date_emission?.split("T")[0] || "",
-          date_echeance:     data.date_echeance?.split("T")[0] || "",
-          type_facture:      data.type_facture   || "",
-          categorie:         data.categorie      || "",
-          sous_categorie:    data.sous_categorie || "",
+          date_emission: data.date_emission?.split("T")[0] || "",
+          date_echeance: data.date_echeance?.split("T")[0] || "",
+          type_facture: data.type_facture || "",
+          categorie: data.categorie || "",
+          sous_categorie: data.sous_categorie || "",
           destinataire_type: (data.destinataire_type as any) || "",
-          destinataire_id:   data.destinataire_id || "",
-          bien_id:           data.bien_id         || "",
-          contract_id:       data.contract_id     || "",
-          remise:            data.remise          || "0",
-          taux_tva:          data.taux_tva        || "0",
-          devise:            data.devise          || "XOF",
-          notes:             data.notes           || "",
+          destinataire_id: data.destinataire_id || "",
+          bien_id: data.bien_id || "",
+          contract_id: data.contract_id || "",
+          remise: data.remise || "0",
+          taux_tva: data.taux_tva || "0",
+          devise: data.devise || "XOF",
+          notes: data.notes || "",
         })
         setArticles(
           (data.articles || []).map((a: any) => ({
-            id:            a.id,
-            libelle:       a.libelle,
-            description:   a.description || "",
+            id: a.id,
+            libelle: a.libelle,
+            description: a.description || "",
             prix_unitaire: parseFloat(a.prix_unitaire) || 0,
-            quantite:      parseFloat(a.quantite)      || 1,
+            quantite: parseFloat(a.quantite) || 1,
           }))
         )
       } catch {
@@ -224,18 +225,18 @@ export default function InvoiceEditPage({ clients = [], owners = [], contracts =
   }, [form.destinataire_type, clients, owners])
 
   const selectedRecipient = recipientOptions.find((r: any) => r.id === form.destinataire_id)
-  const selectedProperty  = biens.find((p: any) => p.id === form.bien_id)
-  const selectedContract  = contracts.find((c: any) => c.id === form.contract_id)
+  const selectedProperty = biens.find((p: any) => p.id === form.bien_id)
+  const selectedContract = contracts.find((c: any) => c.id === form.contract_id)
 
   // ─── Calculs ──────────────────────────────────────────────────────────────────
 
-  const montant_ht      = articles.reduce((s, a) => s + (parseFloat(String(a.prix_unitaire)) || 0) * (parseFloat(String(a.quantite)) || 0), 0)
-  const remise          = parseFloat(form.remise)   || 0
-  const taux_tva        = parseFloat(form.taux_tva) || 0
-  const montant_remise  = Math.round(montant_ht * remise / 100 * 100) / 100
+  const montant_ht = articles.reduce((s, a) => s + (parseFloat(String(a.prix_unitaire)) || 0) * (parseFloat(String(a.quantite)) || 0), 0)
+  const remise = parseFloat(form.remise) || 0
+  const taux_tva = parseFloat(form.taux_tva) || 0
+  const montant_remise = Math.round(montant_ht * remise / 100 * 100) / 100
   const ht_apres_remise = Math.round((montant_ht - montant_remise) * 100) / 100
-  const montant_tva     = Math.round(ht_apres_remise * taux_tva / 100 * 100) / 100
-  const montant_ttc     = Math.round((ht_apres_remise + montant_tva) * 100) / 100
+  const montant_tva = Math.round(ht_apres_remise * taux_tva / 100 * 100) / 100
+  const montant_ttc = Math.round((ht_apres_remise + montant_tva) * 100) / 100
 
   // ─── Articles ─────────────────────────────────────────────────────────────────
 
@@ -259,29 +260,29 @@ export default function InvoiceEditPage({ clients = [], owners = [], contracts =
     setError(null)
 
     const payload = {
-      date_emission:     form.date_emission,
-      date_echeance:     form.date_echeance  || null,
-      type_facture:      form.type_facture,
-      categorie:         form.categorie      || null,
-      sous_categorie:    form.sous_categorie || null,
+      date_emission: form.date_emission,
+      date_echeance: form.date_echeance || null,
+      type_facture: form.type_facture,
+      categorie: form.categorie || null,
+      sous_categorie: form.sous_categorie || null,
       destinataire_type: form.destinataire_type || null,
-      destinataire_id:   form.destinataire_id   || null,
-      bien_id:           form.bien_id           || null,
-      contract_id:       form.contract_id       || null,
+      destinataire_id: form.destinataire_id || null,
+      bien_id: form.bien_id || null,
+      contract_id: form.contract_id || null,
       remise,
       taux_tva,
       montant_ht,
       montant_remise,
       montant_tva,
       montant_ttc,
-      devise:            form.devise,
-      notes:             form.notes || null,
+      devise: form.devise,
+      notes: form.notes || null,
       articles: articles.map((a) => ({
-        libelle:       a.libelle,
-        description:   a.description || null,
+        libelle: a.libelle,
+        description: a.description || null,
         prix_unitaire: parseFloat(String(a.prix_unitaire)) || 0,
-        quantite:      parseFloat(String(a.quantite))      || 1,
-        total:         Math.round((parseFloat(String(a.prix_unitaire)) || 0) * (parseFloat(String(a.quantite)) || 1) * 100) / 100,
+        quantite: parseFloat(String(a.quantite)) || 1,
+        total: Math.round((parseFloat(String(a.prix_unitaire)) || 0) * (parseFloat(String(a.quantite)) || 1) * 100) / 100,
       })),
     }
 
@@ -293,7 +294,7 @@ export default function InvoiceEditPage({ clients = [], owners = [], contracts =
 
     // ── Décommenter pour activer l'appel API réel ─────────────────────────────
     try {
-      const res   = await axiosInstance.put(`/api/factures/${facture.id}`, payload)
+      const res = await axiosInstance.put(`/api/factures/${facture.id}`, payload)
       router.push(`/dashboard/invoices/${facture.id}`)
     } catch (err: any) {
       setError(err.response?.data?.message || "Erreur lors de la sauvegarde.")
@@ -307,7 +308,7 @@ export default function InvoiceEditPage({ clients = [], owners = [], contracts =
     setIsDeleting(true)
     try {
       const token = localStorage.getItem("token")
-      const res   = await fetch(
+      const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/factures/${facture.id}`,
         { method: "DELETE", headers: { Authorization: `Bearer ${token}` } }
       )
@@ -322,13 +323,60 @@ export default function InvoiceEditPage({ clients = [], owners = [], contracts =
 
   // ─── Loading ──────────────────────────────────────────────────────────────────
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <p className="text-muted-foreground">Chargement...</p>
+  if (loading) return (
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-4">
+          <Skeleton className="h-9 w-9 rounded-md" />
+          <div className="space-y-2">
+            <Skeleton className="h-7 w-56" />
+            <Skeleton className="h-4 w-48" />
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <Skeleton className="h-8 w-28 rounded-md" />
+          <Skeleton className="h-8 w-32 rounded-md" />
+        </div>
       </div>
-    )
-  }
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-2 space-y-6">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i}>
+              <CardHeader><Skeleton className="h-5 w-40" /></CardHeader>
+              <CardContent>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {[...Array(4)].map((_, j) => (
+                    <div key={j} className="space-y-2">
+                      <Skeleton className="h-3 w-24" />
+                      <Skeleton className="h-10 w-full rounded-md" />
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        <div className="space-y-4">
+          <Card>
+            <CardHeader><Skeleton className="h-5 w-20" /></CardHeader>
+            <CardContent className="space-y-3">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="flex justify-between">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-4 w-28" />
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader><Skeleton className="h-5 w-16" /></CardHeader>
+            <CardContent><Skeleton className="h-24 w-full rounded-md" /></CardContent>
+          </Card>
+          <Skeleton className="h-10 w-full rounded-md" />
+        </div>
+      </div>
+    </div>
+  )
 
   if (!facture) {
     return (
@@ -513,7 +561,7 @@ export default function InvoiceEditPage({ clients = [], owners = [], contracts =
                           <CommandEmpty>Aucun résultat.</CommandEmpty>
                           <CommandGroup>
                             {recipientOptions.map((r: any) => {
-                              const name  = form.destinataire_type === "client" ? getClientName(r) : getOwnerName(r)
+                              const name = form.destinataire_type === "client" ? getClientName(r) : getOwnerName(r)
                               const email = r.user?.email || r.email || ""
                               return (
                                 <CommandItem

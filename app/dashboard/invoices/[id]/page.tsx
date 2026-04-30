@@ -25,6 +25,7 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import axiosInstance from "@/lib/axios"
 import { toast } from "sonner"
+import { Skeleton } from "@/components/ui/skeleton"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -316,13 +317,159 @@ export default function InvoiceDetailPage() {
 
   // ─── Loading ──────────────────────────────────────────────────────────────
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <p className="text-muted-foreground">Chargement de la facture...</p>
+  if (loading) return (
+    <div className="space-y-6">
+
+      {/* Header */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-4">
+          <Skeleton className="h-9 w-9 rounded-md" />
+          <div className="space-y-2">
+            <div className="flex items-center gap-3">
+              <Skeleton className="h-7 w-40" />
+              <Skeleton className="h-5 w-20 rounded-full" />
+              <Skeleton className="h-5 w-16 rounded-full" />
+            </div>
+            <Skeleton className="h-4 w-64" />
+          </div>
+        </div>
+        <Skeleton className="h-8 w-24 rounded-md" />
       </div>
-    )
-  }
+
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-2 space-y-6">
+
+          {/* Tabs bar */}
+          <div className="grid grid-cols-2 gap-1 p-1 rounded-lg bg-muted">
+            <Skeleton className="h-9 rounded-md" />
+            <Skeleton className="h-9 rounded-md" />
+          </div>
+
+          {/* Facture */}
+          <Card>
+            <CardContent className="p-8 space-y-8">
+
+              {/* En-tête facture */}
+              <div className="flex justify-between items-start">
+                <div className="space-y-2">
+                  <Skeleton className="h-7 w-32" />
+                  <Skeleton className="h-4 w-24" />
+                </div>
+                <div className="space-y-2 text-right">
+                  <Skeleton className="h-4 w-36 ml-auto" />
+                  <Skeleton className="h-3 w-28 ml-auto" />
+                  <Skeleton className="h-3 w-24 ml-auto" />
+                </div>
+              </div>
+
+              {/* Destinataire + dates */}
+              <div className="grid sm:grid-cols-2 gap-8">
+                <div className="space-y-2">
+                  <Skeleton className="h-3 w-24" />
+                  <Skeleton className="h-4 w-36" />
+                  <Skeleton className="h-3 w-40" />
+                  <Skeleton className="h-3 w-32" />
+                </div>
+                <div className="space-y-2">
+                  {[...Array(3)].map((_, i) => (
+                    <div key={i} className="flex justify-end gap-6">
+                      <Skeleton className="h-3 w-24" />
+                      <Skeleton className="h-3 w-24" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Articles */}
+              <div className="rounded-lg border border-border overflow-hidden">
+                <div className="grid grid-cols-5 gap-2 p-3 bg-muted/50 border-b border-border">
+                  {[...Array(5)].map((_, i) => (
+                    <Skeleton key={i} className="h-3 w-full" />
+                  ))}
+                </div>
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="grid grid-cols-5 gap-2 p-3 border-b border-border last:border-0">
+                    <Skeleton className="h-4 col-span-2" />
+                    <Skeleton className="h-4" />
+                    <Skeleton className="h-4" />
+                    <Skeleton className="h-4" />
+                  </div>
+                ))}
+              </div>
+
+              {/* Totaux */}
+              <div className="flex justify-end">
+                <div className="w-[300px] space-y-2">
+                  {[...Array(3)].map((_, i) => (
+                    <div key={i} className="flex justify-between">
+                      <Skeleton className="h-4 w-28" />
+                      <Skeleton className="h-4 w-24" />
+                    </div>
+                  ))}
+                  <Separator />
+                  <div className="flex justify-between">
+                    <Skeleton className="h-5 w-20" />
+                    <Skeleton className="h-5 w-28" />
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Sidebar */}
+        <div className="space-y-4">
+
+          {/* Destinataire */}
+          <Card>
+            <CardHeader><Skeleton className="h-5 w-28" /></CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-3 mb-3">
+                <Skeleton className="h-10 w-10 rounded-full shrink-0" />
+                <div className="space-y-1.5">
+                  <Skeleton className="h-4 w-28" />
+                  <Skeleton className="h-3 w-16" />
+                </div>
+              </div>
+              <Skeleton className="h-3 w-36" />
+              <Skeleton className="h-3 w-44 mt-1" />
+            </CardContent>
+          </Card>
+
+          {/* Bien */}
+          <Card>
+            <CardHeader><Skeleton className="h-5 w-32" /></CardHeader>
+            <CardContent className="space-y-1.5">
+              <Skeleton className="h-4 w-40" />
+              <Skeleton className="h-3 w-24" />
+              <Skeleton className="h-3 w-48" />
+            </CardContent>
+          </Card>
+
+          {/* Informations */}
+          <Card>
+            <CardHeader><Skeleton className="h-5 w-28" /></CardHeader>
+            <CardContent className="space-y-2">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="flex justify-between">
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-4 w-24" />
+                </div>
+              ))}
+              <Separator />
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="flex justify-between">
+                  <Skeleton className="h-4 w-16" />
+                  <Skeleton className="h-4 w-28" />
+                </div>
+              ))}
+              <Skeleton className="h-1.5 w-full rounded-full mt-2" />
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  )
 
   if (!facture) {
     return (
@@ -790,8 +937,8 @@ export default function InvoiceDetailPage() {
                     type="button"
                     onClick={() => { setAmountError(""); setPaymentForm({ ...paymentForm, mode_paiement: m.value }) }}
                     className={`flex flex-col items-center gap-1.5 p-3 rounded-lg border-2 text-xs font-medium transition-all cursor-pointer ${paymentForm.mode_paiement === m.value
-                        ? "border-primary bg-primary/5 text-primary"
-                        : "border-border bg-transparent text-muted-foreground hover:border-primary/40 hover:text-foreground"
+                      ? "border-primary bg-primary/5 text-primary"
+                      : "border-border bg-transparent text-muted-foreground hover:border-primary/40 hover:text-foreground"
                       }`}
                   >
                     <m.Icon className="h-4 w-4" />

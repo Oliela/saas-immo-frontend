@@ -3,27 +3,18 @@
 import Link from "next/link"
 import Image from "next/image"
 import {
-  Building2,
-  Users,
-  Eye,
-  CheckSquare,
-  ArrowUpRight,
-  Calendar,
-  MoreHorizontal,
-  Heart,
-  FileText,
-  MessageSquare,
-  Home,
+  Building2, Users, Eye, CheckSquare, ArrowUpRight,
+  Calendar, MoreHorizontal, Heart, FileText,
+  MessageSquare, Home,
 } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
+  DropdownMenu, DropdownMenuContent,
+  DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -73,6 +64,7 @@ interface DashboardData {
 interface Props {
   data: DashboardData | null
   user?: any
+  loading?: boolean
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -147,18 +139,146 @@ const propertyTypeLabel: Record<string, string> = {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default function ListingDashboardPage({ data, user }: Props) {
-  if (!data) {
+export default function ListingDashboardPage({ data, user, loading }: Props) {
+
+  if (loading) {
     return (
-      <div className="flex items-center justify-center h-64 text-muted-foreground">
-        Chargement du tableau de bord…
+      <div className="space-y-6">
+
+        {/* Header */}
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-2">
+            <Skeleton className="h-7 w-48" />
+            <Skeleton className="h-4 w-64" />
+          </div>
+          <Skeleton className="h-9 w-36 rounded-md" />
+        </div>
+
+        {/* Actions rapides */}
+        <Card>
+          <CardHeader className="pb-3">
+            <Skeleton className="h-5 w-32" />
+            <Skeleton className="h-4 w-56" />
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-3">
+              <Skeleton className="h-9 w-36 rounded-md" />
+              <Skeleton className="h-9 w-40 rounded-md" />
+              <Skeleton className="h-9 w-44 rounded-md" />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Stats */}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i}>
+              <CardContent className="p-6 space-y-4">
+                <Skeleton className="h-10 w-10 rounded-lg" />
+                <div className="space-y-2">
+                  <Skeleton className="h-7 w-16" />
+                  <Skeleton className="h-4 w-28" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Biens + Tâches */}
+        <div className="grid gap-6 lg:grid-cols-3">
+
+          {/* Biens récents */}
+          <Card className="lg:col-span-2">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div className="space-y-2">
+                <Skeleton className="h-5 w-32" />
+                <Skeleton className="h-4 w-48" />
+              </div>
+              <Skeleton className="h-8 w-20 rounded-md" />
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="flex items-center gap-4 p-3 rounded-lg border border-border">
+                    <Skeleton className="h-12 w-16 rounded-md shrink-0" />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-4 w-3/4" />
+                      <Skeleton className="h-3 w-1/2" />
+                    </div>
+                    <div className="hidden sm:flex flex-col items-end gap-2">
+                      <Skeleton className="h-4 w-24" />
+                      <Skeleton className="h-5 w-16 rounded-full" />
+                    </div>
+                    <Skeleton className="h-8 w-8 rounded-md shrink-0" />
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Tâches */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div className="space-y-2">
+                <Skeleton className="h-5 w-32" />
+                <Skeleton className="h-4 w-36" />
+              </div>
+              <Skeleton className="h-8 w-8 rounded-md" />
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="flex items-start gap-3 pb-4 border-b border-border last:border-0 last:pb-0">
+                    <Skeleton className="h-9 w-9 rounded-full shrink-0" />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-4 w-3/4" />
+                      <Skeleton className="h-3 w-full" />
+                      <Skeleton className="h-5 w-20 rounded-full" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Prospects */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div className="space-y-2">
+              <Skeleton className="h-5 w-36" />
+              <Skeleton className="h-4 w-56" />
+            </div>
+            <Skeleton className="h-8 w-20 rounded-md" />
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="flex items-center gap-4 py-3 border-b border-border last:border-0">
+                  <div className="flex items-center gap-3 flex-1">
+                    <Skeleton className="h-8 w-8 rounded-full shrink-0" />
+                    <div className="space-y-1">
+                      <Skeleton className="h-4 w-32" />
+                      <Skeleton className="h-3 w-40 hidden sm:block" />
+                    </div>
+                  </div>
+                  <Skeleton className="h-4 w-20 hidden sm:block" />
+                  <Skeleton className="h-5 w-24 rounded-full hidden md:block" />
+                  <Skeleton className="h-5 w-20 rounded-full" />
+                  <Skeleton className="h-8 w-14 rounded-md" />
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
       </div>
     )
   }
 
-  const { statistics, recentBiens, recentProspects, recentTasks } = data
+  if (!data) return null
 
-  // Tâches non terminées
+  const { statistics, recentBiens, recentProspects, recentTasks } = data
   const pendingTasks = recentTasks.filter((t) => t.status !== "done").slice(0, 4)
 
   const stats = [
@@ -194,6 +314,7 @@ export default function ListingDashboardPage({ data, user }: Props) {
 
   return (
     <div className="space-y-6">
+
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -203,7 +324,7 @@ export default function ListingDashboardPage({ data, user }: Props) {
           </p>
         </div>
         <Button asChild>
-          <Link href="/dashboard/biens/new">Ajouter un bien</Link>
+          <Link href="/dashboard/properties/new">Ajouter un bien</Link>
         </Button>
       </div>
 
@@ -258,6 +379,7 @@ export default function ListingDashboardPage({ data, user }: Props) {
 
       {/* Biens + Tâches */}
       <div className="grid gap-6 lg:grid-cols-3">
+
         {/* Biens récents */}
         <Card className="lg:col-span-2">
           <CardHeader className="flex flex-row items-center justify-between">

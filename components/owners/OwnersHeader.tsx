@@ -13,10 +13,10 @@ export default function OwnersHeader() {
       </div>
 
       <div className="flex gap-2">
-        <Button variant="outline">
+        {/* <Button variant="outline">
           <Download className="mr-2 h-4 w-4" />
           Exporter
-        </Button>
+        </Button> */}
 
         <Button asChild>
           <Link href="/dashboard/owners/new">

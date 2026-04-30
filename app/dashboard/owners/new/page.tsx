@@ -50,6 +50,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { toast } from "sonner"
 import { useAgency } from "@/hooks/agence/useAgency"
 import axiosInstance from "@/lib/axios"
+import { Skeleton } from "@/components/ui/skeleton"
 
 // Sample linked properties for existing owner view
 const linkedProperties = [
@@ -138,7 +139,114 @@ export default function OwnerFormPage() {
   }, [agencyId])
 
   // ✅ Bloque le rendu tant que les données ne sont pas là
-  if (loading || !agencyId) return <p>Chargement...</p>
+  if (loading || !agencyId) return (
+    <div className="min-h-screen bg-background">
+
+      {/* Header */}
+      <div className="border-b bg-card">
+        <div className="mx-auto max-w-6xl px-4 py-4 sm:px-6">
+          <div className="flex items-center gap-4">
+            <Skeleton className="h-9 w-9 rounded-md" />
+            <div className="space-y-2">
+              <Skeleton className="h-5 w-56" />
+              <Skeleton className="h-4 w-72" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 space-y-6">
+
+        {/* Tabs bar */}
+        <div className="flex gap-1">
+          <Skeleton className="h-9 w-24 rounded-md" />
+        </div>
+
+        <div className="grid gap-6 lg:grid-cols-3">
+          <div className="lg:col-span-2 space-y-6">
+
+            {/* Informations personnelles */}
+            <Card>
+              <CardHeader>
+                <Skeleton className="h-5 w-52" />
+                <Skeleton className="h-4 w-40" />
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {[...Array(4)].map((_, i) => (
+                    <div key={i} className="space-y-2">
+                      <Skeleton className="h-3 w-24" />
+                      <Skeleton className="h-10 w-full rounded-md" />
+                    </div>
+                  ))}
+                </div>
+                <Separator />
+                <div className="space-y-4">
+                  <Skeleton className="h-3 w-16" />
+                  <Skeleton className="h-10 w-full rounded-md" />
+                  <div className="grid gap-4 sm:grid-cols-3">
+                    {[...Array(3)].map((_, i) => (
+                      <Skeleton key={i} className="h-10 w-full rounded-md" />
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Informations bancaires */}
+            <Card>
+              <CardHeader>
+                <Skeleton className="h-5 w-48" />
+                <Skeleton className="h-4 w-56" />
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {[...Array(2)].map((_, i) => (
+                    <div key={i} className="space-y-2">
+                      <Skeleton className="h-3 w-32" />
+                      <Skeleton className="h-10 w-full rounded-md" />
+                    </div>
+                  ))}
+                </div>
+                <div className="grid gap-4 sm:grid-cols-3">
+                  {[...Array(3)].map((_, i) => (
+                    <div key={i} className="space-y-2">
+                      <Skeleton className="h-3 w-28" />
+                      <Skeleton className="h-10 w-full rounded-md" />
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Informations fiscales */}
+            <Card>
+              <CardHeader>
+                <Skeleton className="h-5 w-44" />
+                <Skeleton className="h-4 w-52" />
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {[...Array(2)].map((_, i) => (
+                    <div key={i} className="space-y-2">
+                      <Skeleton className="h-3 w-36" />
+                      <Skeleton className="h-10 w-full rounded-md" />
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Actions */}
+            <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+              <Skeleton className="h-9 w-24 rounded-md" />
+              <Skeleton className="h-9 w-40 rounded-md" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
 
 
   const validateForm = () => {

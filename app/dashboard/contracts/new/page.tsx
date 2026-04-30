@@ -4,10 +4,11 @@ import Link from "next/link"
 import { ArrowLeft, FileText, User, DollarSign } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import axiosInstance from "@/lib/axios"
 
 import { useContractForm }      from "@/hooks/contracts/useContractForm"
-import { useAuth }              from "@/hooks/useAuth"   // ou ton contexte auth
 import { ContractInfoTab }      from "@/components/dashboard/contracts/new/ContractInfoTab"
 import { ContractPartiesTab }   from "@/components/dashboard/contracts/new/ContractPartiesTab"
 import { ContractClausesTab }   from "@/components/dashboard/contracts/new/ContractClausesTab"
@@ -17,13 +18,124 @@ import { ContractSidebar }      from "@/components/dashboard/contracts/new/Contr
 import { useAuthAgent } from "@/hooks/agence/useAuthAgent"
 import { toast } from "sonner"
 
+function NewContractSkeleton() {
+  return (
+    <div className="space-y-6">
+
+      {/* Header */}
+      <div className="flex items-center gap-4">
+        <Skeleton className="h-9 w-9 rounded-md" />
+        <div className="space-y-2">
+          <Skeleton className="h-7 w-48" />
+          <Skeleton className="h-4 w-64" />
+        </div>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-3">
+
+        {/* Colonne principale */}
+        <div className="lg:col-span-2 space-y-6">
+
+          {/* Tabs bar */}
+          <div className="grid grid-cols-4 gap-1 p-1 rounded-lg bg-muted">
+            {[...Array(4)].map((_, i) => (
+              <Skeleton key={i} className="h-9 rounded-md" />
+            ))}
+          </div>
+
+          {/* Contenu onglet Infos */}
+          <Card>
+            <CardHeader className="space-y-2">
+              <Skeleton className="h-5 w-40" />
+              <Skeleton className="h-4 w-56" />
+            </CardHeader>
+            <CardContent className="space-y-6">
+
+              {/* Type de contrat */}
+              <div className="space-y-2">
+                <Skeleton className="h-3 w-28" />
+                <div className="flex gap-3">
+                  <Skeleton className="h-12 flex-1 rounded-lg" />
+                  <Skeleton className="h-12 flex-1 rounded-lg" />
+                </div>
+              </div>
+
+              {/* Champs */}
+              <div className="grid gap-4 sm:grid-cols-2">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="space-y-2">
+                    <Skeleton className="h-3 w-24" />
+                    <Skeleton className="h-10 w-full rounded-md" />
+                  </div>
+                ))}
+              </div>
+
+              <div className="space-y-2">
+                <Skeleton className="h-3 w-32" />
+                <Skeleton className="h-24 w-full rounded-md" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Sidebar */}
+        <div className="space-y-6">
+
+          {/* Progression */}
+          <Card>
+            <CardHeader className="pb-3">
+              <Skeleton className="h-5 w-32" />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Skeleton className="h-8 w-12" />
+                <Skeleton className="h-5 w-20 rounded-full" />
+              </div>
+              <Skeleton className="h-2 w-full rounded-full" />
+              <div className="space-y-2">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <Skeleton className="h-5 w-5 rounded-full shrink-0" />
+                    <Skeleton className="h-3 w-36" />
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Récapitulatif */}
+          <Card>
+            <CardHeader className="pb-3">
+              <Skeleton className="h-5 w-28" />
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="flex justify-between gap-2">
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-4 w-28" />
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          {/* Boutons actions */}
+          <div className="space-y-2">
+            <Skeleton className="h-10 w-full rounded-md" />
+            <Skeleton className="h-10 w-full rounded-md" />
+            <Skeleton className="h-10 w-full rounded-md" />
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function NewContractPage() {
-  // Récupère le nom et l'id de l'agence depuis ton contexte auth
-  // Adapte selon ta structure : useAuth(), useUser(), props, contexte React…
-  const { user } = useAuthAgent()
-  const AGENCY_ID   = user?.agency.agency_id   ?? 1
+  const { user, loading: authLoading } = useAuthAgent()
+
+  const AGENCY_ID   = user?.agency.agency_id ?? 1
   const AGENCY_NAME = user?.agency.name ?? ""
-// console.log("AGENCY_ID:", AGENCY_ID, "AGENCY_NAME:", AGENCY_NAME)
+
   const {
     activeTab, setActiveTab,
     contractType,
@@ -44,18 +156,17 @@ export default function NewContractPage() {
     moveClause,
     duplicateClause,
     buildPayload,
-  } = useContractForm(AGENCY_NAME)   // ← agencyName passé ici
+  } = useContractForm(AGENCY_NAME)
+
+  if (authLoading) return <NewContractSkeleton />
 
   const handleSubmit = async () => {
     const payload = buildPayload()
     if (!payload) return
-    console.log("📋 Payload :", payload)
     try {
       const res = await axiosInstance.post("/api/contracts", payload)
-      console.log("✅ Contrat créé :", res.data)
       toast.success("Contrat créé avec succès !")
     } catch (err) {
-      console.error("❌ Erreur :", err.response?.data?.message || err.message)
       toast.error("Erreur lors de la création du contrat : " + (err.response?.data?.message || err.message))
     }
   }

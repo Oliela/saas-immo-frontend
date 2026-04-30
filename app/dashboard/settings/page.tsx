@@ -12,13 +12,87 @@ import TeamSettings from "@/components/settings/TeamSettings"
 import BillingSettings from "@/components/settings/BillingSettings"
 import { useAgency } from "@/hooks/agence/useAgency"
 import { useState } from "react"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
 
 export default function SettingsPage() {
     const { data, loading } = useAgency()
-    
+
     const [isEditing, setIsEditing] = useState(false)
 
-    if (loading) return <p>Chargement...</p>
+    if (loading) return (
+        <div className="space-y-6">
+
+            {/* Header */}
+            <div className="space-y-2">
+                <Skeleton className="h-7 w-36" />
+                <Skeleton className="h-4 w-64" />
+            </div>
+
+            {/* Tabs bar */}
+            <div className="flex flex-wrap gap-2">
+                <Skeleton className="h-9 w-36 rounded-md" />
+                <Skeleton className="h-9 w-24 rounded-md" />
+                <Skeleton className="h-9 w-24 rounded-md" />
+            </div>
+
+            {/* Contenu onglet Profil agence */}
+            <div className="space-y-6">
+
+                {/* Infos générales */}
+                <Card>
+                    <CardHeader className="space-y-2">
+                        <Skeleton className="h-5 w-40" />
+                        <Skeleton className="h-4 w-56" />
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="flex items-center gap-4">
+                            <Skeleton className="h-20 w-20 rounded-full shrink-0" />
+                            <div className="space-y-2">
+                                <Skeleton className="h-8 w-32 rounded-md" />
+                                <Skeleton className="h-4 w-48" />
+                            </div>
+                        </div>
+                        <div className="grid gap-4 sm:grid-cols-2">
+                            {[...Array(4)].map((_, i) => (
+                                <div key={i} className="space-y-2">
+                                    <Skeleton className="h-3 w-24" />
+                                    <Skeleton className="h-10 w-full rounded-md" />
+                                </div>
+                            ))}
+                        </div>
+                        <div className="space-y-2">
+                            <Skeleton className="h-3 w-20" />
+                            <Skeleton className="h-24 w-full rounded-md" />
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Coordonnées */}
+                <Card>
+                    <CardHeader className="space-y-2">
+                        <Skeleton className="h-5 w-32" />
+                        <Skeleton className="h-4 w-48" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="grid gap-4 sm:grid-cols-2">
+                            {[...Array(4)].map((_, i) => (
+                                <div key={i} className="space-y-2">
+                                    <Skeleton className="h-3 w-20" />
+                                    <Skeleton className="h-10 w-full rounded-md" />
+                                </div>
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Bouton save */}
+                <div className="flex justify-end">
+                    <Skeleton className="h-9 w-40 rounded-md" />
+                </div>
+            </div>
+        </div>
+    )
     // if (error) return <p>{error}</p>
 
     const user = data
@@ -69,7 +143,7 @@ export default function SettingsPage() {
 
                 {/* Agency Profile */}
                 <TabsContent value="profile" className="space-y-6">
-                    <AgencyProfileForm agency={profile}/>
+                    <AgencyProfileForm agency={profile} />
                 </TabsContent>
 
                 {/* Notifications */}

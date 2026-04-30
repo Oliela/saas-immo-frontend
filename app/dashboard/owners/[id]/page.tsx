@@ -23,6 +23,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useEffect, useState } from "react"
 import axiosInstance from "@/lib/axios"
 import { useParams } from "next/navigation"
+import { Skeleton } from "@/components/ui/skeleton"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -119,19 +120,19 @@ const PROPERTY_STATUS_CONFIG: Record<
   PropertyStatus,
   { variant: BadgeVariant; label: string }
 > = {
-  rented:      { variant: "default",   label: "Loué" },
-  available:   { variant: "secondary", label: "Disponible" },
-  maintenance: { variant: "outline",   label: "Maintenance" },
+  rented: { variant: "default", label: "Loué" },
+  available: { variant: "secondary", label: "Disponible" },
+  maintenance: { variant: "outline", label: "Maintenance" },
 }
 
 const OWNER_STATUS_CONFIG: Record<
   OwnerStatus,
   { label: string; variant: BadgeVariant }
 > = {
-  actif:        { label: "Actif",       variant: "default" },
-  inactif:      { label: "Inactif",     variant: "secondary" },
-  "en attente": { label: "En attente",  variant: "outline" },
-  suspendu:     { label: "Suspendu",    variant: "destructive" },
+  actif: { label: "Actif", variant: "default" },
+  inactif: { label: "Inactif", variant: "secondary" },
+  "en attente": { label: "En attente", variant: "outline" },
+  suspendu: { label: "Suspendu", variant: "destructive" },
 }
 
 const FALLBACK_STATUS = { label: "Inconnu", variant: "outline" as BadgeVariant }
@@ -140,30 +141,30 @@ const FALLBACK_STATUS = { label: "Inconnu", variant: "outline" as BadgeVariant }
 
 function mapApiToViewModel(data: OwnerApiResponse): OwnerViewModel {
   return {
-    id:               data.id,
-    name:             `${data.firstName} ${data.lastName}`,
-    email:            data.email,
-    phone:            data.phone,
-    location:         `${data.city}, ${data.state}`,
-    address:          `${data.address}, ${data.city}, ${data.state} ${data.zipCode}, ${data.country}`,
-    status:           data.status,
-    joinedDate:       data.created_at.split("T")[0],
-    lastActivity:     null,
-    totalProperties:  data.biens_count ?? 0,
-    totalValue:       data.total_portfolio_value ?? "0 CFA",
-    monthlyIncome:    data.monthly_income ?? "0 CFA",
-    occupancyRate:    data.occupancy_rate ?? "0%",
-    bio:              data.bio ?? "",
-    bankName:         data.bankName,
-    accountHolder:    data.accountHolder,
-    accountNumber:    data.accountNumber,
-    accountType:      data.accountType,
-    taxIdType:        data.taxIdType,
-    taxId:            data.taxId,
-    agency:           data.agency,
-    properties:       data.biens ?? [],
-    contracts:        [],
-    transactions:     [],
+    id: data.id,
+    name: `${data.firstName} ${data.lastName}`,
+    email: data.email,
+    phone: data.phone,
+    location: `${data.city}, ${data.state}`,
+    address: `${data.address}, ${data.city}, ${data.state} ${data.zipCode}, ${data.country}`,
+    status: data.status,
+    joinedDate: data.created_at.split("T")[0],
+    lastActivity: null,
+    totalProperties: data.biens_count ?? 0,
+    totalValue: data.total_portfolio_value ?? "0 CFA",
+    monthlyIncome: data.monthly_income ?? "0 CFA",
+    occupancyRate: data.occupancy_rate ?? "0%",
+    bio: data.bio ?? "",
+    bankName: data.bankName,
+    accountHolder: data.accountHolder,
+    accountNumber: data.accountNumber,
+    accountType: data.accountType,
+    taxIdType: data.taxIdType,
+    taxId: data.taxId,
+    agency: data.agency,
+    properties: data.biens ?? [],
+    contracts: [],
+    transactions: [],
   }
 }
 
@@ -181,8 +182,8 @@ function getPropertyStatusBadge(status: string) {
 export default function OwnerViewPage() {
   const { id } = useParams()
   const [ownerData, setOwnerData] = useState<OwnerApiResponse | null>(null)
-  const [loading, setLoading]     = useState(true)
-  const [error, setError]         = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!id) return
@@ -195,7 +196,7 @@ export default function OwnerViewPage() {
           err instanceof Error
             ? err.message
             : (err as { response?: { data?: { message?: string } } })
-                ?.response?.data?.message ?? "Erreur chargement"
+              ?.response?.data?.message ?? "Erreur chargement"
         setError(message)
       } finally {
         setLoading(false)
@@ -204,11 +205,134 @@ export default function OwnerViewPage() {
     fetchOwner()
   }, [id])
 
-  if (loading) return <p>Chargement...</p>
-  if (error)   return <p>{error}</p>
+  if (loading) return (
+    <div className="space-y-6">
+
+      {/* Header */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-4">
+          <Skeleton className="h-9 w-9 rounded-md" />
+          <div className="flex items-center gap-4">
+            <Skeleton className="h-14 w-14 rounded-full shrink-0" />
+            <div className="space-y-2">
+              <div className="flex items-center gap-3">
+                <Skeleton className="h-7 w-44" />
+                <Skeleton className="h-5 w-16 rounded-full" />
+              </div>
+              <Skeleton className="h-4 w-32" />
+            </div>
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <Skeleton className="h-8 w-36 rounded-md" />
+          <Skeleton className="h-8 w-24 rounded-md" />
+          <Skeleton className="h-8 w-36 rounded-md" />
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {[...Array(4)].map((_, i) => (
+          <Card key={i}>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-2">
+                  <Skeleton className="h-3 w-32" />
+                  <Skeleton className="h-7 w-20" />
+                </div>
+                <Skeleton className="h-10 w-10 rounded-lg shrink-0" />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+
+          {/* Tabs bar */}
+          <div className="flex gap-2 mb-6">
+            {[...Array(3)].map((_, i) => (
+              <Skeleton key={i} className="h-9 w-28 rounded-md" />
+            ))}
+          </div>
+
+          {/* Propriétés */}
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-5 w-32" />
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="flex items-center justify-between p-4 rounded-lg border border-border">
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="h-10 w-10 rounded-lg shrink-0" />
+                    <div className="space-y-1.5">
+                      <Skeleton className="h-4 w-40" />
+                      <Skeleton className="h-3 w-56" />
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="space-y-1 text-right hidden sm:block">
+                      <Skeleton className="h-4 w-24 ml-auto" />
+                      <Skeleton className="h-3 w-16 ml-auto" />
+                    </div>
+                    <Skeleton className="h-5 w-20 rounded-full" />
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Sidebar */}
+        <div className="space-y-6">
+
+          {/* Contact */}
+          <Card>
+            <CardHeader><Skeleton className="h-5 w-44" /></CardHeader>
+            <CardContent className="space-y-3">
+              <Skeleton className="h-4 w-48" />
+              <Skeleton className="h-4 w-36" />
+              <Skeleton className="h-4 w-56" />
+              <Separator />
+              <div className="flex justify-between">
+                <Skeleton className="h-4 w-28" />
+                <Skeleton className="h-4 w-24" />
+              </div>
+              <div className="flex justify-between">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-4 w-8" />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* À propos */}
+          <Card>
+            <CardHeader><Skeleton className="h-5 w-20" /></CardHeader>
+            <CardContent className="space-y-2">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-5/6" />
+              <Skeleton className="h-4 w-3/4" />
+            </CardContent>
+          </Card>
+
+          {/* Actions */}
+          <Card>
+            <CardHeader><Skeleton className="h-5 w-32" /></CardHeader>
+            <CardContent className="space-y-2">
+              <Skeleton className="h-8 w-full rounded-md" />
+              <Skeleton className="h-8 w-full rounded-md" />
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  )
+  if (error) return <p>{error}</p>
   if (!ownerData) return <p>Propriétaire introuvable</p>
 
-  const owner       = mapApiToViewModel(ownerData)
+  const owner = mapApiToViewModel(ownerData)
   const ownerStatus = OWNER_STATUS_CONFIG[owner.status] ?? FALLBACK_STATUS
 
   return (
@@ -258,10 +382,10 @@ export default function OwnerViewPage() {
       {/* ── Stats ──────────────────────────────────────────────────────── */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
-          { label: "Propriétés",          value: owner.totalProperties, Icon: Home },
-          { label: "Valeur du portefeuille", value: owner.totalValue,   Icon: DollarSign },
-          { label: "Revenu mensuel",       value: owner.monthlyIncome,   Icon: TrendingUp },
-          { label: "Taux d'occupation",    value: owner.occupancyRate,   Icon: Building2 },
+          { label: "Propriétés", value: owner.totalProperties, Icon: Home },
+          { label: "Valeur du portefeuille", value: owner.totalValue, Icon: DollarSign },
+          { label: "Revenu mensuel", value: owner.monthlyIncome, Icon: TrendingUp },
+          { label: "Taux d'occupation", value: owner.occupancyRate, Icon: Building2 },
         ].map(({ label, value, Icon }) => (
           <Card key={label}>
             <CardContent className="p-4">
@@ -322,7 +446,7 @@ export default function OwnerViewPage() {
                         <div className="flex items-center gap-4">
                           <div className="text-right hidden sm:block">
                             <p className="font-medium text-foreground">
-                            {prop.price} CFA
+                              {prop.price} CFA
                             </p>
                             <p className="text-xs text-muted-foreground">
                               {prop.listingType === "sale" ? "À vendre" : "À louer / mois"}
@@ -396,9 +520,8 @@ export default function OwnerViewPage() {
                           </p>
                         </div>
                         <span
-                          className={`font-bold ${
-                            t.amount.startsWith("+") ? "text-green-600" : "text-destructive"
-                          }`}
+                          className={`font-bold ${t.amount.startsWith("+") ? "text-green-600" : "text-destructive"
+                            }`}
                         >
                           {t.amount}
                         </span>

@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { useParams, useRouter } from "next/navigation"
 import axiosInstance from "@/lib/axios"
 import { toast } from "sonner"
+import { Skeleton } from "@/components/ui/skeleton"
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -52,10 +53,10 @@ interface VisitData {
         phone: string
         account_type: string
       }
-      agency:{
+      agency: {
         phone: string
-        name: string 
-        email:string
+        name: string
+        email: string
       }
     }
   }
@@ -74,10 +75,10 @@ interface FormState {
 
 const getStatusBadge = (status: string) => {
   const config: Record<string, { variant: "default" | "secondary" | "outline" | "destructive"; label: string }> = {
-    confirmed: { variant: "default",     label: "Confirmée"  },
-    pending:   { variant: "secondary",   label: "En attente" },
-    completed: { variant: "outline",     label: "Terminée"   },
-    cancelled: { variant: "destructive", label: "Annulée"    },
+    confirmed: { variant: "default", label: "Confirmée" },
+    pending: { variant: "secondary", label: "En attente" },
+    completed: { variant: "outline", label: "Terminée" },
+    cancelled: { variant: "destructive", label: "Annulée" },
   }
   const { variant, label } = config[status] ?? { variant: "outline", label: status }
   return <Badge variant={variant}>{label}</Badge>
@@ -86,30 +87,30 @@ const getStatusBadge = (status: string) => {
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export default function VisitEditPage() {
-  const { id }   = useParams()
-  const router   = useRouter()
+  const { id } = useParams()
+  const router = useRouter()
 
-  const [data, setData]                 = useState<VisitData | null>(null)
-  const [form, setForm]                 = useState<FormState | null>(null)
-  const [loading, setLoading]           = useState(true)
+  const [data, setData] = useState<VisitData | null>(null)
+  const [form, setForm] = useState<FormState | null>(null)
+  const [loading, setLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isDeleting, setIsDeleting]     = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
   const [isConfirming, setIsConfirming] = useState(false)
 
   // ── Fetch ────────────────────────────────────────────────────────────────
   useEffect(() => {
     axiosInstance.get(`/api/visit-reservations/${id}`)
       .then((res) => {
-        const visit    = res.data.visit
+        const visit = res.data.visit
         const schedule = visit.visit_schedule
         setData(res.data)
         setForm({
-          status:     visit.status ?? "pending",
+          status: visit.status ?? "pending",
           visit_date: schedule.visit_date ?? "",
           start_time: schedule.start_time?.slice(0, 5) ?? "",
-          end_time:   schedule.end_time?.slice(0, 5) ?? "",
-          notes:      visit.notes ?? "",
-          feedback:   visit.feedback ?? "",
+          end_time: schedule.end_time?.slice(0, 5) ?? "",
+          notes: visit.notes ?? "",
+          feedback: visit.feedback ?? "",
         })
       })
       .catch((err) => console.error("Erreur fetch visite:", err))
@@ -122,12 +123,12 @@ export default function VisitEditPage() {
     setIsSubmitting(true)
     try {
       await axiosInstance.put(`/api/visit-reservations/${id}`, {
-        status:    form.status,
-        notes:      form.notes    || null,
-        feedback:   form.feedback || null,
+        status: form.status,
+        notes: form.notes || null,
+        feedback: form.feedback || null,
         visit_date: form.visit_date,
         start_time: form.start_time,
-        end_time:   form.end_time,
+        end_time: form.end_time,
       })
       toast.success("Visite mise à jour avec succès.")
       router.push(`/dashboard/visits/${id}`)
@@ -171,8 +172,135 @@ export default function VisitEditPage() {
 
   // ── Guards ────────────────────────────────────────────────────────────────
   if (loading) return (
-    <div className="flex items-center justify-center h-64">
-      <p className="text-muted-foreground">Chargement...</p>
+    <div className="space-y-6">
+
+      {/* Header */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-4">
+          <Skeleton className="h-9 w-9 rounded-md" />
+          <div className="space-y-2">
+            <div className="flex items-center gap-3">
+              <Skeleton className="h-7 w-44" />
+              <Skeleton className="h-5 w-20 rounded-full" />
+            </div>
+            <Skeleton className="h-4 w-48" />
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <Skeleton className="h-8 w-36 rounded-md" />
+          <Skeleton className="h-8 w-32 rounded-md" />
+          <Skeleton className="h-8 w-28 rounded-md" />
+        </div>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+
+        {/* Planification */}
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-5 w-28" />
+            <Skeleton className="h-4 w-44" />
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="space-y-2">
+                <Skeleton className="h-3 w-20" />
+                <Skeleton className="h-10 w-full rounded-md" />
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        {/* Propriété */}
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-5 w-24" />
+            <Skeleton className="h-4 w-52" />
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="space-y-2">
+                <Skeleton className="h-3 w-16" />
+                <Skeleton className="h-10 w-full rounded-md" />
+              </div>
+            ))}
+            <div className="grid grid-cols-2 gap-4">
+              {[...Array(2)].map((_, i) => (
+                <div key={i} className="space-y-2">
+                  <Skeleton className="h-3 w-20" />
+                  <Skeleton className="h-10 w-full rounded-md" />
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Client */}
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-5 w-20" />
+            <Skeleton className="h-4 w-48" />
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Skeleton className="h-3 w-24" />
+              <Skeleton className="h-10 w-full rounded-md" />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              {[...Array(2)].map((_, i) => (
+                <div key={i} className="space-y-2">
+                  <Skeleton className="h-3 w-16" />
+                  <Skeleton className="h-10 w-full rounded-md" />
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Agent */}
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-5 w-32" />
+            <Skeleton className="h-4 w-48" />
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Skeleton className="h-3 w-28" />
+              <Skeleton className="h-10 w-full rounded-md" />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              {[...Array(2)].map((_, i) => (
+                <div key={i} className="space-y-2">
+                  <Skeleton className="h-3 w-16" />
+                  <Skeleton className="h-10 w-full rounded-md" />
+                </div>
+              ))}
+            </div>
+            <div className="space-y-2">
+              <Skeleton className="h-3 w-12" />
+              <Skeleton className="h-10 w-full rounded-md" />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Notes & Feedback */}
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <Skeleton className="h-5 w-36" />
+            <Skeleton className="h-4 w-56" />
+          </CardHeader>
+          <CardContent className="grid gap-4 sm:grid-cols-2">
+            {[...Array(2)].map((_, i) => (
+              <div key={i} className="space-y-2">
+                <Skeleton className="h-3 w-40" />
+                <Skeleton className="h-32 w-full rounded-md" />
+                <Skeleton className="h-3 w-52" />
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+      </div>
     </div>
   )
 
@@ -182,10 +310,10 @@ export default function VisitEditPage() {
     </div>
   )
 
-  const { visit }       = data
+  const { visit } = data
   const { bien, agent, agency } = visit.visit_schedule
-  const client          = visit.client
-  const isBusy          = isSubmitting || isDeleting || isConfirming
+  const client = visit.client
+  const isBusy = isSubmitting || isDeleting || isConfirming
   // Permettre la modification des visites annulées/terminées, mais garder le statut en lecture seule
   const isStatusReadOnly = true
   const isFieldsReadOnly = false
@@ -273,10 +401,10 @@ export default function VisitEditPage() {
               <Label>Statut</Label>
               <Input
                 value={
-                  form.status === "pending"   ? "En attente"
-                  : form.status === "confirmed" ? "Confirmée"
-                  : form.status === "completed" ? "Terminée"
-                  : "Annulée"
+                  form.status === "pending" ? "En attente"
+                    : form.status === "confirmed" ? "Confirmée"
+                      : form.status === "completed" ? "Terminée"
+                        : "Annulée"
                 }
                 disabled
                 className="opacity-70"
@@ -408,7 +536,7 @@ export default function VisitEditPage() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label>{agent ? "Nom de l'agent" : "Nom de l'agence"}</Label>
-              { agent ? (<Input value={`${agent.prenom} ${agent.nom}`} disabled className="opacity-70" />) : (<Input value={agency?.name} disabled className="opacity-70" />)}
+              {agent ? (<Input value={`${agent.prenom} ${agent.nom}`} disabled className="opacity-70" />) : (<Input value={agency?.name} disabled className="opacity-70" />)}
               {/* <Input value={`${agent.prenom} ${agent.nom}`} disabled className="opacity-70" /> */}
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -425,17 +553,17 @@ export default function VisitEditPage() {
               <div className="space-y-2">
                 <Label>Rôle</Label>
                 <Input
-                      value={
-                        agent.account_type === "agency_user" ? "Agent immobilier"
-                        : agent.account_type === "super_admin" ? "Administrateur"
+                  value={
+                    agent.account_type === "agency_user" ? "Agent immobilier"
+                      : agent.account_type === "super_admin" ? "Administrateur"
                         : agent.account_type
-                      }
-                      disabled
-                      className="opacity-70"
-                    />
+                  }
+                  disabled
+                  className="opacity-70"
+                />
               </div>
             ) : null}
-                    
+
             <p className="text-xs text-muted-foreground">
               Pour changer d'agent, modifiez le créneau depuis le calendrier.
             </p>
@@ -457,7 +585,7 @@ export default function VisitEditPage() {
                 disabled={isFieldsReadOnly}
                 onChange={(e) => update("notes", e.target.value)}
                 rows={5}
-                
+
               />
               <p className="text-xs text-muted-foreground">Usage interne — non partagé avec le client</p>
             </div>

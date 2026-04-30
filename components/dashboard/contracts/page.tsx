@@ -39,6 +39,7 @@ import { Progress } from "@/components/ui/progress"
 import type { Contract, ContractsStats, ContractStatus } from "@/types/contracts"
 import axiosInstance from "@/lib/axios"
 import { toast } from "sonner"
+import { Skeleton } from "@/components/ui/skeleton"
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -192,7 +193,7 @@ function ContractFilters({
 // ─── Sous-composant : Tableau ─────────────────────────────────────────────────
 
 function ContractTable({ contracts }: { contracts: Contract[] }) {
- const [loading, setLoading] = useState<Record<number, ActionState>>({})
+  const [loading, setLoading] = useState<Record<number, ActionState>>({})
 
   const getStatusBadge = (status: ContractStatus) => {
     const config: Record<ContractStatus, { variant: "default" | "secondary" | "outline" | "destructive"; label: string }> = {
@@ -226,8 +227,8 @@ function ContractTable({ contracts }: { contracts: Contract[] }) {
     console.log("Envoyer le contrat ID", id)
     setLoading((prev) => ({ ...prev, [id]: { loading: true, error: null } }))
     try {
-      await axiosInstance.patch(`/api/contracts/send/${id}`,{
-        
+      await axiosInstance.patch(`/api/contracts/send/${id}`, {
+
       })
       setLoading((prev) => ({ ...prev, [id]: { loading: false, error: null } }))
       toast.success("Contrat envoyé pour signature !")
@@ -404,10 +405,10 @@ export default function ListingContractsPage({
           <p className="text-muted-foreground">Créer et gérer les contrats immobiliers</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" className="bg-transparent">
+          {/* <Button variant="outline" className="bg-transparent">
             <Download className="mr-2 h-4 w-4" />
             Exporter
-          </Button>
+          </Button> */}
           <Button asChild>
             <Link href="/dashboard/contracts/new">
               <Plus className="mr-2 h-4 w-4" />
@@ -418,7 +419,26 @@ export default function ListingContractsPage({
       </div>
 
       {/* 1. Stats */}
-      <ContractStats stats={stats} />
+      {loading ? (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i}>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-2">
+                    <Skeleton className="h-3 w-32" />
+                    <Skeleton className="h-7 w-16" />
+                  </div>
+                  <Skeleton className="h-10 w-10 rounded-lg shrink-0" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <ContractStats stats={stats} />
+      )}
+
 
       {/* 2. Filtres */}
       <ContractFilters
@@ -433,8 +453,70 @@ export default function ListingContractsPage({
       {/* 3. Tableau */}
       {loading ? (
         <Card>
-          <CardContent className="flex items-center justify-center py-16">
-            <p className="text-muted-foreground">Chargement des contrats...</p>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-border">
+                    {["N° Contrat", "Bien / Client", "Type", "Montant", "Ville", "Statut", "Progression", ""].map((h, i) => (
+                      <th key={i} className="py-4 px-4 text-left">
+                        <Skeleton className="h-3 w-20" />
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {[...Array(6)].map((_, i) => (
+                    <tr key={i} className="border-b border-border last:border-0">
+                      {/* N° Contrat */}
+                      <td className="py-4 px-4">
+                        <div className="flex items-center gap-3">
+                          <Skeleton className="h-10 w-10 rounded-lg shrink-0" />
+                          <div className="space-y-1.5">
+                            <Skeleton className="h-4 w-28" />
+                            <Skeleton className="h-3 w-20" />
+                          </div>
+                        </div>
+                      </td>
+                      {/* Bien / Client */}
+                      <td className="py-4 px-4">
+                        <div className="space-y-1.5">
+                          <Skeleton className="h-4 w-40" />
+                          <Skeleton className="h-3 w-28" />
+                        </div>
+                      </td>
+                      {/* Type */}
+                      <td className="py-4 px-4 hidden md:table-cell">
+                        <Skeleton className="h-5 w-16 rounded-full" />
+                      </td>
+                      {/* Montant */}
+                      <td className="py-4 px-4 hidden lg:table-cell">
+                        <Skeleton className="h-4 w-24" />
+                      </td>
+                      {/* Ville */}
+                      <td className="py-4 px-4 hidden lg:table-cell">
+                        <Skeleton className="h-4 w-20" />
+                      </td>
+                      {/* Statut */}
+                      <td className="py-4 px-4">
+                        <Skeleton className="h-5 w-24 rounded-full" />
+                      </td>
+                      {/* Progression */}
+                      <td className="py-4 px-4 hidden xl:table-cell">
+                        <div className="w-[100px] space-y-1">
+                          <Skeleton className="h-2 w-full rounded-full" />
+                          <Skeleton className="h-3 w-16" />
+                        </div>
+                      </td>
+                      {/* Actions */}
+                      <td className="py-4 px-4 text-right">
+                        <Skeleton className="h-8 w-8 rounded-md ml-auto" />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </CardContent>
         </Card>
       ) : (

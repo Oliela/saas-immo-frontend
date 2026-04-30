@@ -26,14 +26,15 @@ import {
   DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog"
 import {
-    AlertDialog, AlertDialogAction, AlertDialogCancel,
-    AlertDialogContent, AlertDialogDescription,
-    AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+  AlertDialog, AlertDialogAction, AlertDialogCancel,
+  AlertDialogContent, AlertDialogDescription,
+  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Label } from "@/components/ui/label"
 import { useFactures, Facture } from "@/hooks/agence/useFactures"
 import axiosInstance from "@/lib/axios"
 import { toast } from "sonner"
+import { Skeleton } from "@/components/ui/skeleton"
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -229,8 +230,113 @@ export default function ListingInvoicesPage({ agencyId }: Props) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <p className="text-muted-foreground">Chargement des factures...</p>
+      <div className="space-y-6">
+
+        {/* Header */}
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-2">
+            <Skeleton className="h-7 w-52" />
+            <Skeleton className="h-4 w-64" />
+          </div>
+          <div className="flex gap-2">
+            <Skeleton className="h-9 w-28 rounded-md" />
+            <Skeleton className="h-9 w-40 rounded-md" />
+          </div>
+        </div>
+
+        {/* Stats */}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i}>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-2">
+                    <Skeleton className="h-3 w-32" />
+                    <Skeleton className="h-7 w-24" />
+                    <Skeleton className="h-3 w-20" />
+                  </div>
+                  <Skeleton className="h-10 w-10 rounded-lg shrink-0" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Table */}
+        <Card>
+          <CardHeader className="pb-4">
+            <div className="flex flex-col gap-4">
+              <div className="space-y-1">
+                <Skeleton className="h-5 w-44" />
+                <Skeleton className="h-4 w-56" />
+              </div>
+              <div className="flex flex-col gap-2 md:flex-row">
+                <Skeleton className="h-10 flex-1 rounded-md" />
+                <Skeleton className="h-10 w-full md:w-[140px] rounded-md" />
+                <Skeleton className="h-10 w-full md:w-[170px] rounded-md" />
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-border">
+                    {[...Array(8)].map((_, i) => (
+                      <th key={i} className="py-3 px-4 text-left">
+                        <Skeleton className="h-3 w-16" />
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {[...Array(6)].map((_, i) => (
+                    <tr key={i} className="border-b border-border last:border-0">
+                      {/* Facture */}
+                      <td className="py-3 px-4">
+                        <div className="space-y-1.5">
+                          <Skeleton className="h-4 w-28" />
+                          <Skeleton className="h-3 w-20" />
+                        </div>
+                      </td>
+                      {/* Destinataire */}
+                      <td className="py-3 px-4 hidden md:table-cell">
+                        <div className="space-y-1.5">
+                          <Skeleton className="h-4 w-32" />
+                          <Skeleton className="h-3 w-40" />
+                        </div>
+                      </td>
+                      {/* Catégorie */}
+                      <td className="py-3 px-4 hidden lg:table-cell">
+                        <Skeleton className="h-4 w-24" />
+                      </td>
+                      {/* Montant TTC */}
+                      <td className="py-3 px-4 text-right">
+                        <Skeleton className="h-4 w-24 ml-auto" />
+                      </td>
+                      {/* Payé */}
+                      <td className="py-3 px-4 text-right hidden sm:table-cell">
+                        <Skeleton className="h-4 w-20 ml-auto" />
+                      </td>
+                      {/* Restant */}
+                      <td className="py-3 px-4 text-right hidden sm:table-cell">
+                        <Skeleton className="h-4 w-20 ml-auto" />
+                      </td>
+                      {/* Statut */}
+                      <td className="py-3 px-4 text-center">
+                        <Skeleton className="h-5 w-24 rounded-full mx-auto" />
+                      </td>
+                      {/* Actions */}
+                      <td className="py-3 px-4 text-right">
+                        <Skeleton className="h-8 w-8 rounded-md ml-auto" />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     )
   }
@@ -252,10 +358,10 @@ export default function ListingInvoicesPage({ agencyId }: Props) {
           <p className="text-muted-foreground">Gérez la facturation et suivez les paiements</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" className="bg-transparent">
+          {/* <Button variant="outline" className="bg-transparent">
             <Download className="mr-2 h-4 w-4" />
             Exporter
-          </Button>
+          </Button> */}
           <Button asChild>
             <Link href="/dashboard/invoices/create">
               <Plus className="mr-2 h-4 w-4" />
