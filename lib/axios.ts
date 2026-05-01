@@ -6,7 +6,9 @@ function getCookie(name: string): string | null {
   return match ? decodeURIComponent(match[2]) : null;
 }
 
-// 🗑️ Supprimez clearAuthCookies() entièrement
+function isLoggedIn(): boolean {
+  return document.cookie.includes("account_type=");
+}
 
 const axiosInstance = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000",
@@ -33,29 +35,22 @@ let isRedirecting = false;
 function clearSessionAndRedirect() {
   if (isRedirecting) return;
   isRedirecting = true;
-  // Le middleware va intercepter ce paramètre et effacer le cookie serveur
   window.location.href = "/login?expired=1";
 }
 
+// Un seul intercepteur response
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401 && typeof window !== "undefined") {
+    if (
+      error.response?.status === 401 &&
+      typeof window !== "undefined" &&
+      isLoggedIn() // seulement si la personne était connectée
+    ) {
       clearSessionAndRedirect();
     }
     return Promise.reject(error);
-  },
-);
-
-// 🗑️ Remplacez tout le bloc interceptors.response par celui-ci
-axiosInstance.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401 && typeof window !== "undefined") {
-      clearSessionAndRedirect();
-    }
-    return Promise.reject(error);
-  },
+  }
 );
 
 export default axiosInstance;

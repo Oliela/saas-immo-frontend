@@ -16,10 +16,19 @@ const HOME_ROUTES: Record<string, string> = {
 
 export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl
+
+  // Ignorer les ressources Vercel, images et fichiers statiques
+  if (
+    pathname.startsWith('/_vercel') ||
+    pathname.startsWith('/api/') ||
+    /\.(.*)$/.test(pathname)
+  ) {
+    return NextResponse.next()
+  }
+
   const accountType = req.cookies.get('account_type')?.value
 
   if (pathname === '/login') {
-    // ✅ Session expirée : on efface le cookie ici côté serveur
     const expired = req.nextUrl.searchParams.get('expired')
     if (expired === '1') {
       const response = NextResponse.next()
