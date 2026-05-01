@@ -18,6 +18,7 @@ import {
   Send,
   Star,
   Trash,
+  UserPlus,
 } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -952,6 +953,17 @@ export default function PropertiesNew({
               </div>
 
               <div className="space-y-3">
+                {/* si il ya pas de proprietaire affricher un button creer un proprietaire sinon afficher les proprietaire dans une liste et selectionner le proprietaire pour l'afficher dans une card en bas */}
+                {owners.length === 0 && (
+                  <div className="text-center py-10">
+                    <p className="text-sm text-muted-foreground mb-4">Aucun propriétaire trouvé. Veuillez en créer un avant d'assigner une propriété.</p>
+                    <Button onClick={() => window.location.href = "/dashboard/owners/new"}>
+                      <UserPlus className="mr-2 h-4 w-4" />
+                      Créer un propriétaire
+                    </Button>
+                  </div>
+                )}  
+
                 {filteredOwners.map((owner) => (
                   <button
                     key={owner.id}
