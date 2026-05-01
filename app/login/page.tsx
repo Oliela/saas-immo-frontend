@@ -100,7 +100,7 @@ export default function LoginPage() {
         <footer className="py-6 px-4">
           <div className="mx-auto max-w-7xl text-center">
             <p className="text-sm text-muted-foreground">
-              &copy; {new Date().getFullYear()} SAS IMO. All rights reserved.
+              &copy; {new Date().getFullYear()} Galle Connect Pro. Tous droits réservés.
             </p>
           </div>
         </footer>

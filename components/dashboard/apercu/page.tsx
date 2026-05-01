@@ -388,7 +388,7 @@ export default function ListingDashboardPage({ data, user, loading }: Props) {
               <CardDescription>Vos biens ajoutés récemment</CardDescription>
             </div>
             <Button variant="outline" size="sm" asChild className="bg-transparent">
-              <Link href="/dashboard/biens">Voir tous</Link>
+              <Link href="/dashboard/properties">Voir tous</Link>
             </Button>
           </CardHeader>
           <CardContent>
@@ -431,9 +431,13 @@ export default function ListingDashboardPage({ data, user, loading }: Props) {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem>Modifier</DropdownMenuItem>
-                      <DropdownMenuItem>Voir détails</DropdownMenuItem>
-                      <DropdownMenuItem className="text-destructive">Supprimer</DropdownMenuItem>
+                      {/* <DropdownMenuItem >Modifier</DropdownMenuItem> */}
+                       <DropdownMenuItem asChild>
+                        <Link href={`/dashboard/properties/${bien.id}`}>
+                           <Eye className="mr-2 h-4 w-4" />Voir détails
+                        </Link>
+                      </DropdownMenuItem>
+                      {/* <DropdownMenuItem className="text-destructive">Supprimer</DropdownMenuItem> */}
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
