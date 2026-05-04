@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import axiosInstance from "@/lib/axios"
+import Link from "next/link"
 
 interface LoginFormProps {
   onSuccess?: () => void
@@ -49,6 +50,7 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
 
       <div className="space-y-2">
         <Label htmlFor="email">Adresse e-mail</Label>
+
         <Input
           id="email"
           type="email"
@@ -57,10 +59,12 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
           onChange={(e) => setEmail(e.target.value)}
           required
         />
+
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="password">Mot de passe</Label>
+
         <Input
           id="password"
           type="password"
@@ -69,6 +73,12 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
           onChange={(e) => setPassword(e.target.value)}
           required
         />
+        <Link
+          href="/forgot-password"
+          className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          Mot de passe oublié ?
+        </Link>
       </div>
 
       <Button type="submit" className="w-full" size="lg" disabled={submitting}>

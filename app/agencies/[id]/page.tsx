@@ -209,7 +209,7 @@ export default function AgencyDetailsPage() {
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <ContactAgencyDialog agencyName={agency.name} agencyId={agency.id}>
+                <ContactAgencyDialog agencyName={agency.name} agencyId={agency.id} currencySymbol="FCFA">
                   <Button size="lg" className="gap-2">
                     <MessageSquare className="h-4 w-4" />
                     Contacter l'agence
@@ -441,7 +441,7 @@ export default function AgencyDetailsPage() {
                   </div>
 
                   <div className="pt-4 space-y-3">
-                    <ContactAgencyDialog agencyId={agency.id} agencyName={agency.name}>
+                    <ContactAgencyDialog agencyId={agency.id} agencyName={agency.name} currencySymbol="FCFA">
                       <Button className="w-full" size="lg">
                         <MessageSquare className="mr-2 h-4 w-4" />
                         Envoyer un message

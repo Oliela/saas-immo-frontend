@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { MessageSquare, CheckCircle, User, Mail, Phone, Home, MapPin, DollarSign, BedDouble, ChevronDown } from "lucide-react"
+import { MessageSquare, CheckCircle, User, Mail, Phone, Home, MapPin, BedDouble, ChevronDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -38,10 +38,11 @@ const featuresList = [
 interface ContactAgencyDialogProps {
   agencyId: number
   agencyName: String
+  currencySymbol?: string
   children: React.ReactNode
 }
 
-export function ContactAgencyDialog({ agencyId,agencyName, children }: ContactAgencyDialogProps) {
+export function ContactAgencyDialog({ agencyId, agencyName, currencySymbol = "FCFA", children }: ContactAgencyDialogProps) {
   const [open, setOpen] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [showAdvanced, setShowAdvanced] = useState(false)
@@ -81,36 +82,36 @@ export function ContactAgencyDialog({ agencyId,agencyName, children }: ContactAg
     if (!form.firstName || !form.email || !form.listingType || !form.propertyType) return
 
     const payload = {
-        agency_id:     agencyId,           // à passer en prop
-        nom:           form.lastName,
-        prenom:        form.firstName,
-        email:         form.email,
-        phone:         form.phone,
+      agency_id: agencyId,           // à passer en prop
+      nom: form.lastName,
+      prenom: form.firstName,
+      email: form.email,
+      phone: form.phone,
 
-        // Champs wish_form
-        property_type: form.propertyType,
-        listing_type:  form.listingType,
-        budget_min:    form.budgetMin ? Number(form.budgetMin) : null,
-        budget_max:    form.budgetMax ? Number(form.budgetMax) : null,
-        nb_pieces:     form.bedrooms && form.bedrooms !== "any" ? Number(form.bedrooms) : null,
-        ville:         form.city,
-        description:   form.message,
-        timeline:      form.timeline,
-        area_min:      form.areaMin ? Number(form.areaMin) : null,
-        area_max:      form.areaMax ? Number(form.areaMax) : null,
-        features:      form.features.length > 0 ? form.features : null,
+      // Champs wish_form
+      property_type: form.propertyType,
+      listing_type: form.listingType,
+      budget_min: form.budgetMin ? Number(form.budgetMin) : null,
+      budget_max: form.budgetMax ? Number(form.budgetMax) : null,
+      nb_pieces: form.bedrooms && form.bedrooms !== "any" ? Number(form.bedrooms) : null,
+      ville: form.city,
+      description: form.message,
+      timeline: form.timeline,
+      area_min: form.areaMin ? Number(form.areaMin) : null,
+      area_max: form.areaMax ? Number(form.areaMax) : null,
+      features: form.features.length > 0 ? form.features : null,
     }
     console.log("Submitting contact form with payload:", payload)
 
     try {
-        await axiosInstance.post("/api/leads", payload)
-        setSubmitted(true)
-        toast.success("Votre demande a été envoyée avec succès ! L'agence vous contactera bientôt.")
+      await axiosInstance.post("/api/leads", payload)
+      setSubmitted(true)
+      toast.success("Votre demande a été envoyée avec succès ! L'agence vous contactera bientôt.")
     } catch (e) {
-        console.error(e)
-        toast.error("Une erreur est survenue lors de l'envoi de votre demande. Veuillez réessayer plus tard.")
+      console.error(e)
+      toast.error("Une erreur est survenue lors de l'envoi de votre demande. Veuillez réessayer plus tard.")
     }
-}
+  }
 
   const handleClose = (val: boolean) => {
     setOpen(val)
@@ -210,7 +211,7 @@ export function ContactAgencyDialog({ agencyId,agencyName, children }: ContactAg
                       <Input
                         id="phone"
                         type="tel"
-                        placeholder="+33 6 12 34 56 78"
+                        placeholder="+221 123 45 67 89"
                         className="pl-9"
                         value={form.phone}
                         onChange={(e) => set("phone", e.target.value)}
@@ -266,7 +267,7 @@ export function ContactAgencyDialog({ agencyId,agencyName, children }: ContactAg
                       <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="city"
-                        placeholder="ex. Paris, Lyon..."
+                        placeholder="ex. Dakar, Thies..."
                         className="pl-9"
                         value={form.city}
                         onChange={(e) => set("city", e.target.value)}
@@ -277,7 +278,7 @@ export function ContactAgencyDialog({ agencyId,agencyName, children }: ContactAg
                     <Label htmlFor="neighborhood">Quartier</Label>
                     <Input
                       id="neighborhood"
-                      placeholder="ex. Marais, Bastille..."
+                      placeholder="ex. Mariste, Ouakam..."
                       value={form.neighborhood}
                       onChange={(e) => set("neighborhood", e.target.value)}
                     />
@@ -285,7 +286,7 @@ export function ContactAgencyDialog({ agencyId,agencyName, children }: ContactAg
                   <div className="space-y-1.5">
                     <Label>Budget min</Label>
                     <div className="relative">
-                      <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground">xof</span>
                       <Input
                         type="number"
                         placeholder="0"
@@ -298,7 +299,7 @@ export function ContactAgencyDialog({ agencyId,agencyName, children }: ContactAg
                   <div className="space-y-1.5">
                     <Label>Budget max</Label>
                     <div className="relative">
-                      <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground">xof</span>
                       <Input
                         type="number"
                         placeholder="Sans limite"
@@ -349,7 +350,7 @@ export function ContactAgencyDialog({ agencyId,agencyName, children }: ContactAg
                 className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
                 <ChevronDown className={cn("h-4 w-4 transition-transform", showAdvanced && "rotate-180")} />
-{showAdvanced ? "Masquer les options avancees" : "Afficher les options avancees (surface, equipements)"}
+                {showAdvanced ? "Masquer les options avancees" : "Afficher les options avancees (surface, equipements)"}
               </button>
 
               {showAdvanced && (
