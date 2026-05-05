@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import axiosInstance from "@/lib/axios";
 
 export function useAuthAgent() {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<any>();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

@@ -53,7 +53,7 @@ export function useClients(agencyId: number) {
   const [clients, setClients] = useState<Client[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-console.log("🔴 agency_id envoyé:", agencyId)
+// console.log("🔴 agency_id envoyé:", agencyId)
   useEffect(() => {
     let cancelled = false;
     setIsLoading(true);
@@ -64,8 +64,8 @@ console.log("🔴 agency_id envoyé:", agencyId)
         params: { agency_id: agencyId },
       })
       .then((res) => {
-        console.log("🔵 useClients raw response:", res.data);
-        console.log("🔵 interests confirmés:", res.data.data);
+        // console.log("🔵 useClients raw response:", res.data);
+        // console.log("🔵 interests confirmés:", res.data.data);
         if (cancelled) return;
 
         // Déduplique par client_id — un client peut avoir plusieurs intérêts
@@ -84,7 +84,7 @@ console.log("🔴 agency_id envoyé:", agencyId)
             status: "approved", // intérêt confirmé = client approuvé
           });
         });
-        console.log("🔵 clients normalisés:", normalized);
+        // console.log("🔵 clients normalisés:", normalized);
         setClients(normalized);
       })
       .catch((err) => {

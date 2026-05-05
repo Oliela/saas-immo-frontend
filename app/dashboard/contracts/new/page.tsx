@@ -92,10 +92,10 @@ function NewContractContent() {
 
   // Query params optionnels (pré-sélection depuis une tâche)
   const searchParams = useSearchParams()
-  const preClientId = searchParams.get("client_id") ?? undefined
-  const preBienId = searchParams.get("bien_id") ?? undefined
+  const preClientId = searchParams.get("client_id") ?? ""
+  const preBienId = searchParams.get("bien_id") ?? ""
 
-  const AGENCY_ID = user?.agency.agency_id ?? 1
+  const AGENCY_ID = user?.agency.id ?? ""
   const AGENCY_NAME = user?.agency.name ?? ""
 
   // Dans NewContractPage
