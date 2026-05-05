@@ -53,7 +53,7 @@ export function useClients(agencyId: number) {
   const [clients, setClients] = useState<Client[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
+console.log("🔴 agency_id envoyé:", agencyId)
   useEffect(() => {
     let cancelled = false;
     setIsLoading(true);

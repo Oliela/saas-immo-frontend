@@ -10,13 +10,13 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import axiosInstance from "@/lib/axios"
 import { useSearchParams } from "next/navigation"
 
-import { useContractForm }      from "@/hooks/contracts/useContractForm"
-import { ContractInfoTab }      from "@/components/dashboard/contracts/new/ContractInfoTab"
-import { ContractPartiesTab }   from "@/components/dashboard/contracts/new/ContractPartiesTab"
-import { ContractClausesTab }   from "@/components/dashboard/contracts/new/ContractClausesTab"
+import { useContractForm } from "@/hooks/contracts/useContractForm"
+import { ContractInfoTab } from "@/components/dashboard/contracts/new/ContractInfoTab"
+import { ContractPartiesTab } from "@/components/dashboard/contracts/new/ContractPartiesTab"
+import { ContractClausesTab } from "@/components/dashboard/contracts/new/ContractClausesTab"
 import { ContractFinancialTab } from "@/components/dashboard/contracts/new/ContractFinancialTab"
-import { ContractPreview }      from "@/components/dashboard/contracts/new/ContractPreview"
-import { ContractSidebar }      from "@/components/dashboard/contracts/new/ContractSidebar"
+import { ContractPreview } from "@/components/dashboard/contracts/new/ContractPreview"
+import { ContractSidebar } from "@/components/dashboard/contracts/new/ContractSidebar"
 import { useAuthAgent } from "@/hooks/agence/useAuthAgent"
 import { toast } from "sonner"
 
@@ -92,20 +92,24 @@ function NewContractContent() {
 
   // Query params optionnels (pré-sélection depuis une tâche)
   const searchParams = useSearchParams()
-  const preClientId  = searchParams.get("client_id") ?? undefined
-  const preBienId    = searchParams.get("bien_id")   ?? undefined
+  const preClientId = searchParams.get("client_id") ?? undefined
+  const preBienId = searchParams.get("bien_id") ?? undefined
 
-  const AGENCY_ID   = user?.agency.agency_id ?? 1
+  const AGENCY_ID = user?.agency.agency_id ?? 1
   const AGENCY_NAME = user?.agency.name ?? ""
+
+  // Dans NewContractPage
+  console.log("🔴 user complet:", user)
+  console.log("🔴 AGENCY_ID:", AGENCY_ID)
 
   const {
     activeTab, setActiveTab,
     contractType,
-    selectedClient,   setSelectedClient,
+    selectedClient, setSelectedClient,
     selectedProperty, setSelectedProperty,
-    showPreview,      setShowPreview,
+    showPreview, setShowPreview,
     clauses,
-    formData,         setFormData,
+    formData, setFormData,
     financials,
     clausesWithInjectedData,
     progress,
