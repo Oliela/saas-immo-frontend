@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { Suspense } from "react"
 import { ArrowLeft, FileText, User, DollarSign } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -19,6 +20,8 @@ import { ContractSidebar }      from "@/components/dashboard/contracts/new/Contr
 import { useAuthAgent } from "@/hooks/agence/useAuthAgent"
 import { toast } from "sonner"
 
+// ── Skeleton ─────────────────────────────────────────────────────────────────
+
 function NewContractSkeleton() {
   return (
     <div className="space-y-6">
@@ -32,9 +35,7 @@ function NewContractSkeleton() {
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-6">
           <div className="grid grid-cols-4 gap-1 p-1 rounded-lg bg-muted">
-            {[...Array(4)].map((_, i) => (
-              <Skeleton key={i} className="h-9 rounded-md" />
-            ))}
+            {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-9 rounded-md" />)}
           </div>
           <Card>
             <CardHeader className="space-y-2">
@@ -83,13 +84,16 @@ function NewContractSkeleton() {
   )
 }
 
-export default function NewContractPage() {
+// ── Composant interne qui utilise useSearchParams ─────────────────────────────
+// Doit être wrappé dans <Suspense> pour satisfaire Next.js
+
+function NewContractContent() {
   const { user, loading: authLoading } = useAuthAgent()
 
-  // ── Query params optionnels (pré-sélection depuis une tâche) ────
+  // Query params optionnels (pré-sélection depuis une tâche)
   const searchParams = useSearchParams()
-  const preClientId  = searchParams.get("client_id") ?? undefined  // ex: "4"
-  const preBienId    = searchParams.get("bien_id")   ?? undefined  // ex: "12"
+  const preClientId  = searchParams.get("client_id") ?? undefined
+  const preBienId    = searchParams.get("bien_id")   ?? undefined
 
   const AGENCY_ID   = user?.agency.agency_id ?? 1
   const AGENCY_NAME = user?.agency.name ?? ""
@@ -232,5 +236,15 @@ export default function NewContractPage() {
         />
       </div>
     </div>
+  )
+}
+
+// ── Export page — Suspense obligatoire autour de useSearchParams ──────────────
+
+export default function NewContractPage() {
+  return (
+    <Suspense fallback={<NewContractSkeleton />}>
+      <NewContractContent />
+    </Suspense>
   )
 }
