@@ -14,6 +14,7 @@ import {
   CheckCircle,
   XCircle,
   Send,
+  FileText,
 } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -414,12 +415,16 @@ export function InterestsList({
                               </Link>
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem asChild>
-                              <Link href="/dashboard/visits/new">
-                                <Calendar className="mr-2 h-4 w-4" />
-                                Planifier une visite
-                              </Link>
-                            </DropdownMenuItem>
+                            {interet.status === "confirmed" && (
+                              <DropdownMenuItem asChild>
+                                <Link
+                                  href={`/dashboard/contracts/new?client_id=${interet.client_id}&bien_id=${interet.bien_id}`}
+                                >
+                                  <FileText className="mr-2 h-4 w-4" />
+                                  Rédiger le contrat
+                                </Link>
+                              </DropdownMenuItem>
+                            )}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </>

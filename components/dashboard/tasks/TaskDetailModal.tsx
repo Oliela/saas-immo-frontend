@@ -18,6 +18,7 @@ import {
   Building2,
   User,
   Loader2,
+  FileText,
 } from "lucide-react"
 import {
   Dialog,
@@ -76,7 +77,7 @@ export function TaskDetailModal({ task, onClose, onMarkDone, onDelete }: Props) 
 
   return (
     <Dialog open={!!task} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent style={{ maxWidth: "52rem" }} className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{task.title}</DialogTitle>
           <DialogDescription>
@@ -219,7 +220,7 @@ export function TaskDetailModal({ task, onClose, onMarkDone, onDelete }: Props) 
                       </p>
                     )}
                     <Button size="sm" variant="outline" className="mt-2 bg-transparent" asChild>
-                      <Link href={`/dashboard/properties/${property.id}`}>
+                      <Link href={`/dashboard/biens/${property.id}`}>
                         Voir le Bien
                       </Link>
                     </Button>
@@ -232,6 +233,24 @@ export function TaskDetailModal({ task, onClose, onMarkDone, onDelete }: Props) 
 
         {/* Actions */}
         <DialogFooter className="flex-col sm:flex-row gap-2">
+          {/* Bouton Créer le contrat — tâches de type interest ou contract en attente */}
+          {(task.type === "interest" || task.type === "contract") && task.status === "pending" && (() => {
+            const t        = task.taskable as Record<string, unknown> | null
+            const clientId = typeof t?.["client_id"] === "number" ? t["client_id"] : null
+            const bienId   = typeof t?.["bien_id"]   === "number" ? t["bien_id"]   : null
+            const params   = new URLSearchParams()
+            if (clientId) params.set("client_id", String(clientId))
+            if (bienId)   params.set("bien_id",   String(bienId))
+            return (
+              <Button asChild className="bg-primary hover:bg-primary/90">
+                <Link href={`/dashboard/contracts/new?${params.toString()}`}>
+                  <FileText className="mr-2 h-4 w-4" />
+                  Créer le Contrat
+                </Link>
+              </Button>
+            )
+          })()}
+
           {task.status === "pending" && (
             <Button
               className="bg-emerald-600 hover:bg-emerald-700"

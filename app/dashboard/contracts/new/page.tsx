@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import axiosInstance from "@/lib/axios"
+import { useSearchParams } from "next/navigation"
 
 import { useContractForm }      from "@/hooks/contracts/useContractForm"
 import { ContractInfoTab }      from "@/components/dashboard/contracts/new/ContractInfoTab"
@@ -21,8 +22,6 @@ import { toast } from "sonner"
 function NewContractSkeleton() {
   return (
     <div className="space-y-6">
-
-      {/* Header */}
       <div className="flex items-center gap-4">
         <Skeleton className="h-9 w-9 rounded-md" />
         <div className="space-y-2">
@@ -30,28 +29,19 @@ function NewContractSkeleton() {
           <Skeleton className="h-4 w-64" />
         </div>
       </div>
-
       <div className="grid gap-6 lg:grid-cols-3">
-
-        {/* Colonne principale */}
         <div className="lg:col-span-2 space-y-6">
-
-          {/* Tabs bar */}
           <div className="grid grid-cols-4 gap-1 p-1 rounded-lg bg-muted">
             {[...Array(4)].map((_, i) => (
               <Skeleton key={i} className="h-9 rounded-md" />
             ))}
           </div>
-
-          {/* Contenu onglet Infos */}
           <Card>
             <CardHeader className="space-y-2">
               <Skeleton className="h-5 w-40" />
               <Skeleton className="h-4 w-56" />
             </CardHeader>
             <CardContent className="space-y-6">
-
-              {/* Type de contrat */}
               <div className="space-y-2">
                 <Skeleton className="h-3 w-28" />
                 <div className="flex gap-3">
@@ -59,8 +49,6 @@ function NewContractSkeleton() {
                   <Skeleton className="h-12 flex-1 rounded-lg" />
                 </div>
               </div>
-
-              {/* Champs */}
               <div className="grid gap-4 sm:grid-cols-2">
                 {[...Array(4)].map((_, i) => (
                   <div key={i} className="space-y-2">
@@ -69,58 +57,23 @@ function NewContractSkeleton() {
                   </div>
                 ))}
               </div>
-
-              <div className="space-y-2">
-                <Skeleton className="h-3 w-32" />
-                <Skeleton className="h-24 w-full rounded-md" />
-              </div>
             </CardContent>
           </Card>
         </div>
-
-        {/* Sidebar */}
         <div className="space-y-6">
-
-          {/* Progression */}
           <Card>
-            <CardHeader className="pb-3">
-              <Skeleton className="h-5 w-32" />
-            </CardHeader>
+            <CardHeader className="pb-3"><Skeleton className="h-5 w-32" /></CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Skeleton className="h-8 w-12" />
-                <Skeleton className="h-5 w-20 rounded-full" />
-              </div>
               <Skeleton className="h-2 w-full rounded-full" />
-              <div className="space-y-2">
-                {[...Array(4)].map((_, i) => (
-                  <div key={i} className="flex items-center gap-2">
-                    <Skeleton className="h-5 w-5 rounded-full shrink-0" />
-                    <Skeleton className="h-3 w-36" />
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Récapitulatif */}
-          <Card>
-            <CardHeader className="pb-3">
-              <Skeleton className="h-5 w-28" />
-            </CardHeader>
-            <CardContent className="space-y-3">
               {[...Array(4)].map((_, i) => (
-                <div key={i} className="flex justify-between gap-2">
-                  <Skeleton className="h-4 w-20" />
-                  <Skeleton className="h-4 w-28" />
+                <div key={i} className="flex items-center gap-2">
+                  <Skeleton className="h-5 w-5 rounded-full shrink-0" />
+                  <Skeleton className="h-3 w-36" />
                 </div>
               ))}
             </CardContent>
           </Card>
-
-          {/* Boutons actions */}
           <div className="space-y-2">
-            <Skeleton className="h-10 w-full rounded-md" />
             <Skeleton className="h-10 w-full rounded-md" />
             <Skeleton className="h-10 w-full rounded-md" />
           </div>
@@ -132,6 +85,11 @@ function NewContractSkeleton() {
 
 export default function NewContractPage() {
   const { user, loading: authLoading } = useAuthAgent()
+
+  // ── Query params optionnels (pré-sélection depuis une tâche) ────
+  const searchParams = useSearchParams()
+  const preClientId  = searchParams.get("client_id") ?? undefined  // ex: "4"
+  const preBienId    = searchParams.get("bien_id")   ?? undefined  // ex: "12"
 
   const AGENCY_ID   = user?.agency.agency_id ?? 1
   const AGENCY_NAME = user?.agency.name ?? ""
@@ -164,9 +122,9 @@ export default function NewContractPage() {
     const payload = buildPayload()
     if (!payload) return
     try {
-      const res = await axiosInstance.post("/api/contracts", payload)
+      await axiosInstance.post("/api/contracts", payload)
       toast.success("Contrat créé avec succès !")
-    } catch (err) {
+    } catch (err: any) {
       toast.error("Erreur lors de la création du contrat : " + (err.response?.data?.message || err.message))
     }
   }
@@ -231,6 +189,8 @@ export default function NewContractPage() {
                 selectedProperty={selectedProperty}
                 onSelectClient={setSelectedClient}
                 onSelectProperty={setSelectedProperty}
+                preClientId={preClientId}
+                preBienId={preBienId}
               />
             </TabsContent>
 

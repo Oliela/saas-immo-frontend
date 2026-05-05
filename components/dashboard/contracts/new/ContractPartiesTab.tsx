@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect } from "react"
 import { User, Building2, Check, Loader2, AlertCircle } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -15,15 +16,37 @@ interface Props {
   selectedProperty: Property | null
   onSelectClient:   (client: Client) => void
   onSelectProperty: (property: Property) => void
+  // ── Pré-sélection optionnelle (depuis une tâche) ──
+  preClientId?: string   // ex: "4"
+  preBienId?:   string   // ex: "12"
 }
 
 export function ContractPartiesTab({
   contractType, agencyId,
   selectedClient, selectedProperty,
   onSelectClient, onSelectProperty,
+  preClientId, preBienId,
 }: Props) {
   const { clients,    isLoading: clientsLoading,    error: clientsError    } = useClients(agencyId)
   const { properties, isLoading: propertiesLoading, error: propertiesError } = useProperties(agencyId, contractType)
+
+  // ── Pré-sélection client ─────────────────────────────────────────
+  // Se déclenche une seule fois quand :
+  //   1. preClientId est fourni
+  //   2. les clients sont chargés
+  //   3. aucun client n'est déjà sélectionné
+  useEffect(() => {
+    if (!preClientId || clientsLoading || selectedClient) return
+    const match = clients.find((c) => c.id === preClientId)
+    if (match) onSelectClient(match)
+  }, [preClientId, clients, clientsLoading])
+
+  // ── Pré-sélection bien ───────────────────────────────────────────
+  useEffect(() => {
+    if (!preBienId || propertiesLoading || selectedProperty) return
+    const match = properties.find((p) => p.id === preBienId)
+    if (match) onSelectProperty(match)
+  }, [preBienId, properties, propertiesLoading])
 
   return (
     <div className="space-y-6">

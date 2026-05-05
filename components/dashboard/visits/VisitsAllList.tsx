@@ -28,10 +28,10 @@ const STATUS_CONFIG: Record<string, {
   label: string
   icon: React.ReactNode
 }> = {
-  confirmed: { variant: "default",     label: "Confirmée",  icon: <CheckCircle className="h-3 w-3 mr-1" /> },
-  pending:   { variant: "secondary",   label: "En attente", icon: <AlertCircle className="h-3 w-3 mr-1" /> },
-  cancelled: { variant: "destructive", label: "Annulée",    icon: <XCircle     className="h-3 w-3 mr-1" /> },
-  completed: { variant: "outline",     label: "Complétée",  icon: <CheckCircle className="h-3 w-3 mr-1" /> },
+  confirmed: { variant: "default", label: "Confirmée", icon: <CheckCircle className="h-3 w-3 mr-1" /> },
+  pending: { variant: "secondary", label: "En attente", icon: <AlertCircle className="h-3 w-3 mr-1" /> },
+  cancelled: { variant: "destructive", label: "Annulée", icon: <XCircle className="h-3 w-3 mr-1" /> },
+  completed: { variant: "outline", label: "Complétée", icon: <CheckCircle className="h-3 w-3 mr-1" /> },
 }
 
 const getStatusBadge = (status: string) => {
@@ -51,9 +51,9 @@ interface VisitsAllListProps {
 export default function VisitsAllList({ visits = [], loading }: VisitsAllListProps) {
 
   const [statusFilter, setStatusFilter] = useState("all")
-  const [search, setSearch]             = useState("")
-  const [loadingId, setLoadingId]       = useState<number | null>(null)
-  const [loadingAction, setLoadingAction] = useState<"reminder" | "done" | "cancel" | null>(null)
+  const [search, setSearch] = useState("")
+  const [loadingId, setLoadingId] = useState<number | null>(null)
+  const [loadingAction, setLoadingAction] = useState<"reminder" | "done" | "cancel" | "confirmed" | null>(null)
 
   const filtered = visits.filter((r) => {
     if (statusFilter !== "all" && r.status !== statusFilter) return false
@@ -109,6 +109,17 @@ export default function VisitsAllList({ visits = [], loading }: VisitsAllListPro
       toast.error(err?.response?.data?.message ?? "Erreur lors de l'annulation.")
     } finally { setLoadingId(null); setLoadingAction(null) }
   }
+  const handleConfirmedVisit = async (reservation: Reservation) => {
+    setLoadingId(reservation.id); setLoadingAction("confirmed")
+    try {
+      await axiosInstance.patch(`/api/visit-reservations/${reservation.id}/confirm`)
+      toast.success("Visite confirmée.")
+      window.location.reload()
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? "Erreur lors de la confirmation.")
+    } finally { setLoadingId(null); setLoadingAction(null) }
+  }
+
 
   return (
     <Card className="lg:col-span-2">
@@ -178,10 +189,10 @@ export default function VisitsAllList({ visits = [], loading }: VisitsAllListPro
             filtered.map((reservation) => {
               const c = reservation.client
               const s = reservation.visit_schedule
-              const visitDate   = new Date(s.visit_date)
+              const visitDate = new Date(s.visit_date)
               const isCompleted = reservation.status === "completed"
               const isCancelled = reservation.status === "cancelled"
-              const isLoading   = loadingId === reservation.id
+              const isLoading = loadingId === reservation.id
 
               return (
                 <div
@@ -234,6 +245,10 @@ export default function VisitsAllList({ visits = [], loading }: VisitsAllListPro
                           <DropdownMenuItem onClick={() => handleSendReminder(reservation)}>
                             {isLoading && loadingAction === "reminder" && <Loader2 className="h-3 w-3 mr-2 animate-spin" />}
                             Envoyer un rappel
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleConfirmedVisit(reservation)}>
+                            {isLoading && loadingAction === "confirmed" && <Loader2 className="h-3 w-3 mr-2 animate-spin" />}
+                            Confirmer la visite
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem onClick={() => handleMarkAsDone(reservation)}>
