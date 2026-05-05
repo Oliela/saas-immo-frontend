@@ -8,8 +8,6 @@ import type {
 import { defaultClauses, paymentFrequencyMultiplier, paymentFrequencyLabel } from "@/data/clauseSysteme"
 import { mockProperties } from "@/data/clauseSysteme"
 
-// ─── Injection de tous les tokens ─────────────────────────────────────────────
-
 function injectTokens(
   content: string,
   formData: FormData,
@@ -28,21 +26,19 @@ function injectTokens(
     n ? `${n.toLocaleString("fr-FR")} FCFA` : "[MONTANT]"
 
   return content
-    .replace(/\{client_name\}/g,       selectedClient?.name      || "[NOM DU CLIENT]")
-    .replace(/\{agency_name\}/g,        agencyName                || "[NOM DE L'AGENCE]")
-    .replace(/\{bien_title\}/g,         selectedProperty?.title   || "[DÉSIGNATION DU BIEN]")
-    .replace(/\{bien_address\}/g,       selectedProperty?.address || "[ADRESSE DU BIEN]")
-    .replace(/\{start_date\}/g,         formData.startDate        || "[DATE DE DÉBUT]")
-    .replace(/\{duration\}/g,           formData.duration ? `${formData.duration} mois` : "[DURÉE]")
-    .replace(/\{amount\}/g,             fmt(financials.rentAmount))
-    .replace(/\{deposit\}/g,            fmt(financials.depositAmount))
-    .replace(/\{caution_total\}/g,      fmt(financials.cautionTotal))
-    .replace(/\{caution_months\}/g,     String(financials.cautionMonths))
-    .replace(/\{rent_at_signature\}/g,  fmt(financials.rentAtSignature))
-    .replace(/\{payment_frequency\}/g,  paymentFrequencyLabel[formData.paymentFrequency] || "mensuel")
+    .replace(/\{client_name\}/g,      selectedClient?.name      || "[NOM DU CLIENT]")
+    .replace(/\{agency_name\}/g,       agencyName                || "[NOM DE L'AGENCE]")
+    .replace(/\{bien_title\}/g,        selectedProperty?.title   || "[DÉSIGNATION DU BIEN]")
+    .replace(/\{bien_address\}/g,      selectedProperty?.address || "[ADRESSE DU BIEN]")
+    .replace(/\{start_date\}/g,        formData.startDate        || "[DATE DE DÉBUT]")
+    .replace(/\{duration\}/g,          formData.duration ? `${formData.duration} mois` : "[DURÉE]")
+    .replace(/\{amount\}/g,            fmt(financials.rentAmount))
+    .replace(/\{deposit\}/g,           fmt(financials.depositAmount))
+    .replace(/\{caution_total\}/g,     fmt(financials.cautionTotal))
+    .replace(/\{caution_months\}/g,    String(financials.cautionMonths))
+    .replace(/\{rent_at_signature\}/g, fmt(financials.rentAtSignature))
+    .replace(/\{payment_frequency\}/g, paymentFrequencyLabel[formData.paymentFrequency] || "mensuel")
 }
-
-// ─── Convertit CatalogClause → ContractClause ─────────────────────────────────
 
 function toContractClause(c: CatalogClause): ContractClause {
   return {
@@ -54,13 +50,12 @@ function toContractClause(c: CatalogClause): ContractClause {
     source:          c.source,
     isModified:      false,
     originalContent: c.content,
-    // Plus de locked — les clauses par défaut sont modifiables et supprimables
   }
 }
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
-export function useContractForm(agencyName: string = "") {
+export function useContractForm(agencyName: string = "", agencyId: number = 0) {
   const [activeTab,        setActiveTab]        = useState("info")
   const [contractType,     setContractType]     = useState<ContractType>("rental")
   const [selectedClient,   setSelectedClient]   = useState<Client | null>(null)
@@ -82,7 +77,6 @@ export function useContractForm(agencyName: string = "") {
     commission: "", paymentFrequency: "monthly",
   })
 
-  // ── Calculs financiers ─────────────────────────────────────────────────────
   const financials = useMemo(() => {
     const rentAmount     = Number(formData.rentAmount    || 0)
     const depositAmount  = Number(formData.deposit       || 0)
@@ -105,14 +99,12 @@ export function useContractForm(agencyName: string = "") {
     }
   }, [formData, contractType])
 
-  // ── Changer le type → recharge les clauses par défaut ─────────────────────
   const handleContractTypeChange = (type: ContractType) => {
     setContractType(type)
     setSelectedProperty(null)
     setClauses(getDefaultClauses(type))
   }
 
-  // ── Gestion des clauses ────────────────────────────────────────────────────
   const addClauseFromCatalog = (catalogClause: CatalogClause) => {
     const alreadyAdded = clauses.some((c) =>
       c.clause_id
@@ -145,7 +137,7 @@ export function useContractForm(agencyName: string = "") {
     )
   }
 
-  const removeClause    = (id: string) => setClauses((prev) => prev.filter((c) => c.id !== id))
+  const removeClause = (id: string) => setClauses((prev) => prev.filter((c) => c.id !== id))
 
   const moveClause = (index: number, direction: "up" | "down") => {
     const next = [...clauses]
@@ -171,7 +163,6 @@ export function useContractForm(agencyName: string = "") {
     })
   }
 
-  // ── Clauses avec tokens injectés (aperçu) ─────────────────────────────────
   const clausesWithInjectedData = useMemo(
     () => clauses.map((c) => ({
       ...c,
@@ -182,12 +173,10 @@ export function useContractForm(agencyName: string = "") {
     [clauses, formData, selectedClient, selectedProperty, agencyName, financials]
   )
 
-  // ── Propriétés filtrées ────────────────────────────────────────────────────
   const filteredProperties = mockProperties.filter(
     (p) => p.type === (contractType === "rental" ? "rent" : "sale")
   )
 
-  // ── Progression ───────────────────────────────────────────────────────────
   const progress = [
     { label: "Informations du Contrat",         done: !!(formData.city && formData.startDate), step: 1 },
     { label: "Parties Sélectionnées",           done: !!(selectedClient && selectedProperty),  step: 2 },
@@ -197,7 +186,7 @@ export function useContractForm(agencyName: string = "") {
 
   const isReadyToSubmit = progress.every((p) => p.done)
 
-  // ── Payload serveur ────────────────────────────────────────────────────────
+  // ── Payload — utilise le vrai agencyId passé en paramètre ─────────────────
   const buildPayload = (): ContractPayload | null => {
     if (!selectedClient || !selectedProperty) return null
 
@@ -210,15 +199,21 @@ export function useContractForm(agencyName: string = "") {
     })
 
     return {
-      client_id: Number(selectedClient.id), bien_id: Number(selectedProperty.id),
-      agency_id: 1, type: contractType,
-      city: formData.city, start_date: formData.startDate,
-      duration: Number(formData.duration),
-      amount: financials.rentAmount, deposit: financials.depositAmount,
-      commission: financials.commissionRate, cautionMonths: financials.cautionMonths,
-      rentAtSignature: financials.rentAtSignature, totalAtSignature: financials.totalAtSignature,
+      client_id:         Number(selectedClient.id),
+      bien_id:           Number(selectedProperty.id),
+      agency_id:         agencyId,   // ✅ vrai ID passé depuis NewContractPage
+      type:              contractType,
+      city:              formData.city,
+      start_date:        formData.startDate,
+      duration:          Number(formData.duration),
+      amount:            financials.rentAmount,
+      deposit:           financials.depositAmount,
+      commission:        financials.commissionRate,
+      cautionMonths:     financials.cautionMonths,
+      rentAtSignature:   financials.rentAtSignature,
+      totalAtSignature:  financials.totalAtSignature,
       payment_frequency: formData.paymentFrequency,
-      clauses: clausePayload,
+      clauses:           clausePayload,
     }
   }
 

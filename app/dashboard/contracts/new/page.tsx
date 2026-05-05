@@ -122,7 +122,7 @@ function NewContractContent() {
     moveClause,
     duplicateClause,
     buildPayload,
-  } = useContractForm(AGENCY_NAME)
+  } = useContractForm(AGENCY_NAME, AGENCY_ID)
 
   if (authLoading) return <NewContractSkeleton />
 
@@ -160,6 +160,7 @@ function NewContractContent() {
         clauses={clausesWithInjectedData}
         formData={formData}
         financials={financials}
+        agenceName={AGENCY_NAME}
       />
 
       <div className="grid gap-6 lg:grid-cols-3">

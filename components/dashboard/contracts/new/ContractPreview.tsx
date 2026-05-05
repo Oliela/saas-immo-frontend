@@ -12,12 +12,19 @@ interface Props {
   clauses:          ContractClause[]  // tokens déjà injectés
   formData:         FormData
   financials:       { totalAtSignature: number }
+  agenceName:      string
 }
 
 export function ContractPreview({
-  open, onOpenChange,
-  contractType, selectedClient, selectedProperty,
-  clauses, formData, financials,
+  open, 
+  onOpenChange,
+  contractType, 
+  selectedClient, 
+  selectedProperty,
+  clauses, 
+  formData, 
+  financials,
+  agenceName
 }: Props) {
   const fmt = (n: number) => n.toLocaleString("fr-FR")
 
@@ -86,7 +93,7 @@ export function ContractPreview({
                 <div>
                   <p className="text-sm font-medium text-foreground mb-4">Représentant de l'Agence</p>
                   <div className="h-16 border-b border-foreground" />
-                  <p className="text-xs text-muted-foreground mt-2">Agence SAS IMO</p>
+                  <p className="text-xs text-muted-foreground mt-2">Agence {agenceName} </p>
                   <p className="text-xs text-muted-foreground">Date : ___________</p>
                 </div>
               </div>

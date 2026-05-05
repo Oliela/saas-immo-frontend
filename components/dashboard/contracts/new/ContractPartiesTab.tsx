@@ -137,9 +137,13 @@ export function ContractPartiesTab({
           {!propertiesLoading && !propertiesError && properties.length === 0 && (
             <div className="text-center py-8 text-muted-foreground">
               <Building2 className="h-12 w-12 mx-auto mb-3 opacity-30" />
-              <p className="text-sm">
-                Aucune propriété disponible pour la{" "}
+              <p className="text-sm font-medium text-foreground">
+                Aucun bien disponible pour la{" "}
                 {contractType === "rental" ? "location" : "vente"}
+              </p>
+              <p className="text-sm mt-1">
+                Vérifiez le type de contrat sélectionné dans l'onglet{" "}
+                <span className="text-primary font-medium">Infos</span>.
               </p>
             </div>
           )}
