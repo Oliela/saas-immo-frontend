@@ -232,6 +232,7 @@ function ContractTable({ contracts }: { contracts: Contract[] }) {
       })
       setLoading((prev) => ({ ...prev, [id]: { loading: false, error: null } }))
       toast.success("Contrat envoyé pour signature !")
+      window.location.reload()
     } catch (err: any) {
       const message = err?.response?.data?.message ?? "Erreur lors de l'envoi"
       setLoading((prev) => ({ ...prev, [id]: { loading: false, error: message } }))

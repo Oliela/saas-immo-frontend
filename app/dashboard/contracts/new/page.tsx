@@ -132,6 +132,8 @@ function NewContractContent() {
     try {
       await axiosInstance.post("/api/contracts", payload)
       toast.success("Contrat créé avec succès !")
+      // recharger la page 
+      window.location.reload()
     } catch (err: any) {
       toast.error("Erreur lors de la création du contrat : " + (err.response?.data?.message || err.message))
     }
