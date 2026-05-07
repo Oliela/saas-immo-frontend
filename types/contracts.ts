@@ -63,3 +63,16 @@ export interface ContractsStats {
   revision: number
   value?: string
 }
+
+//corrige status
+
+export interface ContractStatus { 
+  draft: string | number | symbol
+  revision: string | number | symbol
+  sent: string | number | symbol
+  pending: string | number | symbol
+  signed: string | number | symbol
+  approved: string | number | symbol
+  expired: string | number | symbol
+  cancelled: string | number | symbol
+}

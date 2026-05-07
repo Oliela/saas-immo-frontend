@@ -15,8 +15,9 @@ import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Progress } from "@/components/ui/progress"
 import axiosInstance from "@/lib/axios"
+import { usePdfDownload } from "@/hooks/usePdfDownload" // ← AJOUT
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// ─── Types ────────────────────────────────────────────────────────
 
 interface Article {
   id: number
@@ -63,15 +64,13 @@ interface Facture {
   reglements: Reglement[]
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────────
 
 function formatCurrency(amount: number | string, devise = "XOF") {
   const num = typeof amount === "string" ? parseFloat(amount) : amount
   return new Intl.NumberFormat("fr-FR", {
-    style: "currency",
-    currency: devise,
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
+    style: "currency", currency: devise,
+    minimumFractionDigits: 0, maximumFractionDigits: 0,
   }).format(isNaN(num) ? 0 : num)
 }
 
@@ -87,8 +86,8 @@ function getStatusConfig(statut: string) {
 
 function getReglementStatusConfig(statut: string) {
   const config: Record<string, { variant: "default" | "secondary" | "outline" | "destructive"; label: string }> = {
-    en_attente: { variant: "secondary",  label: "En attente" },
-    confirme:   { variant: "default",    label: "Confirmé" },
+    en_attente: { variant: "secondary",   label: "En attente" },
+    confirme:   { variant: "default",     label: "Confirmé" },
     annule:     { variant: "destructive", label: "Annulé" },
   }
   return config[statut] || { variant: "outline", label: statut }
@@ -96,24 +95,17 @@ function getReglementStatusConfig(statut: string) {
 
 function getPaymentMethodLabel(mode: string) {
   const methods: Record<string, string> = {
-    especes:        "Espèces",
-    virement:       "Virement",
-    cheque:         "Chèque",
-    wave:           "Wave",
-    orange_money:   "Orange Money",
-    carte_bancaire: "Carte bancaire",
+    especes: "Espèces", virement: "Virement", cheque: "Chèque",
+    wave: "Wave", orange_money: "Orange Money", carte_bancaire: "Carte bancaire",
   }
   return methods[mode] || mode
 }
 
 function getPaymentMethodIcon(mode: string) {
   const icons: Record<string, React.ReactNode> = {
-    especes:        <Banknote className="h-4 w-4" />,
-    virement:       <Building2 className="h-4 w-4" />,
-    cheque:         <FileText className="h-4 w-4" />,
-    wave:           <Smartphone className="h-4 w-4" />,
-    orange_money:   <Smartphone className="h-4 w-4" />,
-    carte_bancaire: <CreditCard className="h-4 w-4" />,
+    especes: <Banknote className="h-4 w-4" />, virement: <Building2 className="h-4 w-4" />,
+    cheque: <FileText className="h-4 w-4" />, wave: <Smartphone className="h-4 w-4" />,
+    orange_money: <Smartphone className="h-4 w-4" />, carte_bancaire: <CreditCard className="h-4 w-4" />,
   }
   return icons[mode] || <Wallet className="h-4 w-4" />
 }
@@ -126,16 +118,15 @@ function getDestinataireName(facture: Facture): string {
   return d.email || "—"
 }
 
-// ─── Component ───────────────────────────────────────────────────────────────
+// ─── Component ────────────────────────────────────────────────────
 
 export default function PortalInvoiceDetailPage() {
   const params = useParams<{ id: string }>()
+  const { open: openPdf, isLoading: isPdfLoading } = usePdfDownload() // ← AJOUT
 
   const [facture,    setFacture]    = useState<Facture | null>(null)
   const [loading,    setLoading]    = useState(true)
   const [reglements, setReglements] = useState<Reglement[]>([])
-
-  // ─── Fetch ────────────────────────────────────────────────────────────────
 
   useEffect(() => {
     if (!params.id) return
@@ -153,54 +144,32 @@ export default function PortalInvoiceDetailPage() {
     fetchFacture()
   }, [params.id])
 
-  // ─── Calculs ──────────────────────────────────────────────────────────────
+  const montantTtc    = facture ? parseFloat(facture.montant_ttc)    : 0
+  const montantHt     = facture ? parseFloat(facture.montant_ht)     : 0
+  const montantTva    = facture ? parseFloat(facture.montant_tva)    : 0
+  const tauxTva       = facture ? parseFloat(facture.taux_tva)       : 0
+  const remise        = facture ? parseFloat(facture.remise)         : 0
+  const montantRemise = facture ? parseFloat(facture.montant_remise) : 0
 
-  const montantTtc     = facture ? parseFloat(facture.montant_ttc)     : 0
-  const montantHt      = facture ? parseFloat(facture.montant_ht)      : 0
-  const montantTva     = facture ? parseFloat(facture.montant_tva)     : 0
-  const tauxTva        = facture ? parseFloat(facture.taux_tva)        : 0
-  const remise         = facture ? parseFloat(facture.remise)          : 0
-  const montantRemise  = facture ? parseFloat(facture.montant_remise)  : 0
+  const totalPaid   = reglements.filter((r) => r.statut === "confirme").reduce((s, r) => s + (parseFloat(String(r.montant_regle)) || 0), 0)
+  const remaining   = Math.max(montantTtc - totalPaid, 0)
+  const progressPct = montantTtc > 0 ? Math.min((totalPaid / montantTtc) * 100, 100) : 0
+  const statusConfig = getStatusConfig(facture?.statut || "non_payee")
 
-  const totalPaid = reglements
-    .filter((r) => r.statut === "confirme")
-    .reduce((s, r) => s + (parseFloat(String(r.montant_regle)) || 0), 0)
-  const remaining     = Math.max(montantTtc - totalPaid, 0)
-  const progressPct   = montantTtc > 0 ? Math.min((totalPaid / montantTtc) * 100, 100) : 0
-
-  const statusConfig  = getStatusConfig(facture?.statut || "non_payee")
-
-  // ─── Loading ──────────────────────────────────────────────────────────────
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <p className="text-muted-foreground">Chargement...</p>
-      </div>
-    )
-  }
-
-  if (!facture) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <p className="text-destructive">Facture introuvable.</p>
-      </div>
-    )
-  }
+  if (loading) return <div className="flex items-center justify-center h-64"><p className="text-muted-foreground">Chargement...</p></div>
+  if (!facture) return <div className="flex items-center justify-center h-64"><p className="text-destructive">Facture introuvable.</p></div>
 
   const destinataireName = getDestinataireName(facture)
-
-  // ─── Render ───────────────────────────────────────────────────────────────
+  const pdfPath = `/api/factures/${facture.id}/pdf` // ← AJOUT
 
   return (
     <div className="space-y-6">
+
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" asChild>
-            <Link href="/portal/invoices">
-              <ArrowLeft className="h-5 w-5" />
-            </Link>
+            <Link href="/portal/invoices"><ArrowLeft className="h-5 w-5" /></Link>
           </Button>
           <div>
             <div className="flex items-center gap-3 flex-wrap">
@@ -210,26 +179,32 @@ export default function PortalInvoiceDetailPage() {
             </div>
             <p className="text-muted-foreground mt-1 text-sm">
               Émise le {new Date(facture.date_emission).toLocaleDateString("fr-FR")}
-              {facture.date_echeance && (
-                <> · Échéance le {new Date(facture.date_echeance).toLocaleDateString("fr-FR")}</>
-              )}
+              {facture.date_echeance && <> · Échéance le {new Date(facture.date_echeance).toLocaleDateString("fr-FR")}</>}
             </p>
           </div>
         </div>
+        {/* ── Boutons PDF header ── */}
         <div className="flex gap-2 flex-wrap">
-          <Button variant="outline" size="sm" className="bg-transparent">
+          <Button
+            variant="outline" size="sm" className="bg-transparent"
+            onClick={() => openPdf(pdfPath, `${facture.id}-print`)}
+            disabled={isPdfLoading(`${facture.id}-print`)}
+          >
             <Printer className="mr-2 h-4 w-4" />
-            Imprimer
+            {isPdfLoading(`${facture.id}-print`) ? "Ouverture..." : "Imprimer"}
           </Button>
-          <Button variant="outline" size="sm" className="bg-transparent">
+          <Button
+            variant="outline" size="sm" className="bg-transparent"
+            onClick={() => openPdf(pdfPath, facture.id)}
+            disabled={isPdfLoading(facture.id)}
+          >
             <Download className="mr-2 h-4 w-4" />
-            Télécharger PDF
+            {isPdfLoading(facture.id) ? "Ouverture..." : "Télécharger PDF"}
           </Button>
         </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* ── Main Content ── */}
         <div className="lg:col-span-2 space-y-6">
           <Tabs defaultValue="details" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
@@ -237,18 +212,15 @@ export default function PortalInvoiceDetailPage() {
               <TabsTrigger value="payments">
                 Règlements
                 {reglements.length > 0 && (
-                  <span className="ml-2 bg-primary text-primary-foreground text-xs rounded-full px-1.5 py-0.5">
-                    {reglements.length}
-                  </span>
+                  <span className="ml-2 bg-primary text-primary-foreground text-xs rounded-full px-1.5 py-0.5">{reglements.length}</span>
                 )}
               </TabsTrigger>
             </TabsList>
 
-            {/* ── Tab Détails ── */}
+            {/* Détails */}
             <TabsContent value="details" className="space-y-6">
               <Card>
                 <CardContent className="p-8">
-                  {/* En-tête */}
                   <div className="flex justify-between items-start mb-8">
                     <div>
                       <h2 className="text-2xl font-bold tracking-tight">FACTURE</h2>
@@ -262,15 +234,12 @@ export default function PortalInvoiceDetailPage() {
                     </div>
                   </div>
 
-                  {/* Destinataire + Dates */}
                   <div className="grid gap-8 sm:grid-cols-2 mb-8">
                     <div>
                       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Facturé à</p>
                       <p className="font-semibold">{destinataireName}</p>
                       {facture.destinataire?.phone && <p className="text-sm text-muted-foreground">{facture.destinataire.phone}</p>}
-                      {facture.bien && (
-                        <p className="text-sm text-muted-foreground mt-1">{facture.bien.title} — {facture.bien.city}</p>
-                      )}
+                      {facture.bien && <p className="text-sm text-muted-foreground mt-1">{facture.bien.title} — {facture.bien.city}</p>}
                     </div>
                     <div className="text-right space-y-1">
                       <div className="flex justify-end gap-6">
@@ -298,7 +267,6 @@ export default function PortalInvoiceDetailPage() {
                     </div>
                   </div>
 
-                  {/* Articles */}
                   <div className="border border-border rounded-lg overflow-hidden mb-6">
                     <table className="w-full text-sm">
                       <thead>
@@ -324,7 +292,6 @@ export default function PortalInvoiceDetailPage() {
                     </table>
                   </div>
 
-                  {/* Totaux */}
                   <div className="flex justify-end">
                     <div className="w-[280px] space-y-2">
                       <div className="flex justify-between text-sm">
@@ -359,9 +326,8 @@ export default function PortalInvoiceDetailPage() {
               </Card>
             </TabsContent>
 
-            {/* ── Tab Règlements ── */}
+            {/* Règlements */}
             <TabsContent value="payments" className="space-y-6">
-              {/* Résumé */}
               <Card>
                 <CardHeader><CardTitle>Statut des paiements</CardTitle></CardHeader>
                 <CardContent className="space-y-4">
@@ -376,9 +342,7 @@ export default function PortalInvoiceDetailPage() {
                     </div>
                     <div className={`p-3 rounded-lg text-center ${remaining <= 0 ? "bg-emerald-500/10" : "bg-amber-500/10 border border-amber-500/20"}`}>
                       <p className={`text-xs mb-1 ${remaining <= 0 ? "text-muted-foreground" : "text-amber-600"}`}>Restant</p>
-                      <p className={`text-xl font-bold ${remaining <= 0 ? "text-emerald-600" : "text-amber-600"}`}>
-                        {formatCurrency(remaining, facture.devise)}
-                      </p>
+                      <p className={`text-xl font-bold ${remaining <= 0 ? "text-emerald-600" : "text-amber-600"}`}>{formatCurrency(remaining, facture.devise)}</p>
                     </div>
                   </div>
                   <div className="space-y-1.5">
@@ -391,7 +355,6 @@ export default function PortalInvoiceDetailPage() {
                 </CardContent>
               </Card>
 
-              {/* Historique */}
               <Card>
                 <CardHeader><CardTitle>Historique des règlements</CardTitle></CardHeader>
                 <CardContent>
@@ -406,24 +369,16 @@ export default function PortalInvoiceDetailPage() {
                             <div className="flex items-center gap-3">
                               {getPaymentMethodIcon(reglement.mode_paiement)}
                               <div>
-                                <p className="text-sm font-medium">
-                                  {new Date(reglement.date_reglement).toLocaleDateString("fr-FR")}
-                                </p>
+                                <p className="text-sm font-medium">{new Date(reglement.date_reglement).toLocaleDateString("fr-FR")}</p>
                                 <p className="text-xs text-muted-foreground">
                                   {getPaymentMethodLabel(reglement.mode_paiement)}
-                                  {reglement.reference_paiement && (
-                                    <span className="font-mono ml-1">{reglement.reference_paiement}</span>
-                                  )}
+                                  {reglement.reference_paiement && <span className="font-mono ml-1">{reglement.reference_paiement}</span>}
                                 </p>
                               </div>
                             </div>
                             <div className="text-right">
-                              <p className="text-sm font-semibold text-emerald-600">
-                                {formatCurrency(reglement.montant_regle, facture.devise)}
-                              </p>
-                              <Badge variant={rConfig.variant as any} className="text-xs mt-1">
-                                {rConfig.label}
-                              </Badge>
+                              <p className="text-sm font-semibold text-emerald-600">{formatCurrency(reglement.montant_regle, facture.devise)}</p>
+                              <Badge variant={rConfig.variant as any} className="text-xs mt-1">{rConfig.label}</Badge>
                             </div>
                           </div>
                         )
@@ -436,17 +391,11 @@ export default function PortalInvoiceDetailPage() {
           </Tabs>
         </div>
 
-        {/* ── Sidebar ── */}
+        {/* Sidebar */}
         <div className="space-y-4">
-          {/* Bien */}
           {facture.bien && (
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <Building2 className="h-4 w-4" />
-                  Bien immobilier
-                </CardTitle>
-              </CardHeader>
+              <CardHeader><CardTitle className="flex items-center gap-2 text-base"><Building2 className="h-4 w-4" />Bien immobilier</CardTitle></CardHeader>
               <CardContent className="space-y-1">
                 <p className="font-semibold text-sm">{facture.bien.title}</p>
                 <p className="text-xs text-muted-foreground capitalize">{facture.bien.propertyType}</p>
@@ -454,76 +403,29 @@ export default function PortalInvoiceDetailPage() {
               </CardContent>
             </Card>
           )}
-
-          {/* Contrat */}
           {facture.contract && (
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <Hash className="h-4 w-4" />
-                  Contrat lié
-                </CardTitle>
-              </CardHeader>
+              <CardHeader><CardTitle className="flex items-center gap-2 text-base"><Hash className="h-4 w-4" />Contrat lié</CardTitle></CardHeader>
               <CardContent className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Numéro</span>
-                  <span className="font-mono text-xs font-medium">{facture.contract.contract_number}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Type</span>
-                  <span className="font-medium capitalize">{facture.contract.type}</span>
-                </div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Numéro</span><span className="font-mono text-xs font-medium">{facture.contract.contract_number}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Type</span><span className="font-medium capitalize">{facture.contract.type}</span></div>
               </CardContent>
             </Card>
           )}
-
-          {/* Infos */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Calendar className="h-4 w-4" />
-                Informations
-              </CardTitle>
-            </CardHeader>
+            <CardHeader><CardTitle className="flex items-center gap-2 text-base"><Calendar className="h-4 w-4" />Informations</CardTitle></CardHeader>
             <CardContent className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Émission</span>
-                <span className="font-medium">{new Date(facture.date_emission).toLocaleDateString("fr-FR")}</span>
-              </div>
-              {facture.date_echeance && (
-                <>
-                  <Separator />
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Échéance</span>
-                    <span className="font-medium">{new Date(facture.date_echeance).toLocaleDateString("fr-FR")}</span>
-                  </div>
-                </>
-              )}
+              <div className="flex justify-between"><span className="text-muted-foreground">Émission</span><span className="font-medium">{new Date(facture.date_emission).toLocaleDateString("fr-FR")}</span></div>
+              {facture.date_echeance && (<><Separator /><div className="flex justify-between"><span className="text-muted-foreground">Échéance</span><span className="font-medium">{new Date(facture.date_echeance).toLocaleDateString("fr-FR")}</span></div></>)}
             </CardContent>
           </Card>
-
-          {/* Montant */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <DollarSign className="h-4 w-4" />
-                Montant
-              </CardTitle>
-            </CardHeader>
+            <CardHeader><CardTitle className="flex items-center gap-2 text-base"><DollarSign className="h-4 w-4" />Montant</CardTitle></CardHeader>
             <CardContent className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Total TTC</span>
-                <span className="font-bold text-lg text-primary">{formatCurrency(montantTtc, facture.devise)}</span>
-              </div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Total TTC</span><span className="font-bold text-lg text-primary">{formatCurrency(montantTtc, facture.devise)}</span></div>
               <Separator />
-              <div className="flex justify-between text-emerald-600">
-                <span>Payé</span>
-                <span className="font-medium">{formatCurrency(totalPaid, facture.devise)}</span>
-              </div>
-              <div className="flex justify-between text-amber-600">
-                <span>Restant</span>
-                <span className="font-bold">{formatCurrency(remaining, facture.devise)}</span>
-              </div>
+              <div className="flex justify-between text-emerald-600"><span>Payé</span><span className="font-medium">{formatCurrency(totalPaid, facture.devise)}</span></div>
+              <div className="flex justify-between text-amber-600"><span>Restant</span><span className="font-bold">{formatCurrency(remaining, facture.devise)}</span></div>
               <Progress value={progressPct} className="h-1.5 mt-1" />
               <p className="text-xs text-center text-muted-foreground">{Math.round(progressPct)}% réglé</p>
             </CardContent>

@@ -7,8 +7,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { useAuth } from "@/hooks/useAuth"
 import { useClientFactures, type Facture } from "@/hooks/clients/useClientFactures"
+import { usePdfDownload } from "@/hooks/usePdfDownload" // ← AJOUT
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────────
 
 function getStatusConfig(statut: string) {
   const config: Record<string, { variant: "default" | "secondary" | "outline" | "destructive"; label: string }> = {
@@ -23,47 +24,36 @@ function getStatusConfig(statut: string) {
 function formatCurrency(amount: number | string, devise = "XOF") {
   const num = typeof amount === "string" ? parseFloat(amount) : amount
   return new Intl.NumberFormat("fr-FR", {
-    style: "currency",
-    currency: devise,
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
+    style: "currency", currency: devise,
+    minimumFractionDigits: 0, maximumFractionDigits: 0,
   }).format(isNaN(num) ? 0 : num)
 }
 
 function getFactureDescription(facture: Facture): string {
-  if (facture.categorie) return facture.categorie.replace(/_/g, " ")
+  if (facture.categorie)    return facture.categorie.replace(/_/g, " ")
   if (facture.type_facture) return facture.type_facture
   return "—"
 }
 
-// ─── Component ───────────────────────────────────────────────────────────────
+// ─── Component ────────────────────────────────────────────────────
 
 export default function PortalInvoicesPage() {
   const { user, loading: loadingUser } = useAuth()
-
   const clientId = user?.profile?.id
-
   const { factures, stats, loading: loadingFactures, error } = useClientFactures(clientId)
+  const { open: openPdf, isLoading: isPdfLoading } = usePdfDownload() // ← AJOUT
 
   if (loadingUser || loadingFactures) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <p className="text-muted-foreground">Chargement...</p>
-      </div>
-    )
+    return <div className="flex items-center justify-center h-64"><p className="text-muted-foreground">Chargement...</p></div>
   }
 
   if (error) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <p className="text-destructive">{error}</p>
-      </div>
-    )
+    return <div className="flex items-center justify-center h-64"><p className="text-destructive">{error}</p></div>
   }
-  console.log("Factures dans la page :", factures) // Debug: log factures data dans la page
 
   return (
     <div className="space-y-6">
+
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
@@ -72,58 +62,44 @@ export default function PortalInvoicesPage() {
         </div>
       </div>
 
-      {/* Summary Cards */}
+      {/* Stats */}
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Paiements en attente</p>
-                <p className="text-2xl font-bold text-foreground mt-1">
-                  {stats ? formatCurrency(stats.paiement_attente) : "—"}
-                </p>
+                <p className="text-2xl font-bold text-foreground mt-1">{stats ? formatCurrency(stats.paiement_attente) : "—"}</p>
               </div>
-              <div className="text-2xl font-bold text-amber-600">
-                {stats?.facture_reste_a_payer ?? 0}
-              </div>
+              <div className="text-2xl font-bold text-amber-600">{stats?.facture_reste_a_payer ?? 0}</div>
             </div>
           </CardContent>
         </Card>
-
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Total payé</p>
-                <p className="text-2xl font-bold text-foreground mt-1">
-                  {stats ? formatCurrency(stats.tatol_payee) : "—"}
-                </p>
+                <p className="text-2xl font-bold text-foreground mt-1">{stats ? formatCurrency(stats.tatol_payee) : "—"}</p>
               </div>
-              <div className="text-2xl font-bold text-emerald-600">
-                {stats?.facture_payee ?? 0}
-              </div>
+              <div className="text-2xl font-bold text-emerald-600">{stats?.facture_payee ?? 0}</div>
             </div>
           </CardContent>
         </Card>
-
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Montant total</p>
-                <p className="text-2xl font-bold text-foreground mt-1">
-                  {stats ? formatCurrency(stats.total_paiement) : "—"}
-                </p>
+                <p className="text-2xl font-bold text-foreground mt-1">{stats ? formatCurrency(stats.total_paiement) : "—"}</p>
               </div>
-              <div className="text-2xl font-bold text-primary">
-                {stats?.total_factures ?? 0}
-              </div>
+              <div className="text-2xl font-bold text-primary">{stats?.total_factures ?? 0}</div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Liste des factures */}
+      {/* Liste */}
       <Card>
         <CardHeader>
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -135,9 +111,7 @@ export default function PortalInvoicesPage() {
         </CardHeader>
         <CardContent>
           {factures.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              <p>Aucune facture trouvée</p>
-            </div>
+            <div className="text-center py-12 text-muted-foreground"><p>Aucune facture trouvée</p></div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -155,64 +129,36 @@ export default function PortalInvoicesPage() {
                 </thead>
                 <tbody>
                   {factures.map((facture) => {
-                    const statusConfig  = getStatusConfig(facture.statut)
-                    const montantTtc    = parseFloat(facture.montant_ttc)
-                    const montantRegle  = parseFloat(String(facture.montant_regle)) || 0
+                    const statusConfig   = getStatusConfig(facture.statut)
+                    const montantTtc     = parseFloat(facture.montant_ttc)
+                    const montantRegle   = parseFloat(String(facture.montant_regle))  || 0
                     const montantRestant = parseFloat(String(facture.montant_restant)) || 0
 
                     return (
-                      <tr
-                        key={facture.id}
-                        className="border-b border-border last:border-0 hover:bg-muted/50 transition-colors"
-                      >
+                      <tr key={facture.id} className="border-b border-border last:border-0 hover:bg-muted/50 transition-colors">
                         <td className="py-3 px-4">
                           <p className="font-medium text-foreground">{facture.numero_facture}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {new Date(facture.date_emission).toLocaleDateString("fr-FR")}
-                          </p>
+                          <p className="text-xs text-muted-foreground">{new Date(facture.date_emission).toLocaleDateString("fr-FR")}</p>
                         </td>
-
                         <td className="py-3 px-4 hidden md:table-cell">
-                          <p className="text-sm text-foreground capitalize">
-                            {getFactureDescription(facture)}
-                          </p>
-                          {facture.bien && (
-                            <p className="text-xs text-muted-foreground">{facture.bien.title}</p>
-                          )}
+                          <p className="text-sm text-foreground capitalize">{getFactureDescription(facture)}</p>
+                          {facture.bien && <p className="text-xs text-muted-foreground">{facture.bien.title}</p>}
                         </td>
-
                         <td className="py-3 px-4 hidden lg:table-cell">
-                          <p className="text-sm text-foreground">
-                            {facture.date_echeance
-                              ? new Date(facture.date_echeance).toLocaleDateString("fr-FR")
-                              : "—"}
-                          </p>
+                          <p className="text-sm text-foreground">{facture.date_echeance ? new Date(facture.date_echeance).toLocaleDateString("fr-FR") : "—"}</p>
                         </td>
-
                         <td className="py-3 px-4 text-right">
-                          <p className="font-semibold text-foreground">
-                            {formatCurrency(montantTtc, facture.devise)}
-                          </p>
+                          <p className="font-semibold text-foreground">{formatCurrency(montantTtc, facture.devise)}</p>
                         </td>
-
                         <td className="py-3 px-4 text-right hidden sm:table-cell">
-                          <p className="text-sm text-emerald-600 font-medium">
-                            {formatCurrency(montantRegle, facture.devise)}
-                          </p>
+                          <p className="text-sm text-emerald-600 font-medium">{formatCurrency(montantRegle, facture.devise)}</p>
                         </td>
-
                         <td className="py-3 px-4 text-right hidden sm:table-cell">
-                          <p className="text-sm text-amber-600 font-medium">
-                            {formatCurrency(montantRestant, facture.devise)}
-                          </p>
+                          <p className="text-sm text-amber-600 font-medium">{formatCurrency(montantRestant, facture.devise)}</p>
                         </td>
-
                         <td className="py-3 px-4 text-center">
-                          <Badge variant={statusConfig.variant as any}>
-                            {statusConfig.label}
-                          </Badge>
+                          <Badge variant={statusConfig.variant as any}>{statusConfig.label}</Badge>
                         </td>
-
                         <td className="py-3 px-4 text-right">
                           <div className="flex items-center justify-end gap-2">
                             <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
@@ -220,9 +166,15 @@ export default function PortalInvoicesPage() {
                                 <Eye className="h-4 w-4" />
                               </Link>
                             </Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                            {/* ── MODIFIÉ ── */}
+                            <Button
+                              variant="ghost" size="icon" className="h-8 w-8"
+                              onClick={() => openPdf(`/api/factures/${facture.id}/pdf`, facture.id)}
+                              disabled={isPdfLoading(facture.id)}
+                            >
                               <Download className="h-4 w-4" />
                             </Button>
+                            {/* ── FIN MODIFIÉ ── */}
                           </div>
                         </td>
                       </tr>
