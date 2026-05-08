@@ -4,6 +4,7 @@ import Link from "next/link"
 import {
   ArrowLeft, Pencil, Calendar, Clock, MapPin, User, Building2,
   Phone, Mail, CheckCircle, AlertCircle, MessageSquare, Navigation, Loader2,
+  Star,
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -498,8 +499,22 @@ export default function VisitViewPage() {
 
           {/* ── Notes ── */}
           <Card>
-            <CardHeader><CardTitle className="text-lg">Notes avant la visite</CardTitle></CardHeader>
-            <CardContent>
+            <CardHeader><CardTitle className="text-lg">Notes sur la visite</CardTitle></CardHeader>
+            <CardContent className="space-y-3">
+              {visit.notes && (
+                <div className="flex items-center gap-2">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Star
+                      key={star}
+                      className={`h-5 w-5 ${star <= Number(visit.notes)
+                          ? "fill-amber-400 text-amber-400"
+                          : "text-muted-foreground"
+                        }`}
+                    />
+                  ))}
+                  <span className="text-sm text-muted-foreground">{visit.notes}/5</span>
+                </div>
+              )}
               {visit.notes ? (
                 <p className="text-muted-foreground leading-relaxed">{visit.notes}</p>
               ) : (

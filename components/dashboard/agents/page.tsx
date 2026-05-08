@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import {
   Plus,
   Search,
@@ -104,6 +104,7 @@ interface ListingAgentsPageProps {
   agents?: Agent[]
   stats?: Stats
   loading?: boolean
+  currentUserRole?: string
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -112,10 +113,21 @@ export default function ListingAgentsPage({
   agents = [],
   stats = {},
   loading = false,
+  currentUserRole = '',
 }: ListingAgentsPageProps) {
   const [roleFilter, setRoleFilter] = useState("all")
   const [statusFilter, setStatusFilter] = useState("all")
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [agentsList, setAgentsList] = useState<Agent[]>(agents)
+  const [deletingAgentId, setDeletingAgentId] = useState<number | null>(null)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [agentToDelete, setAgentToDelete] = useState<Agent | null>(null)
+
+  // ← FIX : synchroniser agentsList quand agents change (chargement asynchrone)
+  useEffect(() => {
+    setAgentsList(agents)
+  }, [agents])
+
   const [formData, setFormData] = useState({
     nom: "",
     prenom: "",
@@ -134,10 +146,8 @@ export default function ListingAgentsPage({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
-    console.log("Form data to submit:", formData)  // Debug log
     try {
-      const response = await axiosInstance.post("/api/create/agent", formData)
-      // Handle success, maybe refresh the page or show a message
+      await axiosInstance.post("/api/create/agent", formData)
       setIsDialogOpen(false)
       setFormData({
         nom: "",
@@ -151,11 +161,8 @@ export default function ListingAgentsPage({
         specialization: "",
         license_number: "",
         role: "agent",
-
-
       })
-      // Maybe reload the page or update the agents list
-      toast.success("Agent créé avec succès un mail lui sera envoyé avec les informations de connexion !")
+      toast.success("Agent créé avec succès. Un mail lui sera envoyé avec ses informations de connexion !")
       window.location.reload()
     } catch (error) {
       console.error("Error creating agent:", error)
@@ -166,20 +173,44 @@ export default function ListingAgentsPage({
   }
 
   const handleInputChange = (field: string, value: string) => {
-    const processedValue = field === "commission_rate" ? (value === "" ? 0 : parseFloat(value) || 0) : value
+    const processedValue =
+      field === "commission_rate" ? (value === "" ? 0 : parseFloat(value) || 0) : value
     setFormData(prev => ({ ...prev, [field]: processedValue }))
   }
 
-  // Stats cards construites depuis les vraies données API
+  // ── Suppression ─────────────────────────────────────────────────────────────
+  const openDeleteDialog = (agent: Agent) => {
+    setAgentToDelete(agent)
+    setDeleteDialogOpen(true)
+  }
+
+  const handleDeleteAgent = async () => {
+    if (!agentToDelete) return
+    setDeletingAgentId(agentToDelete.id)
+    try {
+      await axiosInstance.delete(`/api/agent/delete/${agentToDelete.id}`)
+      setAgentsList(prev => prev.filter(a => a.id !== agentToDelete.id))
+      toast.success(
+        `L'agent ${agentToDelete.profile?.first_name ?? agentToDelete.nom} a été supprimé.`
+      )
+      setDeleteDialogOpen(false)
+      setAgentToDelete(null)
+    } catch (error: any) {
+      toast.error(error.response?.data?.error ?? "Erreur lors de la suppression.")
+    } finally {
+      setDeletingAgentId(null)
+    }
+  }
+  // ────────────────────────────────────────────────────────────────────────────
+
   const statsCards = [
-    { label: "Agents Totaux", value: stats?.nombreAgents ?? 0, icon: Users },
-    { label: "Actifs Maintenant", value: stats?.agentsActifs ?? 0, icon: ShieldCheck },
-    { label: "Note Moyenne", value: stats?.notesMoyennes ?? 0, icon: Star },
-    { label: "Total des Ventes", value: stats?.totalVentes ?? 0, icon: TrendingUp },
+    { label: "Agents Totaux",     value: stats?.nombreAgents  ?? 0, icon: Users },
+    { label: "Actifs Maintenant", value: stats?.agentsActifs  ?? 0, icon: ShieldCheck },
+    { label: "Note Moyenne",      value: stats?.notesMoyennes ?? 0, icon: Star },
+    { label: "Total des Ventes",  value: stats?.totalVentes   ?? 0, icon: TrendingUp },
   ]
 
-  // Filtrage sur les données réelles
-  const filteredAgents = agents.filter((agent) => {
+  const filteredAgents = agentsList.filter((agent) => {
     const role = agent.roles?.[0]?.name ?? "agent"
     const isActive = agent.is_active === 1 ? "active" : "inactive"
     if (roleFilter !== "all" && role !== roleFilter) return false
@@ -187,7 +218,6 @@ export default function ListingAgentsPage({
     return true
   })
 
-  // Badge adapté aux rôles renvoyés par le serveur
   const getRoleBadge = (role: string) => {
     const config: Record<
       string,
@@ -222,10 +252,42 @@ export default function ListingAgentsPage({
     )
   }
 
-  console.log("Agents fetched from API:", agents)  // Debug log
-
   return (
     <div className="space-y-6">
+
+      {/* Dialog de confirmation suppression — global, en dehors de la liste */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Supprimer l'agent</DialogTitle>
+            <DialogDescription>
+              Êtes-vous sûr de vouloir supprimer{" "}
+              <strong>
+                {agentToDelete?.profile?.first_name ?? agentToDelete?.nom}{" "}
+                {agentToDelete?.profile?.last_name ?? agentToDelete?.prenom}
+              </strong>{" "}
+              ? Cette action est irréversible. Toutes ses données seront supprimées.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+              disabled={!!deletingAgentId}
+            >
+              Annuler
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={!!deletingAgentId}
+              onClick={handleDeleteAgent}
+            >
+              {deletingAgentId ? "Suppression..." : "Confirmer la suppression"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Page Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -371,7 +433,6 @@ export default function ListingAgentsPage({
       </div>
 
       {/* Stats Cards */}
-      {/* Stats Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {loading ? (
           [...Array(4)].map((_, i) => (
@@ -423,7 +484,6 @@ export default function ListingAgentsPage({
                   <SelectItem value="all">Tous les Rôles</SelectItem>
                   <SelectItem value="admin_agence">Admin Agence</SelectItem>
                   <SelectItem value="agent">Agent</SelectItem>
-                  {/* <SelectItem value="agent_junior">Agent Junior</SelectItem> */}
                 </SelectContent>
               </Select>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -441,7 +501,6 @@ export default function ListingAgentsPage({
         </CardContent>
       </Card>
 
-
       {/* Agents List */}
       <div className="grid gap-4">
         {loading ? (
@@ -449,8 +508,6 @@ export default function ListingAgentsPage({
             <Card key={i}>
               <CardContent className="p-6">
                 <div className="flex flex-col lg:flex-row lg:items-center gap-6">
-
-                  {/* Avatar + infos */}
                   <div className="flex items-center gap-4 flex-1">
                     <div className="relative shrink-0">
                       <Skeleton className="h-14 w-14 rounded-full" />
@@ -467,8 +524,6 @@ export default function ListingAgentsPage({
                       <Skeleton className="h-3 w-12" />
                     </div>
                   </div>
-
-                  {/* Actions */}
                   <div className="flex items-center gap-2">
                     <Skeleton className="h-8 w-28 rounded-md" />
                     <Skeleton className="h-8 w-8 rounded-md" />
@@ -499,8 +554,9 @@ export default function ListingAgentsPage({
                           </AvatarFallback>
                         </Avatar>
                         <span
-                          className={`absolute bottom-0 right-0 h-4 w-4 rounded-full border-2 border-background ${isActive ? "bg-green-500" : "bg-gray-400"
-                            }`}
+                          className={`absolute bottom-0 right-0 h-4 w-4 rounded-full border-2 border-background ${
+                            isActive ? "bg-green-500" : "bg-gray-400"
+                          }`}
                         />
                       </div>
                       <div className="min-w-0">
@@ -524,58 +580,6 @@ export default function ListingAgentsPage({
                       </div>
                     </div>
 
-                    {/* Stats */}
-                    <div className="flex items-center gap-6 lg:gap-8">
-                      {/*
-                        Les champs ci-dessous (properties, clients, closedDeals, rating)
-                        ne sont pas encore fournis par l'API.
-                        À décommenter et adapter quand le back les exposera.
-                      */}
-
-                      {/* Propriétés — non disponible dans l'API actuelle */}
-                      {/* <div className="text-center">
-                        <p className="text-xl font-bold text-foreground">{agent.properties}</p>
-                        <p className="text-xs text-muted-foreground">Propriétés</p>
-                      </div> */}
-
-                      {/* Clients — non disponible dans l'API actuelle */}
-                      {/* <div className="text-center">
-                        <p className="text-xl font-bold text-foreground">{agent.clients}</p>
-                        <p className="text-xs text-muted-foreground">Clients</p>
-                      </div> */}
-
-                      {/* Ventes — non disponible dans l'API actuelle */}
-                      {/* <div className="text-center">
-                        <p className="text-xl font-bold text-foreground">{agent.closedDeals}</p>
-                        <p className="text-xs text-muted-foreground">Ventes</p>
-                      </div> */}
-
-                      {/* Note — non disponible dans l'API actuelle */}
-                      {/* <div className="text-center">
-                        <div className="flex items-center gap-1">
-                          <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
-                          <p className="text-xl font-bold text-foreground">{agent.rating}</p>
-                        </div>
-                        <p className="text-xs text-muted-foreground">Note</p>
-                      </div> */}
-
-                      {/* Licence — disponible dans profile */}
-                      {/* <div className="text-center">
-                        <p className="text-sm font-medium text-foreground">
-                          {agent.profile?.license_number ?? "—"}
-                        </p>
-                        <p className="text-xs text-muted-foreground">Licence</p>
-                      </div> */}
-
-                      {/* Spécialisation — disponible dans profile */}
-                      {/* <div className="text-center">
-                        <p className="text-sm font-medium text-foreground">
-                          {agent.profile?.specialization ?? "—"}
-                        </p>
-                        <p className="text-xs text-muted-foreground">Spécialisation</p>
-                      </div> */}
-                    </div>
-
                     {/* Actions */}
                     <div className="flex items-center gap-2">
                       <Dialog>
@@ -594,11 +598,11 @@ export default function ListingAgentsPage({
                           <div className="space-y-4 py-4">
                             {[
                               { key: "properties", label: "Propriétés" },
-                              { key: "clients", label: "Clients" },
-                              { key: "contracts", label: "Contrats" },
-                              { key: "invoices", label: "Factures" },
-                              { key: "settings", label: "Paramètres" },
-                              { key: "team", label: "Équipe" },
+                              { key: "clients",    label: "Clients" },
+                              { key: "contracts",  label: "Contrats" },
+                              { key: "invoices",   label: "Factures" },
+                              { key: "settings",   label: "Paramètres" },
+                              { key: "team",       label: "Équipe" },
                             ].map(({ key, label }) => (
                               <div key={key} className="flex items-center justify-between">
                                 <Label htmlFor={`perm-${agent.id}-${key}`}>{label}</Label>
@@ -619,7 +623,7 @@ export default function ListingAgentsPage({
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          {/* <DropdownMenuItem asChild>
+                          <DropdownMenuItem asChild>
                             <Link href={`/dashboard/agents/${agent.id}`}>
                               <Eye className="mr-2 h-4 w-4" />
                               Voir le Profil
@@ -630,13 +634,20 @@ export default function ListingAgentsPage({
                               <Pencil className="mr-2 h-4 w-4" />
                               Modifier les Détails
                             </Link>
-                          </DropdownMenuItem> */}
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
                           <DropdownMenuItem>
                             <Mail className="mr-2 h-4 w-4" />
                             Envoyer un Message
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem className="text-destructive">
+                          <DropdownMenuItem
+                            className="text-destructive focus:text-destructive"
+                            onSelect={(e) => {
+                              e.preventDefault()
+                              openDeleteDialog(agent)
+                            }}
+                          >
                             <Trash2 className="mr-2 h-4 w-4" />
                             Supprimer l'Agent
                           </DropdownMenuItem>

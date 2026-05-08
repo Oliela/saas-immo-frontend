@@ -61,6 +61,7 @@ interface Visit {
     status: string
     notes: string | null
     feedback: string | null
+    note: number | null
     created_at: string
     visit_schedule: {
         visit_date: string
@@ -167,10 +168,74 @@ export default function ListingVisitsPage({ visits, loading }: Props) {
 
     const [cancelDialogId, setCancelDialogId]     = useState<number | null>(null)
     const [feedbackDialogId, setFeedbackDialogId] = useState<number | null>(null)
-    const [selectedRating, setSelectedRating]     = useState(0)
     const [cancelReason, setCancelReason]         = useState("")
     const [isCancelling, setIsCancelling]         = useState(false)
 
+    // ── État du formulaire de feedback ───────────────────────────────────────
+    const [selectedRating, setSelectedRating]     = useState(0)      // → champ "note"
+    const [agentPonctuel, setAgentPonctuel]       = useState("")
+    const [agentDisponible, setAgentDisponible]   = useState("")
+    const [visitConforme, setVisitConforme]       = useState("")
+    const [commentaires, setCommentaires]         = useState("")
+    const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false)
+
+    // Suivre les visites dont le feedback vient d'être soumis (sans recharger la page)
+    const [submittedFeedbacks, setSubmittedFeedbacks] = useState<Record<number, string>>({})
+
+    // ── Réinitialiser le formulaire de feedback ──────────────────────────────
+    const resetFeedbackForm = () => {
+        setSelectedRating(0)
+        setAgentPonctuel("")
+        setAgentDisponible("")
+        setVisitConforme("")
+        setCommentaires("")
+    }
+
+    // ── Soumettre le feedback ────────────────────────────────────────────────
+    const handleSubmitFeedback = async (visitId: number, bienTitle: string) => {
+        if (selectedRating === 0) {
+            toast.error("Veuillez attribuer une note à la visite.")
+            return
+        }
+
+        // Construire le texte structuré du feedback
+        const parts: string[] = []
+        if (agentPonctuel)   parts.push(`Ponctualité de l'agent : ${agentPonctuel}`)
+        if (agentDisponible) parts.push(`Disponibilité / écoute de l'agent : ${agentDisponible}`)
+        if (visitConforme)   parts.push(`Bien conforme à l'annonce : ${visitConforme}`)
+        if (commentaires)    parts.push(`Commentaires : ${commentaires}`)
+
+        const feedbackText = parts.join("\n")
+
+        setIsSubmittingFeedback(true)
+        console.log("Feedback à soumettre pour la visite", visitId, {
+            rating: selectedRating,
+            agentPonctuel,
+            agentDisponible,
+            visitConforme,
+            commentaires,
+        }, "Texte structuré envoyé au backend:", feedbackText)
+        console.log('note envoyée:', selectedRating)  // Vérifier que la note est bien prise en compte
+        try {
+            await axiosInstance.patch(`/api/visit-reservations/${visitId}/feedback`, {
+                feedback: feedbackText,
+                note:     selectedRating,  // → champ "note" dans la table visite
+            })
+
+            toast.success(`Avis envoyé pour ${bienTitle}`)
+
+            // Mettre à jour localement pour masquer le bouton sans recharger
+            setSubmittedFeedbacks((prev) => ({ ...prev, [visitId]: feedbackText }))
+            setFeedbackDialogId(null)
+            resetFeedbackForm()
+        } catch (err: any) {
+            toast.error(err.response?.data?.message ?? "Erreur lors de l'envoi de l'avis.")
+        } finally {
+            setIsSubmittingFeedback(false)
+        }
+    }
+
+    // ── Annuler une visite ───────────────────────────────────────────────────
     const handleCancelVisit = async (visitId: number, bien: Bien) => {
         try {
             setIsCancelling(true)
@@ -199,7 +264,7 @@ export default function ListingVisitsPage({ visits, loading }: Props) {
     return (
         <div className="space-y-6">
 
-            {/* ── Header — toujours visible ── */}
+            {/* ── Header ── */}
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
                     <h1 className="text-2xl font-semibold text-foreground">Mes Visites</h1>
@@ -213,7 +278,7 @@ export default function ListingVisitsPage({ visits, loading }: Props) {
                 </Button>
             </div>
 
-            {/* ── Skeleton inline ── */}
+            {/* ── Skeleton ── */}
             {loading ? (
                 <div className="space-y-6">
                     <div className="flex gap-2">
@@ -228,44 +293,19 @@ export default function ListingVisitsPage({ visits, loading }: Props) {
                                     <div className="p-6 flex-1 space-y-4">
                                         <div className="flex justify-between gap-4">
                                             <div className="space-y-2">
-                                                <div className="flex items-center gap-2">
-                                                    <Skeleton className="h-5 w-48" />
-                                                    <Skeleton className="h-5 w-20 rounded-full" />
-                                                </div>
+                                                <Skeleton className="h-5 w-48" />
                                                 <Skeleton className="h-4 w-64" />
                                             </div>
-                                            <div className="space-y-2 shrink-0">
-                                                <Skeleton className="h-4 w-36" />
-                                                <Skeleton className="h-4 w-24 ml-auto" />
-                                            </div>
                                         </div>
-                                        <div className="flex items-center gap-4 p-3 rounded-lg bg-secondary/50">
-                                            <Skeleton className="h-10 w-10 rounded-full shrink-0" />
-                                            <div className="flex-1 space-y-2">
-                                                <Skeleton className="h-4 w-32" />
-                                                <Skeleton className="h-3 w-24" />
-                                            </div>
-                                            <Skeleton className="h-8 w-24 rounded-md shrink-0" />
-                                        </div>
-                                        <div className="flex gap-2">
-                                            <Skeleton className="h-6 w-20 rounded-full" />
-                                            <Skeleton className="h-6 w-16 rounded-full" />
-                                            <Skeleton className="h-6 w-28" />
-                                        </div>
-                                        <div className="flex gap-2 pt-4 border-t border-border">
-                                            <Skeleton className="h-8 w-36 rounded-md" />
-                                            <Skeleton className="h-8 w-36 rounded-md" />
-                                            <Skeleton className="h-8 w-32 rounded-md" />
-                                        </div>
+                                        <Skeleton className="h-16 w-full rounded-lg" />
+                                        <Skeleton className="h-8 w-32 rounded-md" />
                                     </div>
                                 </div>
                             </CardContent>
                         </Card>
                     ))}
                 </div>
-
             ) : (
-
                 <Tabs defaultValue="upcoming" className="space-y-6">
                     <TabsList>
                         <TabsTrigger value="upcoming">À venir ({upcoming.length})</TabsTrigger>
@@ -294,9 +334,7 @@ export default function ListingVisitsPage({ visits, loading }: Props) {
                                     <Card key={visit.id}>
                                         <CardContent className="p-0">
                                             <div className="flex flex-col md:flex-row">
-
                                                 <BienThumbnail bien={bien} size="lg" />
-
                                                 <div className="p-6 flex-1">
                                                     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
                                                         <div>
@@ -334,13 +372,11 @@ export default function ListingVisitsPage({ visits, loading }: Props) {
                                                         <Button variant="outline" size="sm" className="bg-transparent shrink-0" asChild>
                                                             {agent ? (
                                                                 <a href={`tel:${agent?.phone}`}>
-                                                                    <Phone className="mr-2 h-4 w-4" />
-                                                                    Appeler
+                                                                    <Phone className="mr-2 h-4 w-4" />Appeler
                                                                 </a>
                                                             ) : (
                                                                 <a href={`tel:${agency?.phone}`}>
-                                                                    <Phone className="mr-2 h-4 w-4" />
-                                                                    Appeler
+                                                                    <Phone className="mr-2 h-4 w-4" />Appeler
                                                                 </a>
                                                             )}
                                                         </Button>
@@ -357,7 +393,6 @@ export default function ListingVisitsPage({ visits, loading }: Props) {
                                                         </span>
                                                     </div>
 
-                                                    {/* Notes */}
                                                     {visit.notes && (
                                                         <div className="mb-4 p-3 bg-accent/10 rounded-lg">
                                                             <p className="text-sm text-foreground">
@@ -375,7 +410,6 @@ export default function ListingVisitsPage({ visits, loading }: Props) {
                                                             <MessageSquare className="mr-2 h-4 w-4" />
                                                             Contacter l'agent
                                                         </Button>
-
                                                         <Dialog
                                                             open={cancelDialogId === visit.id}
                                                             onOpenChange={(open) => {
@@ -440,14 +474,16 @@ export default function ListingVisitsPage({ visits, loading }: Props) {
                         ) : (
                             past.map((visit) => {
                                 const { bien, agent, visit_date, start_time, end_time, agency } = visit.visit_schedule
+
+                                // Le feedback peut venir de la BDD ou d'une soumission locale
+                                const feedbackExistant = visit.feedback ?? submittedFeedbacks[visit.id] ?? null
+
                                 return (
                                     <Collapsible key={visit.id}>
                                         <Card>
                                             <CardContent className="p-0">
                                                 <div className="flex flex-col sm:flex-row">
-
                                                     <BienThumbnail bien={bien} size="sm" />
-
                                                     <div className="p-4 flex-1">
                                                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                                                             <div>
@@ -506,14 +542,23 @@ export default function ListingVisitsPage({ visits, loading }: Props) {
                                                             </p>
                                                         )}
 
-                                                        {visit.feedback && (
-                                                            <div className="p-3 bg-muted/50 rounded-lg text-sm">
-                                                                <span className="font-medium">Retour : </span>
-                                                                <span className="text-muted-foreground">{visit.feedback}</span>
+                                                        {/* Feedback existant → afficher avec la note */}
+                                                        {feedbackExistant && (
+                                                            <div className="p-3 bg-muted/50 rounded-lg text-sm space-y-2">
+                                                                <div className="flex items-center justify-between">
+                                                                    <span className="font-medium">Votre avis</span>
+                                                                    {visit.note && (
+                                                                        <StarRating rating={visit.note} />
+                                                                    )}
+                                                                </div>
+                                                                <p className="text-muted-foreground whitespace-pre-line">
+                                                                    {feedbackExistant}
+                                                                </p>
                                                             </div>
                                                         )}
 
-                                                        {!visit.feedback && visit.status !== "cancelled" && (
+                                                        {/* Bouton feedback — masqué si déjà soumis */}
+                                                        {!feedbackExistant && visit.status !== "cancelled" && (
                                                             <div className="flex items-center justify-between gap-4">
                                                                 <p className="text-sm text-muted-foreground">
                                                                     Vous n'avez pas encore partagé votre avis.
@@ -522,7 +567,7 @@ export default function ListingVisitsPage({ visits, loading }: Props) {
                                                                     open={feedbackDialogId === visit.id}
                                                                     onOpenChange={(open) => {
                                                                         setFeedbackDialogId(open ? visit.id : null)
-                                                                        if (!open) setSelectedRating(0)
+                                                                        if (!open) resetFeedbackForm()
                                                                     }}
                                                                 >
                                                                     <DialogTrigger asChild>
@@ -538,47 +583,121 @@ export default function ListingVisitsPage({ visits, loading }: Props) {
                                                                                 Partagez vos impressions sur {bien.title}
                                                                             </DialogDescription>
                                                                         </DialogHeader>
-                                                                        <div className="space-y-4 py-4">
+                                                                        <div className="space-y-5 py-4">
+
+                                                                            {/* Note globale — obligatoire */}
                                                                             <div className="space-y-2">
-                                                                                <Label>Évaluation globale</Label>
-                                                                                <StarRating rating={selectedRating} interactive onRate={setSelectedRating} />
+                                                                                <Label>
+                                                                                    Note globale de la visite
+                                                                                    <span className="text-destructive ml-1">*</span>
+                                                                                </Label>
+                                                                                <StarRating
+                                                                                    rating={selectedRating}
+                                                                                    interactive
+                                                                                    onRate={setSelectedRating}
+                                                                                />
+                                                                                {selectedRating === 0 && (
+                                                                                    <p className="text-xs text-muted-foreground">Cliquez sur une étoile pour noter</p>
+                                                                                )}
                                                                             </div>
-                                                                            <div className="space-y-2">
-                                                                                <Label>Ce que vous avez aimé</Label>
-                                                                                <Textarea placeholder="Superbes caractéristiques, emplacement..." />
+
+                                                                            <div className="border-t border-border pt-4 space-y-4">
+                                                                                <p className="text-sm font-medium text-foreground">
+                                                                                    À propos de l'agent{agent ? ` — ${agent.prenom} ${agent.nom}` : ""}
+                                                                                </p>
+
+                                                                                {/* Ponctualité */}
+                                                                                <div className="space-y-2">
+                                                                                    <Label>L'agent était-il ponctuel ?</Label>
+                                                                                    <RadioGroup value={agentPonctuel} onValueChange={setAgentPonctuel} className="flex gap-4">
+                                                                                        <div className="flex items-center space-x-2">
+                                                                                            <RadioGroupItem value="oui" id={`ponctuel-oui-${visit.id}`} />
+                                                                                            <Label htmlFor={`ponctuel-oui-${visit.id}`} className="font-normal">Oui</Label>
+                                                                                        </div>
+                                                                                        <div className="flex items-center space-x-2">
+                                                                                            <RadioGroupItem value="non" id={`ponctuel-non-${visit.id}`} />
+                                                                                            <Label htmlFor={`ponctuel-non-${visit.id}`} className="font-normal">Non</Label>
+                                                                                        </div>
+                                                                                        <div className="flex items-center space-x-2">
+                                                                                            <RadioGroupItem value="leger-retard" id={`ponctuel-retard-${visit.id}`} />
+                                                                                            <Label htmlFor={`ponctuel-retard-${visit.id}`} className="font-normal">Léger retard</Label>
+                                                                                        </div>
+                                                                                    </RadioGroup>
+                                                                                </div>
+
+                                                                                {/* Disponibilité / écoute */}
+                                                                                <div className="space-y-2">
+                                                                                    <Label>L'agent a-t-il bien répondu à vos questions ?</Label>
+                                                                                    <RadioGroup value={agentDisponible} onValueChange={setAgentDisponible} className="flex gap-4">
+                                                                                        <div className="flex items-center space-x-2">
+                                                                                            <RadioGroupItem value="tres-bien" id={`dispo-tres-bien-${visit.id}`} />
+                                                                                            <Label htmlFor={`dispo-tres-bien-${visit.id}`} className="font-normal">Très bien</Label>
+                                                                                        </div>
+                                                                                        <div className="flex items-center space-x-2">
+                                                                                            <RadioGroupItem value="bien" id={`dispo-bien-${visit.id}`} />
+                                                                                            <Label htmlFor={`dispo-bien-${visit.id}`} className="font-normal">Bien</Label>
+                                                                                        </div>
+                                                                                        <div className="flex items-center space-x-2">
+                                                                                            <RadioGroupItem value="insuffisant" id={`dispo-insuffisant-${visit.id}`} />
+                                                                                            <Label htmlFor={`dispo-insuffisant-${visit.id}`} className="font-normal">Insuffisant</Label>
+                                                                                        </div>
+                                                                                    </RadioGroup>
+                                                                                </div>
                                                                             </div>
-                                                                            <div className="space-y-2">
-                                                                                <Label>Ce qui pourrait être mieux</Label>
-                                                                                <Textarea placeholder="Préoccupations ou inconvénients..." />
+
+                                                                            <div className="border-t border-border pt-4 space-y-4">
+                                                                                <p className="text-sm font-medium text-foreground">À propos du bien visité</p>
+
+                                                                                {/* Conforme à l'annonce */}
+                                                                                <div className="space-y-2">
+                                                                                    <Label>Le bien correspondait-il à l'annonce ?</Label>
+                                                                                    <RadioGroup value={visitConforme} onValueChange={setVisitConforme} className="flex gap-4">
+                                                                                        <div className="flex items-center space-x-2">
+                                                                                            <RadioGroupItem value="oui" id={`conforme-oui-${visit.id}`} />
+                                                                                            <Label htmlFor={`conforme-oui-${visit.id}`} className="font-normal">Oui</Label>
+                                                                                        </div>
+                                                                                        <div className="flex items-center space-x-2">
+                                                                                            <RadioGroupItem value="partiellement" id={`conforme-partiel-${visit.id}`} />
+                                                                                            <Label htmlFor={`conforme-partiel-${visit.id}`} className="font-normal">Partiellement</Label>
+                                                                                        </div>
+                                                                                        <div className="flex items-center space-x-2">
+                                                                                            <RadioGroupItem value="non" id={`conforme-non-${visit.id}`} />
+                                                                                            <Label htmlFor={`conforme-non-${visit.id}`} className="font-normal">Non</Label>
+                                                                                        </div>
+                                                                                    </RadioGroup>
+                                                                                </div>
+
+                                                                                {/* Commentaire libre */}
+                                                                                <div className="space-y-2">
+                                                                                    <Label>Commentaires libres</Label>
+                                                                                    <Textarea
+                                                                                        placeholder="Partagez tout autre retour sur la visite ou l'agent..."
+                                                                                        value={commentaires}
+                                                                                        onChange={(e) => setCommentaires(e.target.value)}
+                                                                                        rows={3}
+                                                                                    />
+                                                                                </div>
                                                                             </div>
-                                                                            <div className="space-y-2">
-                                                                                <Label>Êtes-vous intéressé par cette propriété ?</Label>
-                                                                                <RadioGroup defaultValue="no">
-                                                                                    <div className="flex items-center space-x-2">
-                                                                                        <RadioGroupItem value="yes" id={`yes-${visit.id}`} />
-                                                                                        <Label htmlFor={`yes-${visit.id}`} className="font-normal">Oui, je suis intéressé</Label>
-                                                                                    </div>
-                                                                                    <div className="flex items-center space-x-2">
-                                                                                        <RadioGroupItem value="maybe" id={`maybe-${visit.id}`} />
-                                                                                        <Label htmlFor={`maybe-${visit.id}`} className="font-normal">Peut-être, j'ai besoin de plus d'info</Label>
-                                                                                    </div>
-                                                                                    <div className="flex items-center space-x-2">
-                                                                                        <RadioGroupItem value="no" id={`no-${visit.id}`} />
-                                                                                        <Label htmlFor={`no-${visit.id}`} className="font-normal">Non, ce n'est pas pour moi</Label>
-                                                                                    </div>
-                                                                                </RadioGroup>
-                                                                            </div>
-                                                                            <div className="space-y-2">
-                                                                                <Label>Commentaires supplémentaires</Label>
-                                                                                <Textarea placeholder="Autres réflexions..." />
-                                                                            </div>
+
                                                                         </div>
+
                                                                         <DialogFooter>
-                                                                            <Button variant="outline" className="bg-transparent" onClick={() => setFeedbackDialogId(null)}>
+                                                                            <Button
+                                                                                variant="outline"
+                                                                                className="bg-transparent"
+                                                                                onClick={() => {
+                                                                                    setFeedbackDialogId(null)
+                                                                                    resetFeedbackForm()
+                                                                                }}
+                                                                                disabled={isSubmittingFeedback}
+                                                                            >
                                                                                 Annuler
                                                                             </Button>
-                                                                            <Button onClick={() => setFeedbackDialogId(null)}>
-                                                                                Envoyer mon avis
+                                                                            <Button
+                                                                                onClick={() => handleSubmitFeedback(visit.id, bien.title)}
+                                                                                disabled={isSubmittingFeedback || selectedRating === 0}
+                                                                            >
+                                                                                {isSubmittingFeedback ? "Envoi en cours..." : "Envoyer mon avis"}
                                                                             </Button>
                                                                         </DialogFooter>
                                                                     </DialogContent>
@@ -597,7 +716,7 @@ export default function ListingVisitsPage({ visits, loading }: Props) {
                 </Tabs>
             )}
 
-            {/* ── Conseils — toujours visible ── */}
+            {/* ── Conseils ── */}
             <Card className="bg-secondary/30">
                 <CardContent className="p-6">
                     <h3 className="font-medium text-foreground mb-3">Conseils pour les visites de propriétés</h3>

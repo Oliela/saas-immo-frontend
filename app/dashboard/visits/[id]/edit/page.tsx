@@ -9,10 +9,13 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useParams, useRouter } from "next/navigation"
 import axiosInstance from "@/lib/axios"
 import { toast } from "sonner"
 import { Skeleton } from "@/components/ui/skeleton"
+import { useGetAgent } from "@/hooks/agence/useGetAgent"
+import { useAuthAgent } from "@/hooks/agence/useAuthAgent"
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -34,7 +37,7 @@ interface VisitData {
       visit_date: string
       start_time: string
       end_time: string
-      agent_id: number
+      agent_id: number | null
       bien: {
         id: number
         title: string
@@ -52,8 +55,9 @@ interface VisitData {
         email: string
         phone: string
         account_type: string
-      }
+      } | null
       agency: {
+        id: number
         phone: string
         name: string
         email: string
@@ -69,6 +73,7 @@ interface FormState {
   end_time: string
   notes: string
   feedback: string
+  agent_id: string // ← nouveau
 }
 
 // ─── Helper statut ───────────────────────────────────────────────────────────
@@ -97,7 +102,11 @@ export default function VisitEditPage() {
   const [isDeleting, setIsDeleting] = useState(false)
   const [isConfirming, setIsConfirming] = useState(false)
 
-  // ── Fetch ────────────────────────────────────────────────────────────────
+  // ── Récupérer l'agence de l'agent connecté ───────────────────────────────
+  const { user: authUser, loading: authLoading } = useAuthAgent()
+  const { agent: agentsList, loading: agentsLoading } = useGetAgent({ agencyId: authUser?.agency?.id })
+
+  // ── Fetch de la visite ────────────────────────────────────────────────────
   useEffect(() => {
     axiosInstance.get(`/api/visit-reservations/${id}`)
       .then((res) => {
@@ -111,6 +120,7 @@ export default function VisitEditPage() {
           end_time: schedule.end_time?.slice(0, 5) ?? "",
           notes: visit.notes ?? "",
           feedback: visit.feedback ?? "",
+          agent_id: schedule.agent_id ? String(schedule.agent_id) : "", // ← pré-remplir l'agent actuel
         })
       })
       .catch((err) => console.error("Erreur fetch visite:", err))
@@ -129,7 +139,9 @@ export default function VisitEditPage() {
         visit_date: form.visit_date,
         start_time: form.start_time,
         end_time: form.end_time,
+        agent_id: form.agent_id ? Number(form.agent_id) : null, // ← ajouté ici
       })
+
       toast.success("Visite mise à jour avec succès.")
       router.push(`/dashboard/visits/${id}`)
     } catch (err: any) {
@@ -171,10 +183,8 @@ export default function VisitEditPage() {
   }
 
   // ── Guards ────────────────────────────────────────────────────────────────
-  if (loading) return (
+  if (loading || authLoading) return (
     <div className="space-y-6">
-
-      {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
           <Skeleton className="h-9 w-9 rounded-md" />
@@ -192,114 +202,23 @@ export default function VisitEditPage() {
           <Skeleton className="h-8 w-28 rounded-md" />
         </div>
       </div>
-
       <div className="grid gap-6 lg:grid-cols-2">
-
-        {/* Planification */}
-        <Card>
-          <CardHeader>
-            <Skeleton className="h-5 w-28" />
-            <Skeleton className="h-4 w-44" />
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="space-y-2">
-                <Skeleton className="h-3 w-20" />
-                <Skeleton className="h-10 w-full rounded-md" />
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-
-        {/* Propriété */}
-        <Card>
-          <CardHeader>
-            <Skeleton className="h-5 w-24" />
-            <Skeleton className="h-4 w-52" />
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="space-y-2">
-                <Skeleton className="h-3 w-16" />
-                <Skeleton className="h-10 w-full rounded-md" />
-              </div>
-            ))}
-            <div className="grid grid-cols-2 gap-4">
-              {[...Array(2)].map((_, i) => (
-                <div key={i} className="space-y-2">
+        {[...Array(5)].map((_, i) => (
+          <Card key={i} className={i === 4 ? "lg:col-span-2" : ""}>
+            <CardHeader>
+              <Skeleton className="h-5 w-28" />
+              <Skeleton className="h-4 w-44" />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {[...Array(3)].map((_, j) => (
+                <div key={j} className="space-y-2">
                   <Skeleton className="h-3 w-20" />
                   <Skeleton className="h-10 w-full rounded-md" />
                 </div>
               ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Client */}
-        <Card>
-          <CardHeader>
-            <Skeleton className="h-5 w-20" />
-            <Skeleton className="h-4 w-48" />
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Skeleton className="h-3 w-24" />
-              <Skeleton className="h-10 w-full rounded-md" />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              {[...Array(2)].map((_, i) => (
-                <div key={i} className="space-y-2">
-                  <Skeleton className="h-3 w-16" />
-                  <Skeleton className="h-10 w-full rounded-md" />
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Agent */}
-        <Card>
-          <CardHeader>
-            <Skeleton className="h-5 w-32" />
-            <Skeleton className="h-4 w-48" />
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Skeleton className="h-3 w-28" />
-              <Skeleton className="h-10 w-full rounded-md" />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              {[...Array(2)].map((_, i) => (
-                <div key={i} className="space-y-2">
-                  <Skeleton className="h-3 w-16" />
-                  <Skeleton className="h-10 w-full rounded-md" />
-                </div>
-              ))}
-            </div>
-            <div className="space-y-2">
-              <Skeleton className="h-3 w-12" />
-              <Skeleton className="h-10 w-full rounded-md" />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Notes & Feedback */}
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <Skeleton className="h-5 w-36" />
-            <Skeleton className="h-4 w-56" />
-          </CardHeader>
-          <CardContent className="grid gap-4 sm:grid-cols-2">
-            {[...Array(2)].map((_, i) => (
-              <div key={i} className="space-y-2">
-                <Skeleton className="h-3 w-40" />
-                <Skeleton className="h-32 w-full rounded-md" />
-                <Skeleton className="h-3 w-52" />
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-
+            </CardContent>
+          </Card>
+        ))}
       </div>
     </div>
   )
@@ -314,14 +233,14 @@ export default function VisitEditPage() {
   const { bien, agent, agency } = visit.visit_schedule
   const client = visit.client
   const isBusy = isSubmitting || isDeleting || isConfirming
-  // Permettre la modification des visites annulées/terminées, mais garder le statut en lecture seule
-  const isStatusReadOnly = true
-  const isFieldsReadOnly = false
+
+  // L'agent actuellement sélectionné dans le formulaire (pour afficher ses infos)
+  const agentSelectionne = (agentsList as any[]).find(
+    (a: any) => String(a.id) === form.agent_id
+  ) ?? agent
 
   const update = (key: keyof FormState, value: string) =>
     setForm((prev) => prev ? { ...prev, [key]: value } : prev)
-
-  console.log("VisitEditPage - data:", data) // Debug log to inspect the fetched data
 
   return (
     <div className="space-y-6">
@@ -343,9 +262,7 @@ export default function VisitEditPage() {
           </div>
         </div>
 
-        {/* Boutons header */}
         <div className="flex gap-2">
-          {/* Confirmer — uniquement si en attente */}
           {form.status === "pending" && (
             <Button
               variant="outline"
@@ -361,14 +278,8 @@ export default function VisitEditPage() {
             </Button>
           )}
 
-          {/* Annuler — si pas déjà annulée */}
           {form.status !== "cancelled" && (
-            <Button
-              variant="destructive"
-              size="sm"
-              disabled={isBusy}
-              onClick={handleCancel}
-            >
+            <Button variant="destructive" size="sm" disabled={isBusy} onClick={handleCancel}>
               {isDeleting
                 ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Annulation...</>
                 : <><Trash2 className="mr-2 h-4 w-4" />Annuler la visite</>
@@ -376,7 +287,6 @@ export default function VisitEditPage() {
             </Button>
           )}
 
-          {/* Enregistrer — toujours disponible */}
           <Button size="sm" disabled={isBusy} onClick={handleSave}>
             {isSubmitting
               ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Enregistrement...</>
@@ -395,8 +305,6 @@ export default function VisitEditPage() {
             <CardDescription>Date et horaire de la visite</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-
-            {/* Statut en lecture seule */}
             <div className="space-y-2">
               <Label>Statut</Label>
               <Input
@@ -410,24 +318,20 @@ export default function VisitEditPage() {
                 className="opacity-70"
               />
             </div>
-
             <div className="space-y-2">
               <Label>Date de visite</Label>
               <Input
                 type="date"
                 value={form.visit_date}
-                disabled={isFieldsReadOnly}
                 onChange={(e) => update("visit_date", e.target.value)}
               />
             </div>
-
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Heure de début</Label>
                 <Input
                   type="time"
                   value={form.start_time}
-                  disabled={isFieldsReadOnly}
                   onChange={(e) => update("start_time", e.target.value)}
                 />
               </div>
@@ -436,7 +340,6 @@ export default function VisitEditPage() {
                 <Input
                   type="time"
                   value={form.end_time}
-                  disabled={isFieldsReadOnly}
                   onChange={(e) => {
                     if (e.target.value <= form.start_time) return
                     update("end_time", e.target.value)
@@ -444,12 +347,6 @@ export default function VisitEditPage() {
                 />
               </div>
             </div>
-
-            {!isFieldsReadOnly && (
-              <p className="text-xs text-muted-foreground">
-                Vous pouvez modifier cette visite même si elle est {form.status === "completed" ? "terminée" : "annulée"}.
-              </p>
-            )}
           </CardContent>
         </Card>
 
@@ -466,11 +363,7 @@ export default function VisitEditPage() {
             </div>
             <div className="space-y-2">
               <Label>Adresse</Label>
-              <Input
-                value={`${bien.address}, ${bien.neighborhood}, ${bien.city}`}
-                disabled
-                className="opacity-70"
-              />
+              <Input value={`${bien.address}, ${bien.neighborhood}, ${bien.city}`} disabled className="opacity-70" />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -479,11 +372,7 @@ export default function VisitEditPage() {
               </div>
               <div className="space-y-2">
                 <Label>Transaction</Label>
-                <Input
-                  value={bien.listingType === "rent" ? "À louer" : "À vendre"}
-                  disabled
-                  className="opacity-70"
-                />
+                <Input value={bien.listingType === "rent" ? "À louer" : "À vendre"} disabled className="opacity-70" />
               </div>
             </div>
             <div className="space-y-2">
@@ -527,45 +416,72 @@ export default function VisitEditPage() {
           </CardContent>
         </Card>
 
-        {/* ── Agent (lecture seule) ── */}
+        {/* ── Agent — MODIFIABLE ── */}
         <Card>
           <CardHeader>
             <CardTitle>Agent assigné</CardTitle>
-            <CardDescription>Agent responsable de la visite</CardDescription>
+            <CardDescription>
+              {agent ? "Modifier l'agent responsable de la visite" : "Assigner un agent à cette visite"}
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+
+            {/* Sélecteur d'agent */}
             <div className="space-y-2">
-              <Label>{agent ? "Nom de l'agent" : "Nom de l'agence"}</Label>
-              {agent ? (<Input value={`${agent.prenom} ${agent.nom}`} disabled className="opacity-70" />) : (<Input value={agency?.name} disabled className="opacity-70" />)}
-              {/* <Input value={`${agent.prenom} ${agent.nom}`} disabled className="opacity-70" /> */}
+              <Label>Choisir un agent</Label>
+              {agentsLoading ? (
+                <Skeleton className="h-10 w-full rounded-md" />
+              ) : agentsList.length > 0 ? (
+                <Select
+                  value={form.agent_id}
+                  onValueChange={(value) => update("agent_id", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="— Sélectionner un agent —" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(agentsList as any[]).map((a: any) => (
+                      <SelectItem key={a.id} value={String(a.id)}>
+                        {a.prenom} {a.nom}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Input value="Aucun agent disponible" disabled className="opacity-70" />
+              )}
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Email</Label>
-                <Input value={agent ? agent.email : agency?.email} disabled className="opacity-70" />
-              </div>
-              <div className="space-y-2">
-                <Label>Téléphone</Label>
-                <Input value={agent ? agent.phone : agency?.phone} disabled className="opacity-70" />
-              </div>
-            </div>
-            {agent ? (
-              <div className="space-y-2">
-                <Label>Rôle</Label>
-                <Input
-                  value={
-                    agent.account_type === "agency_user" ? "Agent immobilier"
-                      : agent.account_type === "super_admin" ? "Administrateur"
-                        : agent.account_type
-                  }
-                  disabled
-                  className="opacity-70"
-                />
-              </div>
-            ) : null}
+
+            {/* Infos de l'agent sélectionné */}
+            {agentSelectionne ? (
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Email</Label>
+                    <Input value={agentSelectionne.email} disabled className="opacity-70" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Téléphone</Label>
+                    <Input value={agentSelectionne.phone} disabled className="opacity-70" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Rôle</Label>
+                  <Input
+                    value={agentSelectionne.account_type === "agency_user" ? "Agent immobilier" : agentSelectionne.account_type}
+                    disabled
+                    className="opacity-70"
+                  />
+                </div>
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground italic">
+                Aucun agent sélectionné — la visite sera gérée directement par l'agence.
+              </p>
+            )}
 
             <p className="text-xs text-muted-foreground">
-              Pour changer d'agent, modifiez le créneau depuis le calendrier.
+              Cliquez sur "Enregistrer" pour confirmer l'assignation.
             </p>
           </CardContent>
         </Card>
@@ -582,10 +498,8 @@ export default function VisitEditPage() {
               <Textarea
                 placeholder="Instructions pour l'agent, informations sur le client..."
                 value={form.notes}
-                disabled={isFieldsReadOnly}
                 onChange={(e) => update("notes", e.target.value)}
                 rows={5}
-
               />
               <p className="text-xs text-muted-foreground">Usage interne — non partagé avec le client</p>
             </div>
@@ -594,7 +508,6 @@ export default function VisitEditPage() {
               <Textarea
                 placeholder="Compte rendu de la visite, intérêts du client, suite à donner..."
                 value={form.feedback}
-                // disabled={isReadOnly}
                 onChange={(e) => update("feedback", e.target.value)}
                 rows={5}
               />

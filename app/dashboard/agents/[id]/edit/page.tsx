@@ -1,157 +1,249 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft, Save, Trash2 } from "lucide-react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { ArrowLeft, Save } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Switch } from "@/components/ui/switch"
-import { Separator } from "@/components/ui/separator"
+import { Skeleton } from "@/components/ui/skeleton"
+import { useGetAgentDetails } from "@/hooks/agence/useGetAgentDetails"
+import { useUpdateAgent } from "@/hooks/agence/useUpdateAgent"
 
-const initialData = {
-  id: "1",
-  firstName: "Sarah",
-  lastName: "Wilson",
-  email: "sarah.wilson@sasimo.com",
-  phone: "+1 (555) 100-1001",
-  role: "admin",
-  status: "active",
-  bio: "Senior real estate agent with 8+ years of experience specializing in luxury residential and commercial properties.",
-  specialization: "Luxury Residential",
-  licenseNumber: "RE-2023-45678",
-  commissionRate: "3",
-  permissions: {
-    properties: true,
-    clients: true,
-    contracts: true,
-    invoices: true,
-    settings: true,
-    team: true,
-  },
-}
+// ─── Component ────────────────────────────────────────────────────────────────
 
 export default function AgentEditPage() {
-  const [formData, setFormData] = useState(initialData)
-  const [permissions, setPermissions] = useState(initialData.permissions)
+  const params = useParams()
+  const router = useRouter()
+  const id = params.id as string
 
-  const togglePermission = (key: string) => {
-    setPermissions({ ...permissions, [key]: !permissions[key as keyof typeof permissions] })
+  const { data, loading: loadingDetails } = useGetAgentDetails(id)
+  const { updateAgent, loading: loadingUpdate } = useUpdateAgent()
+
+  const [formData, setFormData] = useState({
+    nom:             "",
+    prenom:          "",
+    email:           "",
+    phone:           "",
+    is_active:       1,
+    role:            "agent",
+    first_name:      "",
+    last_name:       "",
+    bio:             "",
+    specialization:  "",
+    license_number:  "",
+    commission_rate: "",
+    address:         "",
+  })
+
+  // Préremplir quand les données arrivent
+  useEffect(() => {
+    const agent = data.agent
+    if (!agent) return
+    setFormData({
+      nom:             agent.nom ?? "",
+      prenom:          agent.prenom ?? "",
+      email:           agent.email ?? "",
+      phone:           agent.phone ?? "",
+      is_active:       agent.is_active ?? 1,
+      role:            agent.roles?.[0]?.name ?? "agent",
+      first_name:      agent.profile?.first_name ?? "",
+      last_name:       agent.profile?.last_name ?? "",
+      bio:             agent.profile?.bio ?? "",
+      specialization:  agent.profile?.specialization ?? "",
+      license_number:  agent.profile?.license_number ?? "",
+      commission_rate: agent.profile?.commission_rate?.toString() ?? "",
+      address:         agent.profile?.address ?? "",
+    })
+  }, [data.agent])
+
+  const set = (field: string, value: string | number) =>
+    setFormData(prev => ({ ...prev, [field]: value }))
+
+  const handleSubmit = async () => {
+    await updateAgent(id, {
+      ...formData,
+      commission_rate: formData.commission_rate === "" ? undefined : parseFloat(formData.commission_rate),
+    }, () => {
+      router.push(`/dashboard/agents/${id}`)
+    })
   }
+
+  if (loadingDetails) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <Skeleton className="h-9 w-9 rounded-md" />
+          <div className="space-y-2">
+            <Skeleton className="h-6 w-48" />
+            <Skeleton className="h-4 w-32" />
+          </div>
+        </div>
+        <div className="grid gap-6 lg:grid-cols-2">
+          {[...Array(2)].map((_, i) => (
+            <Card key={i}>
+              <CardContent className="p-6 space-y-4">
+                {[...Array(4)].map((_, j) => <Skeleton key={j} className="h-10 w-full" />)}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  const fullName = `${formData.first_name || formData.nom} ${formData.last_name || formData.prenom}`
 
   return (
     <div className="space-y-6">
+
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" asChild>
-            <Link href={`/dashboard/agents/${formData.id}`}><ArrowLeft className="h-5 w-5" /></Link>
+            <Link href={`/dashboard/agents/${id}`}>
+              <ArrowLeft className="h-5 w-5" />
+            </Link>
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Edit Agent Profile</h1>
-            <p className="text-muted-foreground">{formData.firstName} {formData.lastName}</p>
+            <h1 className="text-2xl font-bold text-foreground">Modifier l'agent</h1>
+            <p className="text-muted-foreground">{fullName}</p>
           </div>
         </div>
-        <div className="flex gap-2">
-          <Button variant="destructive" size="sm"><Trash2 className="mr-2 h-4 w-4" />Remove Agent</Button>
-          <Button size="sm"><Save className="mr-2 h-4 w-4" />Save Changes</Button>
-        </div>
+        <Button size="sm" onClick={handleSubmit} disabled={loadingUpdate}>
+          <Save className="mr-2 h-4 w-4" />
+          {loadingUpdate ? "Enregistrement..." : "Enregistrer"}
+        </Button>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Personal Info */}
+
+        {/* Informations personnelles */}
         <Card>
           <CardHeader>
-            <CardTitle>Personal Information</CardTitle>
+            <CardTitle>Informations personnelles</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label>First Name</Label>
-                <Input value={formData.firstName} onChange={(e) => setFormData({ ...formData, firstName: e.target.value })} />
+                <Label htmlFor="nom">Nom</Label>
+                <Input
+                  id="nom"
+                  value={formData.nom}
+                  onChange={e => set("nom", e.target.value)}
+                />
               </div>
               <div className="space-y-2">
-                <Label>Last Name</Label>
-                <Input value={formData.lastName} onChange={(e) => setFormData({ ...formData, lastName: e.target.value })} />
+                <Label htmlFor="prenom">Prénom</Label>
+                <Input
+                  id="prenom"
+                  value={formData.prenom}
+                  onChange={e => set("prenom", e.target.value)}
+                />
               </div>
             </div>
             <div className="space-y-2">
-              <Label>Email</Label>
-              <Input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={formData.email}
+                onChange={e => set("email", e.target.value)}
+              />
             </div>
             <div className="space-y-2">
-              <Label>Phone</Label>
-              <Input value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
+              <Label htmlFor="phone">Téléphone</Label>
+              <Input
+                id="phone"
+                value={formData.phone}
+                onChange={e => set("phone", e.target.value)}
+              />
             </div>
             <div className="space-y-2">
-              <Label>Bio</Label>
-              <Textarea value={formData.bio} onChange={(e) => setFormData({ ...formData, bio: e.target.value })} rows={4} />
+              <Label htmlFor="address">Adresse</Label>
+              <Input
+                id="address"
+                value={formData.address}
+                onChange={e => set("address", e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="bio">Biographie</Label>
+              <Textarea
+                id="bio"
+                value={formData.bio}
+                onChange={e => set("bio", e.target.value)}
+                rows={4}
+              />
             </div>
           </CardContent>
         </Card>
 
-        {/* Role & License */}
+        {/* Rôle & Credentials */}
         <Card>
           <CardHeader>
-            <CardTitle>Role & Credentials</CardTitle>
+            <CardTitle>Rôle et Credentials</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label>Role</Label>
-              <Select value={formData.role} onValueChange={(v) => setFormData({ ...formData, role: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+              <Label htmlFor="role">Rôle</Label>
+              <Select value={formData.role} onValueChange={v => set("role", v)}>
+                <SelectTrigger id="role"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="admin_agence">Admin Agence</SelectItem>
                   <SelectItem value="agent">Agent</SelectItem>
-                  <SelectItem value="junior">Junior Agent</SelectItem>
+                  <SelectItem value="agent_junior">Agent Junior</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Status</Label>
-              <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+              <Label htmlFor="is_active">Statut</Label>
+              <Select
+                value={formData.is_active.toString()}
+                onValueChange={v => set("is_active", parseInt(v))}
+              >
+                <SelectTrigger id="is_active"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
+                  <SelectItem value="1">Actif</SelectItem>
+                  <SelectItem value="0">Inactif</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Specialization</Label>
-              <Input value={formData.specialization} onChange={(e) => setFormData({ ...formData, specialization: e.target.value })} />
+              <Label htmlFor="specialization">Spécialisation</Label>
+              <Input
+                id="specialization"
+                value={formData.specialization}
+                onChange={e => set("specialization", e.target.value)}
+              />
             </div>
             <div className="space-y-2">
-              <Label>License Number</Label>
-              <Input value={formData.licenseNumber} onChange={(e) => setFormData({ ...formData, licenseNumber: e.target.value })} />
+              <Label htmlFor="license_number">Numéro de licence</Label>
+              <Input
+                id="license_number"
+                value={formData.license_number}
+                onChange={e => set("license_number", e.target.value)}
+              />
             </div>
             <div className="space-y-2">
-              <Label>Commission Rate (%)</Label>
-              <Input type="number" value={formData.commissionRate} onChange={(e) => setFormData({ ...formData, commissionRate: e.target.value })} />
+              <Label htmlFor="commission_rate">Taux de commission (%)</Label>
+              <Input
+                id="commission_rate"
+                type="number"
+                step="0.01"
+                min="0"
+                max="100"
+                value={formData.commission_rate}
+                onChange={e => set("commission_rate", e.target.value)}
+              />
             </div>
           </CardContent>
         </Card>
 
-        {/* Permissions */}
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle>Permissions</CardTitle>
-            <CardDescription>Control what this agent can access and modify</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {Object.entries(permissions).map(([key, value]) => (
-                <div key={key} className="flex items-center justify-between p-3 rounded-lg border border-border">
-                  <Label htmlFor={`perm-${key}`} className="capitalize cursor-pointer">{key}</Label>
-                  <Switch id={`perm-${key}`} checked={value} onCheckedChange={() => togglePermission(key)} />
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </div>
   )
