@@ -56,7 +56,7 @@ export function DashboardHeader() {
           </Sheet>
           <Link href="/dashboard" className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-              <Home className="h-4 w-4 text-primary-foreground" />
+               <img src="/icon.svg" alt="icon-galle-connect-pro" />
             </div>
             <span className="text-lg font-semibold text-foreground">Galle Connect Pro</span>
           </Link>

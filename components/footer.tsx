@@ -30,7 +30,7 @@ export function Footer() {
           <div className="space-y-4">
             <Link href="/" className="flex items-center gap-2">
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-foreground">
-                <Home className="h-5 w-5 text-primary" />
+                <img src="/favicon jaune.svg" alt="icon-galle-connect-pro" />
               </div>
               <span className="text-xl font-semibold">GalleConnectPro</span>
             </Link>

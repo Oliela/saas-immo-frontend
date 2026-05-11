@@ -43,7 +43,7 @@ export function Header() {
         <div className="flex lg:flex-1">
           <Link href="/" className="flex items-center gap-2 -m-1.5 p-1.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-              <Home className="h-5 w-5 text-primary-foreground" />
+              <img src="/icon.svg" alt="icon-galle-connect-pro" />
             </div>
             <span className="text-xl font-semibold text-foreground">GalleConnectPro</span>
           </Link>
@@ -112,7 +112,7 @@ export function Header() {
                   className="flex items-center gap-2"
                 >
                   <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-                    <Home className="h-5 w-5 text-primary-foreground" />
+                    <img src="/icon.svg" alt="icon-galle-connect-pro" />
                   </div>
                   <span className="text-xl font-semibold text-foreground">GalleConnectPro</span>
                 </Link>
