@@ -92,6 +92,7 @@ interface PropertyResponse {
   floor: string
   furnished: boolean
   description: string
+  marketplace: boolean
   features: Feature[]
   images: Image[]
   video: string | null

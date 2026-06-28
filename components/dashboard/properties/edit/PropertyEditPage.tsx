@@ -83,6 +83,7 @@ interface ExistingProperty {
     floor: string
     furnished: boolean
     description: string
+    marketplace: boolean
     images: Array<string | { url?: string; path?: string; image?: string }>
     features: Array<string | { id: number; name: string }>
     video: string | null
@@ -165,6 +166,7 @@ export default function PropertyEditPage({ propertyTypes, existingProperty }: Pr
         floor: existingProperty.floor,
         furnished: existingProperty.furnished,
         description: existingProperty.description,
+        marketplace: existingProperty.marketplace ?? true,
         images: [] as string[],
         video: "",
         commodite: existingProperty.features.map((f) => (typeof f === "string" ? parseInt(f, 10) : f.id)),
@@ -351,6 +353,7 @@ export default function PropertyEditPage({ propertyTypes, existingProperty }: Pr
             formDataToSend.append("bathrooms", formData.bathrooms.toString())
             formDataToSend.append("floor", formData.floor?.toString() ?? "")
             formDataToSend.append("furnished", formData.furnished ? "1" : "0")
+            formDataToSend.append("marketplace", formData.marketplace ? "1" : "0")
             formDataToSend.append("description", formData.description ?? "")
             formDataToSend.append("ownerId", selectedOwner?.id ?? "")
 
@@ -510,6 +513,18 @@ export default function PropertyEditPage({ propertyTypes, existingProperty }: Pr
                                         </SelectContent>
                                     </Select>
                                 </div>
+                            </div>
+
+                            <div className="flex items-center justify-between p-4 rounded-lg border border-border">
+                                <div className="space-y-0.5">
+                                    <Label htmlFor="marketplace" className="cursor-pointer">Visible sur la marketplace</Label>
+                                    <p className="text-sm text-muted-foreground">Ce bien sera affiché sur les pages publiques d'achat et de location</p>
+                                </div>
+                                <Switch
+                                    id="marketplace"
+                                    checked={formData.marketplace}
+                                    onCheckedChange={(c) => setFormData({ ...formData, marketplace: c })}
+                                />
                             </div>
                         </div>
                     )}

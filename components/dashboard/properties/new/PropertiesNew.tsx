@@ -108,6 +108,7 @@ type PropertyFormData = {
   floor: number | null
   furnished: boolean
   description: string
+  marketplace: boolean
 
   // features: tableau d'IDs (number[])
   features: number[]
@@ -149,6 +150,7 @@ export default function PropertiesNew({
     floor: null,
     furnished: false,
     description: "",
+    marketplace: true,
     features: [],
     images: [],
     video: null,
@@ -346,8 +348,9 @@ export default function PropertiesNew({
     if (formData.bathrooms !== "") payload.append("bathrooms", String(formData.bathrooms))
     if (formData.floor !== null) payload.append("floor", String(formData.floor))
 
-    // Laravel interprète "1"/"0" comme boolean pour furnished
+    // Laravel interprète "1"/"0" comme boolean pour furnished et marketplace
     payload.append("furnished", formData.furnished ? "1" : "0")
+    payload.append("marketplace", formData.marketplace ? "1" : "0")
 
     if (formData.description) payload.append("description", formData.description)
 
@@ -524,6 +527,18 @@ export default function PropertiesNew({
                   </Select>
                   {serverFieldError("status") && <FieldError message={serverFieldError("status")!} />}
                 </div>
+              </div>
+
+              <div className="flex items-center justify-between p-4 rounded-lg border border-border">
+                <div className="space-y-0.5">
+                  <Label htmlFor="marketplace" className="cursor-pointer">Visible sur la marketplace</Label>
+                  <p className="text-sm text-muted-foreground">Ce bien sera affiché sur les pages publiques d'achat et de location</p>
+                </div>
+                <Switch
+                  id="marketplace"
+                  checked={formData.marketplace}
+                  onCheckedChange={(c) => setFormData({ ...formData, marketplace: c })}
+                />
               </div>
             </div>
           )}

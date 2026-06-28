@@ -96,6 +96,7 @@ export interface Bien {
   listingType: ListingType;
   price: string;          // Décimal sérialisé en string par Laravel
   status: PropertyStatus;
+  marketplace: boolean;
 
   // Localisation
   city: string;
