@@ -12,7 +12,7 @@ export const metadata = {
 
 export default function PortalLayout({ children }: { children: React.ReactNode }) {
   return (
-    // <PortalGuard>
+    <PortalGuard>
       <div className="min-h-screen bg-background">
         <ClientSidebar />
         <div className="lg:pl-64">
@@ -20,6 +20,6 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
           <main className="p-4 lg:p-6">{children}</main>
         </div>
       </div>
-    // </PortalGuard>
+    </PortalGuard>
   )
 }
