@@ -34,6 +34,7 @@ export function Header() {
 
   const isClient = user?.user?.account_type === "client"
   const isAgency = user?.user?.account_type === "agency_user"
+  const isSuperAdmin = user?.user?.account_type === "super_admin"
   // console.log("User data in Header:", user, "isClient:", isClient, "isAgency:", isAgency)
 
   return (
@@ -87,6 +88,12 @@ export function Header() {
               {isAgency && (
                 <Button asChild>
                   <Link href="/dashboard">Tableau de bord</Link>
+                </Button>
+              )}
+
+              {isSuperAdmin && (
+                <Button asChild>
+                  <Link href="/admin">Administration</Link>
                 </Button>
               )}
             </>
@@ -217,6 +224,21 @@ export function Header() {
                           <ChevronRight className="h-4 w-4 text-muted-foreground" />
                         </Link>
                       )}
+
+                      {isSuperAdmin && (
+                        <Link
+                          href="/admin"
+                          onClick={() => setOpen(false)}
+                          className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium text-foreground hover:bg-muted transition-colors"
+                        >
+                          <LayoutDashboard className="h-5 w-5 shrink-0" />
+                          <div className="flex-1">
+                            <p>Administration</p>
+                            <p className="text-xs text-muted-foreground font-normal">Accéder au panneau admin</p>
+                          </div>
+                          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                        </Link>
+                      )}
                     </>
                   )}
                 </div>
@@ -240,6 +262,12 @@ export function Header() {
                   <Button asChild className="w-full" size="lg">
                     <Link href="/dashboard" onClick={() => setOpen(false)}>
                       Tableau de bord
+                    </Link>
+                  </Button>
+                ) : isSuperAdmin ? (
+                  <Button asChild className="w-full" size="lg">
+                    <Link href="/admin" onClick={() => setOpen(false)}>
+                      Administration
                     </Link>
                   </Button>
                 ) : null}
