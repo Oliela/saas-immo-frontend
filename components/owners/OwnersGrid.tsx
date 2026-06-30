@@ -78,7 +78,7 @@ export default function OwnersGrid({ owners, getStatusBadge }: Props) {
         }
     }
 
-    console.log("donnee",owners)
+    // console.log("donnee",owners)
 
     return (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

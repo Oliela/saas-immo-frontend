@@ -86,7 +86,7 @@ function EditForm({ data, agencyName }: EditFormProps) {
     setSubmitError(null)
     try {
       const res = await axiosInstance.put(`/api/contracts/${data.contractId}`, payload)
-      console.log("✅ Contrat modifié :", res.data)
+      // console.log("✅ Contrat modifié :", res.data)
       toast.success("Contrat mis à jour")
       window.location.href = `/dashboard/contracts/${data.contractId}`
     } catch (err: any) {

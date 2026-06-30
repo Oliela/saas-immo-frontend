@@ -59,7 +59,7 @@ export default function ClientPortal() {
   const [reclamationMessage, setReclamationMessage] = useState("")
   const [reclamationLoading, setReclamationLoading] = useState(false)
 
-  console.log("loginCount:", loginCount, "showModal:", showModal) ;
+  // console.log("loginCount:", loginCount, "showModal:", showModal) ;
 
   const handleReclamation = async (contractId: number, agencyId: number) => {
     if (!reclamationSubject.trim() || !reclamationMessage.trim()) {

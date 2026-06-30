@@ -17,7 +17,7 @@ export default function PropertyEditHeader({ property }: any) {
 
   const handleDelete = () => {
     // Logique de suppression du bien
-    console.log("Bien supprimé :", property.id)
+    // console.log("Bien supprimé :", property.id)
   }
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

@@ -208,14 +208,14 @@ export default function ListingVisitsPage({ visits, loading }: Props) {
         const feedbackText = parts.join("\n")
 
         setIsSubmittingFeedback(true)
-        console.log("Feedback à soumettre pour la visite", visitId, {
-            rating: selectedRating,
-            agentPonctuel,
-            agentDisponible,
-            visitConforme,
-            commentaires,
-        }, "Texte structuré envoyé au backend:", feedbackText)
-        console.log('note envoyée:', selectedRating)  // Vérifier que la note est bien prise en compte
+        // console.log("Feedback à soumettre pour la visite", visitId, {
+        //     rating: selectedRating,
+        //     agentPonctuel,
+        //     agentDisponible,
+        //     visitConforme,
+        //     commentaires,
+        // }, "Texte structuré envoyé au backend:", feedbackText)
+        // console.log('note envoyée:', selectedRating)  // Vérifier que la note est bien prise en compte
         try {
             await axiosInstance.patch(`/api/visit-reservations/${visitId}/feedback`, {
                 feedback: feedbackText,

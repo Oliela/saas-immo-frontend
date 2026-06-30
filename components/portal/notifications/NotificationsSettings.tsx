@@ -80,7 +80,7 @@ export function NotificationsSettings({ initialEmail, initialPush }: Props) {
 
   const handleSave = () => {
     // TODO: PUT /api/notification-settings
-    console.log("Saving settings:", { email, push })
+    // console.log("Saving settings:", { email, push })
     toast.success("Préférences enregistrées.")
   }
 

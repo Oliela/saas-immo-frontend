@@ -191,18 +191,18 @@ export default function OwnerEditPage() {
   if (error) return <p>{error}</p>
   if (!formData) return <p>Propriétaire introuvable</p>
 
-  console.log("formData", formData)
+  // console.log("formData", formData)
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    console.log("formData", formData)
+    // console.log("formData", formData)
     try {
       const res = await axiosInstance.put(`/api/owners/${formData.id}`, formData)
-      console.log("res", res)
+      // console.log("res", res)
       toast.success("Propriétaire modifié avec succès")
       window.location.href = `/dashboard/owners/${formData.id}`
 
     } catch (err: any) {
-      console.log("err", err)
+      // console.log("err", err)
       toast.error("Erreur lors de la modification du propriétaire")
     }
   }

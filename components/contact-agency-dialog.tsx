@@ -101,7 +101,7 @@ export function ContactAgencyDialog({ agencyId, agencyName, currencySymbol = "FC
       area_max: form.areaMax ? Number(form.areaMax) : null,
       features: form.features.length > 0 ? form.features : null,
     }
-    console.log("Submitting contact form with payload:", payload)
+    // console.log("Submitting contact form with payload:", payload)
 
     try {
       await axiosInstance.post("/api/leads", payload)

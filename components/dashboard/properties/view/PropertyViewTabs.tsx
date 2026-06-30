@@ -10,7 +10,8 @@ interface Feature {
 }
 
 interface Property {
-  surface: number
+  propertyType: string
+  surface: number | string
   rooms: number
   bathrooms: number
   floor: number | string
@@ -22,13 +23,20 @@ interface Property {
   features: Feature[]
 }
 
+const TERRAIN_TYPES = ["terrain", "terrain_agricole"]
+
+function formatSurface(surface: number | string): string {
+  const num = typeof surface === "string" ? parseFloat(surface) : surface
+  return new Intl.NumberFormat("fr-FR").format(Math.round(num))
+}
+
 interface PropertyViewTabsProps {
   property: Property
 }
 
 
 export default function PropertyViewTabs({ property }: PropertyViewTabsProps) {
-
+  const isTerrain = TERRAIN_TYPES.includes(property.propertyType)
 
   return (
     <Tabs defaultValue="details">
@@ -50,73 +58,82 @@ export default function PropertyViewTabs({ property }: PropertyViewTabsProps) {
                 <div className="p-2 rounded-full bg-primary/10">
                   <Maximize className="h-5 w-5 text-primary" />
                 </div>
-                <div >
+                <div>
                   <p className="text-sm text-muted-foreground">Surface</p>
-                  <p className="font-semibold text-foreground">{property.surface} m²</p>
+                  <p className="font-semibold text-foreground">{formatSurface(property.surface)} m²</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50">
-                <div className="p-2 rounded-full bg-primary/10">
-                  <BedDouble className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Pièces</p>
-                  <p className="font-semibold text-foreground">{property.rooms} pièces</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50">
-                <div className="p-2 rounded-full bg-primary/10">
-                  <Bath className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Salles de bain</p>
-                  <p className="font-semibold text-foreground">{property.bathrooms} salles de bain</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50">
-                <div className="p-2 rounded-full bg-primary/10">
-                  <Layers className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Étage</p>
-                  <p className="font-semibold text-foreground">Étage {property.floor}</p>
-                </div>
-              </div>
+              {!isTerrain && (
+                <>
+                  <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50">
+                    <div className="p-2 rounded-full bg-primary/10">
+                      <BedDouble className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Pièces</p>
+                      <p className="font-semibold text-foreground">{property.rooms} pièces</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50">
+                    <div className="p-2 rounded-full bg-primary/10">
+                      <Bath className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Salles de bain</p>
+                      <p className="font-semibold text-foreground">{property.bathrooms} salles de bain</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50">
+                    <div className="p-2 rounded-full bg-primary/10">
+                      <Layers className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Étage</p>
+                      <p className="font-semibold text-foreground">Étage {property.floor}</p>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
 
-            <Separator className="my-6" />
-
-            <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50">
-              <div className="p-2 rounded-full bg-primary/10">
-                <Sofa className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Meublé</p>
-                <p className="font-semibold text-foreground">{property.furnished ? "Oui, entièrement meublé" : "Non, non meublé"}</p>
-              </div>
-            </div>
+            {!isTerrain && (
+              <>
+                <Separator className="my-6" />
+                <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50">
+                  <div className="p-2 rounded-full bg-primary/10">
+                    <Sofa className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Meublé</p>
+                    <p className="font-semibold text-foreground">{property.furnished ? "Oui, entièrement meublé" : "Non, non meublé"}</p>
+                  </div>
+                </div>
+              </>
+            )}
 
 
           </CardContent>
         </Card>
 
-        <Card className="mt-4">
-          <CardHeader>
-            <CardTitle>Features & Amenities</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              {property.features.map((feature) => (
-                <div key={feature.id} className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-accent" />
-                  <span className="text-sm text-foreground">
-                    {feature.name}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        {!isTerrain && (
+          <Card className="mt-4">
+            <CardHeader>
+              <CardTitle>Équipements & Commodités</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {property.features.map((feature) => (
+                  <div key={feature.id} className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-accent" />
+                    <span className="text-sm text-foreground">
+                      {feature.name}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </TabsContent>
 
       <TabsContent value="description" className="mt-4">

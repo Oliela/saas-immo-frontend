@@ -62,12 +62,12 @@ export function useProperties(agencyId: number, contractType: ContractType) {
         params: { agency_id: agencyId },
       })
       .then((res) => {
-        console.log("🟢 useProperties raw response:", res.data);
-        console.log("🟢 listingType cherché:", listingType);
+        // console.log("🟢 useProperties raw response:", res.data);
+        // console.log("🟢 listingType cherché:", listingType);
         res.data.data.forEach((interest) => {
-          console.log(
-            `🟢 bien ${interest.bien.id} - listingType: "${interest.bien.listingType}" - match: ${interest.bien.listingType === listingType}`,
-          );
+          // console.log(
+          //   `🟢 bien ${interest.bien.id} - listingType: "${interest.bien.listingType}" - match: ${interest.bien.listingType === listingType}`,
+          // );
         });
         if (cancelled) return;
 
@@ -89,7 +89,7 @@ export function useProperties(agencyId: number, contractType: ContractType) {
             type: bien.listingType,
           });
         });
-        console.log("🟢 properties normalisées:", normalized);
+        // console.log("🟢 properties normalisées:", normalized);
         setProperties(normalized);
       })
       .catch((err) => {

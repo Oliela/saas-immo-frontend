@@ -91,7 +91,7 @@ export default function ListingInterestsPage({
     if (!retourMessage.trim()) return
 
     setRetourLoading(true)
-    console.log("Envoi du retour au client pour l'intérêt ID", id, "avec le message :", retourMessage.trim())
+    // console.log("Envoi du retour au client pour l'intérêt ID", id, "avec le message :", retourMessage.trim())
     try {
       await axiosInstance.patch(`/api/interets/${id}/respond`, {
         agent_response: retourMessage,

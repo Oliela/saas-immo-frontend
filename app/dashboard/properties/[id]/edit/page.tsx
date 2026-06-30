@@ -135,7 +135,7 @@ export default function EditPropertyPage({}) {
 
 
   
-  console.log("Fetched properties edit:", propertiesData)
+  // console.log("Fetched properties edit:", propertiesData)
 
   return (
     <PropertyEditPage propertyTypes={propertyTypes} existingProperty={propertiesData} mockOwners={[]} />

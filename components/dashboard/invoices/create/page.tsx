@@ -316,8 +316,8 @@ export default function CreateInvoice({
       })),
     }
 
-    console.log("=== PAYLOAD ENVOYÉ AU SERVEUR ===")
-    console.log(JSON.stringify(payload, null, 2))
+    // console.log("=== PAYLOAD ENVOYÉ AU SERVEUR ===")
+    // console.log(JSON.stringify(payload, null, 2))
 
     // TODO: décommenter pour l'appel réel
     try {
@@ -344,7 +344,7 @@ export default function CreateInvoice({
     lines.every((l) => l.libelle && l.prix_unitaire > 0 && l.quantite > 0)
 
   // ─── Render ───────────────────────────────────────────────────────────────
-console.log ("clients dans CreateInvoice:", clients);
+// console.log ("clients dans CreateInvoice:", clients);
   return (
     <div className="space-y-6">
       {/* Header */}

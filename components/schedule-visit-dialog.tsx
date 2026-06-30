@@ -162,7 +162,7 @@ export function ScheduleVisitDialog({
   // ── Créneaux de l'agence ────────────────────────────────────────────────────
   const { creneaux, loading: loadingCreneaux } = useAgencyCreneaux(bien.agency_id, open)
   const { blockedDates, blockedTimes } = useBlockedSlots(creneaux, bien.id, selectedDate)
-  console.log("creneaux", creneaux, "blockedTimes", blockedTimes)
+  // console.log("creneaux", creneaux, "blockedTimes", blockedTimes)
   // ── Handlers ────────────────────────────────────────────────────────────────
 
   const handleTriggerClick = () => {

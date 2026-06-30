@@ -15,7 +15,7 @@ export function useProfile() {
       try {
         const response = await axiosInstance.get("/api/profile");
         setData(response.data);
-        console.log("Profile data:", response.data);
+        // console.log("Profile data:", response.data);
       } catch {
 
         setError("Erreur lors du chargement du profil");

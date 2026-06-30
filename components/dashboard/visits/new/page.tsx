@@ -213,17 +213,17 @@ export default function NewVisitForm({ clients, properties, agents, timeSlots, a
 
     const handleSubmit = async () => {
         if (!validateForm()) return
-        console.log({
-            client_id: Number(selectedClient?.id),
-            bien_id: Number(selectedProperty?.id),
-            agent_id: Number(selectedAgent?.id),
-            visit_date: visitDate,
-            start_time: visitStartTime,
-            end_time: visitEndTime,
-            status,
-            notes,
-            agency_id: Number(agencyId),
-        })
+        // console.log({
+        //     client_id: Number(selectedClient?.id),
+        //     bien_id: Number(selectedProperty?.id),
+        //     agent_id: Number(selectedAgent?.id),
+        //     visit_date: visitDate,
+        //     start_time: visitStartTime,
+        //     end_time: visitEndTime,
+        //     status,
+        //     notes,
+        //     agency_id: Number(agencyId),
+        // })
         const playload = {
             client_id: Number(selectedClient?.id),
             bien_id: Number(selectedProperty?.id),

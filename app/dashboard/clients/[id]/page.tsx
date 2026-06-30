@@ -138,7 +138,7 @@ const UploadDialog = ({ open, onClose, clientName, clientId }: { open: boolean; 
     }
 
     setIsSubmitting(true)
-    console.log("Uploading document for clientId:", clientId, "type:", type, "file:", file)
+    // console.log("Uploading document for clientId:", clientId, "type:", type, "file:", file)
 
     try {
       const formData = new FormData()

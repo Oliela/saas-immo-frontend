@@ -287,7 +287,7 @@ export default function InvoiceEditPage({ clients = [], owners = [], contracts =
     }
 
     // ── Debug ─────────────────────────────────────────────────────────────────
-    console.log("=== PAYLOAD UPDATE FACTURE ===")
+    // console.log("=== PAYLOAD UPDATE FACTURE ===")
     // console.log(JSON.stringify(payload, null, 2))
     // alert("Payload prêt — voir la console pour le contenu envoyé au serveur.")
     setIsSaving(false)

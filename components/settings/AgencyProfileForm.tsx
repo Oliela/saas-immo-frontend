@@ -96,16 +96,16 @@ export default function AgencyProfileForm({ agency }: Props) {
     setIsSaving(false)
    
 
-    console.log("Submitting form with data:", {
-      agencyName,
-      email,
-      phone,
-      website,
-      address,
-      description,
-      selectedSpecialties,
-      // logoFile,
-    })
+    // console.log("Submitting form with data:", {
+    //   agencyName,
+    //   email,
+    //   phone,
+    //   website,
+    //   address,
+    //   description,
+    //   selectedSpecialties,
+    //   logoFile,
+    // })
     try {
       const formData = new FormData()
       formData.append("name", agencyName)

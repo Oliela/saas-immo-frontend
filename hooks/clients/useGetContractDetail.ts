@@ -104,7 +104,7 @@ export function useGetContractDetail(contractId: number | null) {
     setError(null)
     try {
       const res = await axiosInstance.get(`/api/contracts/${contractId}`)
-      console.log("Détail du contrat reçu :", res.data)
+      // console.log("Détail du contrat reçu :", res.data)
       setContract(res.data?.data ?? null)
     } catch (err) {
       console.error("Erreur lors du chargement du contrat :", err)

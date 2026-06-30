@@ -6,7 +6,7 @@ import { Separator } from "@/components/ui/separator"
 
 
 export default function PropertyViewOwnerCard({ property }: any) {
-    console.log("Owner data:", property) // Debug log to check owner data structure
+    // console.log("Owner data:", property) // Debug log to check owner data structure
   return (
      <Card>
             <CardHeader>

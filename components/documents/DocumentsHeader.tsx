@@ -51,8 +51,8 @@ export default function DocumentsHeader({ user }: { user: any }) {
         }
 
         setIsSubmitting(true)
-        console.log("Selected Document Type:", selectedDocType)
-        console.log("Selected File:", selectedFile)
+        // console.log("Selected Document Type:", selectedDocType)
+        // console.log("Selected File:", selectedFile)
 
         try {
             const formData = new FormData()

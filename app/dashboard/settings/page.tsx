@@ -99,7 +99,7 @@ export default function SettingsPage() {
     const profile = data.agency
     const agent = data?.agency.users
 
-    console.log("Agency data:", data)
+    // console.log("Agency data:", data)
     // console.log("agent data:", agent)
     // console.log("profile data:", profile)
     // console.log("user data:", user)

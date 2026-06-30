@@ -180,7 +180,7 @@ export default function AgencyRegisterForm({ onBack }: AgencyRegisterFormProps):
       toast.error("Vous devez confirmer que les informations sont correctes.")
       return
     }
-    console.log("Soumission du formulaire agence :", formData)
+    // console.log("Soumission du formulaire agence :", formData)
 
     setSubmitting(true)
     try {

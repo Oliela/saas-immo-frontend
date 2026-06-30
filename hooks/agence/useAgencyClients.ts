@@ -104,7 +104,7 @@ export function useAgencyClients() {
       try {
         const response = await axiosInstance.get<AgencyClientsData>("/api/agency-clients",{params: { agency_id: 1 }})
         setData(response.data)
-        console.log("Fetched agency clients data:", response.data)
+        // console.log("Fetched agency clients data:", response.data)
       } catch (e: any) {
         setError(e.message)
       } finally {

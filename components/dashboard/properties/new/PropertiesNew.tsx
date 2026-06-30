@@ -378,7 +378,7 @@ export default function PropertiesNew({
       const res = await axiosInstance.post("/api/biens", buildPayload(), {
         headers: { "Content-Type": "multipart/form-data" },
       })
-      console.log("Bien créé :", res.data)
+      // console.log("Bien créé :", res.data)
       toast.success("Propriété créée avec succès !")
       window.location.href = `/dashboard/properties/`
       // TODO: redirection ou notification de succès
@@ -495,7 +495,7 @@ export default function PropertiesNew({
                 <div className="space-y-2">
                   <Label htmlFor="price">Prix <span className="text-destructive">*</span></Label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-medium">XOF</span>
                     <Input
                       id="price"
                       type="number"
@@ -503,7 +503,7 @@ export default function PropertiesNew({
                       placeholder="0"
                       value={formData.price}
                       onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}
-                      className={cn("pl-7", errors.price || serverFieldError("price") ? "border-destructive" : "")}
+                      className={cn("pl-12", errors.price || serverFieldError("price") ? "border-destructive" : "")}
                     />
                     {formData.listingType === "rent" && (
                       <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">/mois</span>

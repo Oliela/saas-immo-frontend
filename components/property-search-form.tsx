@@ -78,7 +78,7 @@ export function PropertySearchForm({
   const handleSubmit = async () => {
     setIsSubmitting(true)
     setError(null)
-    console.log("📤 Form data to submit:", {
+    // console.log("📤 Form data to submit:", {
       ...form,
       agency_id: agencyId,
       bien_title: propertyTitle,

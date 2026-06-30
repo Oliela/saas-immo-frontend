@@ -53,7 +53,7 @@ export default function TeamSettings({ agent }: Props) {
     }
   }
  
-  console.log("Team members:", agent)
+  // console.log("Team members:", agent)
 
   return (
     <Card>

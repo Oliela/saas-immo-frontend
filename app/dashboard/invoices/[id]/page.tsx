@@ -253,9 +253,9 @@ export default function InvoiceDetailPage() {
       notes: paymentForm.notes || null,
     }
 
-    console.log("=== PAYLOAD RÈGLEMENT ===")
-    console.log(`POST /api/factures/reglements/${facture?.id}`)
-    console.log(JSON.stringify(payload, null, 2))
+    // console.log("=== PAYLOAD RÈGLEMENT ===")
+    // console.log(`POST /api/factures/reglements/${facture?.id}`)
+    // console.log(JSON.stringify(payload, null, 2))
 
     setIsSubmitting(true)
     try {
@@ -265,8 +265,8 @@ export default function InvoiceDetailPage() {
         payload
       )
 
-      console.log("=== RÉPONSE SERVEUR ===")
-      console.log(data)
+      // console.log("=== RÉPONSE SERVEUR ===")
+      // console.log(data)
 
       // ✅ Ajouter le règlement retourné dans la liste locale
       if (data.reglement) {

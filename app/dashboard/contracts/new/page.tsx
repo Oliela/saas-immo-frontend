@@ -99,8 +99,8 @@ function NewContractContent() {
   const AGENCY_NAME = user?.agency.name ?? ""
 
   // Dans NewContractPage
-  console.log("🔴 user complet:", user)
-  console.log("🔴 AGENCY_ID:", AGENCY_ID)
+  // console.log("🔴 user complet:", user)
+  // console.log("🔴 AGENCY_ID:", AGENCY_ID)
 
   const {
     activeTab, setActiveTab,

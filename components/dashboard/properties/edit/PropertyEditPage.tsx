@@ -173,6 +173,7 @@ export default function PropertyEditPage({ propertyTypes, existingProperty }: Pr
         ownerId: existingProperty.owners_id,
     })
     const [errors, setErrors] = useState<Record<string, string>>({})
+    const isTerrain = ["terrain", "terrain_agricole"].includes(formData.propertyType)
     const [uploadedImages, setUploadedImages] = useState<MediaImage[]>(
         (existingProperty.images || []).map((img, index) => ({
             id: `existing-${index}`,
@@ -220,7 +221,7 @@ export default function PropertyEditPage({ propertyTypes, existingProperty }: Pr
             if (!formData.address) newErrors.address = "L'adresse est requise"
         } else if (step === 3) {
             if (!formData.surface) newErrors.surface = "La surface est requise"
-            if (!formData.rooms) newErrors.rooms = "Le nombre de pièces est requis"
+            if (!isTerrain && !formData.rooms) newErrors.rooms = "Le nombre de pièces est requis"
         } else if (step === 4) {
             if (uploadedImages.length === 0) newErrors.images = "Au moins une image est requise"
         } else if (step === 5) {
@@ -349,10 +350,12 @@ export default function PropertyEditPage({ propertyTypes, existingProperty }: Pr
             formDataToSend.append("neighborhood", formData.neighborhood ?? "")
             formDataToSend.append("address", formData.address)
             formDataToSend.append("surface", formData.surface.toString())
-            formDataToSend.append("rooms", formData.rooms.toString())
-            formDataToSend.append("bathrooms", formData.bathrooms.toString())
-            formDataToSend.append("floor", formData.floor?.toString() ?? "")
-            formDataToSend.append("furnished", formData.furnished ? "1" : "0")
+            if (!isTerrain) {
+                formDataToSend.append("rooms", (formData.rooms ?? 0).toString())
+                formDataToSend.append("bathrooms", (formData.bathrooms ?? 0).toString())
+                formDataToSend.append("floor", formData.floor?.toString() ?? "")
+                formDataToSend.append("furnished", formData.furnished ? "1" : "0")
+            }
             formDataToSend.append("marketplace", formData.marketplace ? "1" : "0")
             formDataToSend.append("description", formData.description ?? "")
             formDataToSend.append("ownerId", selectedOwner?.id ?? "")
@@ -388,7 +391,7 @@ export default function PropertyEditPage({ propertyTypes, existingProperty }: Pr
                 }
             )
 
-            console.log("Response:", response.data)
+            // console.log("Response:", response.data)
             toast.success("Bien mis à jour avec succès !")
         } catch (error) {
             console.error("Error updating property:", error)
@@ -611,62 +614,67 @@ export default function PropertyEditPage({ propertyTypes, existingProperty }: Pr
                                     {errors.surface && <FieldError message={errors.surface} />}
                                 </div>
 
-                                <div className="space-y-2">
-                                    <Label>Chambres <span className="text-destructive">*</span></Label>
-                                    <Select value={formData.rooms.toString()} onValueChange={(v) => setFormData({ ...formData, rooms: parseInt(v, 10) })}>
-                                        <SelectTrigger className={errors.rooms ? "border-destructive" : ""}>
-                                            <SelectValue>
-                                                {formData.rooms ? `${formData.rooms} ${formData.rooms > 1 ? "chambres" : "chambre"}` : "Sélectionner"}
-                                            </SelectValue>
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
-                                                <SelectItem key={n} value={n.toString()}>
-                                                    {n} {n > 1 ? "chambres" : "chambre"}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                    {errors.rooms && <FieldError message={errors.rooms} />}
-                                </div>
+                                {!isTerrain && (
+                                    <>
+                                        <div className="space-y-2">
+                                            <Label>Chambres <span className="text-destructive">*</span></Label>
+                                            <Select value={(formData.rooms ?? 0).toString()} onValueChange={(v) => setFormData({ ...formData, rooms: parseInt(v, 10) })}>
+                                                <SelectTrigger className={errors.rooms ? "border-destructive" : ""}>
+                                                    <SelectValue>
+                                                        {formData.rooms ? `${formData.rooms} ${formData.rooms > 1 ? "chambres" : "chambre"}` : "Sélectionner"}
+                                                    </SelectValue>
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+                                                        <SelectItem key={n} value={n.toString()}>
+                                                            {n} {n > 1 ? "chambres" : "chambre"}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                            {errors.rooms && <FieldError message={errors.rooms} />}
+                                        </div>
 
-                                <div className="space-y-2">
-                                    <Label>Salles de bain</Label>
-                                    <Select value={formData.bathrooms.toString()} onValueChange={(v) => setFormData({ ...formData, bathrooms: parseInt(v, 10) })}>
-                                        <SelectTrigger>
-                                            <SelectValue>
-                                                {formData.bathrooms ? `${formData.bathrooms} ${formData.bathrooms > 1 ? "salles de bain" : "salle de bain"}` : "Sélectionner"}
-                                            </SelectValue>
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {[1, 2, 3, 4, 5].map((n) => (
-                                                <SelectItem key={n} value={n.toString()}>
-                                                    {n} {n > 1 ? "salles de bain" : "salle de bain"}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
+                                        <div className="space-y-2">
+                                            <Label>Salles de bain</Label>
+                                            <Select value={(formData.bathrooms ?? 0).toString()} onValueChange={(v) => setFormData({ ...formData, bathrooms: parseInt(v, 10) })}>
+                                                <SelectTrigger>
+                                                    <SelectValue>
+                                                        {formData.bathrooms ? `${formData.bathrooms} ${formData.bathrooms > 1 ? "salles de bain" : "salle de bain"}` : "Sélectionner"}
+                                                    </SelectValue>
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {[1, 2, 3, 4, 5].map((n) => (
+                                                        <SelectItem key={n} value={n.toString()}>
+                                                            {n} {n > 1 ? "salles de bain" : "salle de bain"}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
 
-                                <div className="space-y-2">
-                                    <Label>Étage</Label>
-                                    <Select value={formData.floor} onValueChange={(v) => setFormData({ ...formData, floor: v })}>
-                                        <SelectTrigger>
-                                            <SelectValue>
-                                                {formData.floor ? `${formData.floor === "ground" ? "Rez-de-chaussée" : formData.floor === "penthouse" ? "Penthouse" : `Étage ${formData.floor}`}` : "Sélectionner"}
-                                            </SelectValue>
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="ground">Rez-de-chaussée</SelectItem>
-                                            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 25, 30].map((n) => (
-                                                <SelectItem key={n} value={n.toString()}>Étage {n}</SelectItem>
-                                            ))}
-                                            <SelectItem value="penthouse">Penthouse</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
+                                        <div className="space-y-2">
+                                            <Label>Étage</Label>
+                                            <Select value={formData.floor ?? ""} onValueChange={(v) => setFormData({ ...formData, floor: v })}>
+                                                <SelectTrigger>
+                                                    <SelectValue>
+                                                        {formData.floor ? `${formData.floor === "ground" ? "Rez-de-chaussée" : formData.floor === "penthouse" ? "Penthouse" : `Étage ${formData.floor}`}` : "Sélectionner"}
+                                                    </SelectValue>
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="ground">Rez-de-chaussée</SelectItem>
+                                                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 25, 30].map((n) => (
+                                                        <SelectItem key={n} value={n.toString()}>Étage {n}</SelectItem>
+                                                    ))}
+                                                    <SelectItem value="penthouse">Penthouse</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </>
+                                )}
                             </div>
 
+                            {!isTerrain && (
                             <div className="flex items-center justify-between p-4 rounded-lg border border-border">
                                 <div className="space-y-0.5">
                                     <Label htmlFor="furnished" className="cursor-pointer">Meublé</Label>
@@ -678,6 +686,7 @@ export default function PropertyEditPage({ propertyTypes, existingProperty }: Pr
                                     onCheckedChange={(c) => setFormData({ ...formData, furnished: c })}
                                 />
                             </div>
+                            )}
 
                             <div className="space-y-2">
                                 <Label htmlFor="description">Description</Label>

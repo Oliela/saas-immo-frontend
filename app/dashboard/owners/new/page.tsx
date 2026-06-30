@@ -101,7 +101,7 @@ const recentTransactions = [
 export default function OwnerFormPage() {
   const [activeTab, setActiveTab] = useState("profile")
   const { data: agencyData, loading } = useAgency() // Set to true for existing owner
-  console.log("agencyData", agencyData)
+  // console.log("agencyData", agencyData)
   const agencyId = agencyData?.agency?.id
   const [formData, setFormData] = useState({
     agency_id: agencyId,
@@ -269,12 +269,12 @@ export default function OwnerFormPage() {
     e.preventDefault()
     if (!validateForm()) return
     setIsSubmitting(true)
-    console.log(formData)
+    // console.log(formData)
 
     // await newawPromise((resolve) => setTimeout(resolve, 1500))
     try {
       const res = await axiosInstance.post("/api/owners", formData)
-      console.log(res)
+      // console.log(res)
       toast.success("Propriétaire créé avec succès")
       window.location.href = "/dashboard/owners"
     } catch (err: any) {

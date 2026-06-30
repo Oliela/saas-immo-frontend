@@ -13,10 +13,10 @@ export default function AvailabilitySlotsPage() {
   // console.log("User:", user?.agency.id )
 
   const {creneaux, loading: loadingCreneaux} = useGetCreneaux({agencyId: user?.agency.id})
-  console.log("Creneaux:", creneaux)
+  // console.log("Creneaux:", creneaux)
 
   const {agent, loading: loadingAgent} = useGetAgent({agencyId: user?.agency.id})
-  console.log("Agent:", agent)
+  // console.log("Agent:", agent)
 
   const{biens, loading: loadingBiens} = useGetBiens({agencyId: user?.agency.id})
   // console.log("Biens:", biens)

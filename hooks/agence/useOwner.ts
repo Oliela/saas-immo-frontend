@@ -19,7 +19,7 @@ export function useOwners(options?: UseOwnersOptions) {
       );
 
       setOwners(response.data?.owners || []);
-      console.log("Données des propriétaires récupérées :", response.data);
+      // console.log("Données des propriétaires récupérées :", response.data);
     } catch (error) {
       console.error(
         "Erreur lors de la récupération des propriétaires :",

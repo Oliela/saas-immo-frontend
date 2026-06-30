@@ -188,7 +188,7 @@ export function useAgencyClientDetails(id: string | number) {
         }
       })
       toast.success("Document approuvé avec succès")
-      console.log("Document approval response:", res.data)
+      // console.log("Document approval response:", res.data)
     } catch (err: any) {
       const message = err.response?.data?.message || err.response?.data?.error || "Erreur lors de l'approbation du document"
       toast.error(message)

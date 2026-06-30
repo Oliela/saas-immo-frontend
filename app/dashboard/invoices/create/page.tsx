@@ -203,7 +203,7 @@ export default function CreateInvoicePage() {
     || loadingClient || loadingOwners || loadingContracts || loadingBiens
 
   if (isLoading) return <CreateInvoiceSkeleton />
-  console.log("owner from useOwners:", owners)
+  // console.log("owner from useOwners:", owners)
 
   return (
     <CreateInvoice
