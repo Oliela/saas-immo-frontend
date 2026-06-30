@@ -74,6 +74,7 @@ export default function ClientRegisterForm({ onBack }: ClientRegisterFormProps):
                 password: form.password,
                 password_confirmation: form.passwordConfirm, // Laravel nécessite ce champ
             };
+            await axiosInstance.get('/sanctum/csrf-cookie');
 
             // ⚡ Envoi de la requête via Axios
             const res = await axiosInstance.post('/api/register/client', payload);
