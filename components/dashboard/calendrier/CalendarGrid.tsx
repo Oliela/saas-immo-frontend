@@ -62,10 +62,11 @@ const getCreneauStyle = (creneau: Creneau) => {
     case "unavailable":
       return "bg-slate-100 text-slate-500 border border-dashed border-slate-300 dark:bg-slate-800/40"
     case "reserved": {
-      const confirmed = creneau.reservations?.[0]?.status === "confirmed"
-      return confirmed
-        ? "bg-primary/20 text-primary"
-        : "bg-amber-500/20 text-amber-700"
+      const resStatus = creneau.reservations?.[0]?.status
+      if (resStatus === "completed") return "bg-green-500/20 text-green-700"
+      if (resStatus === "cancelled") return "bg-red-500/20 text-red-600"
+      if (resStatus === "confirmed") return "bg-primary/20 text-primary"
+      return "bg-amber-500/20 text-amber-700"
     }
     case "available":
     default:
@@ -236,6 +237,14 @@ export default function CalendarGrid({ creneaux = [] }: CalendarGridProps) {
             <div className="flex items-center gap-2 text-sm">
               <div className="h-3 w-3 rounded bg-amber-500" />
               <span className="text-muted-foreground">En attente</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <div className="h-3 w-3 rounded bg-green-500" />
+              <span className="text-muted-foreground">Terminée</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <div className="h-3 w-3 rounded bg-red-500" />
+              <span className="text-muted-foreground">Annulée</span>
             </div>
             <div className="flex items-center gap-2 text-sm">
               <div className="h-3 w-3 rounded-full border-2 border-emerald-500 bg-emerald-500/20" />
@@ -434,7 +443,10 @@ export default function CalendarGrid({ creneaux = [] }: CalendarGridProps) {
           {selectedCreneau && (() => {
             const reservation  = selectedCreneau.reservations?.[0]
             const client       = reservation?.client
-            const confirmed    = reservation?.status === "confirmed"
+            const resStatus    = reservation?.status
+            const confirmed    = resStatus === "confirmed"
+            const completed    = resStatus === "completed"
+            const cancelled    = resStatus === "cancelled"
             const hasReservation = (selectedCreneau.reservations?.length ?? 0) > 0
             const isUnavailable = selectedCreneau.status === "unavailable"
 
@@ -511,10 +523,12 @@ export default function CalendarGrid({ creneaux = [] }: CalendarGridProps) {
                     <div>
                       <p className="text-sm text-muted-foreground">Statut</p>
                       <div className="mt-1">
-                        {isUnavailable && <Badge className="bg-slate-100 text-slate-600">Indisponible</Badge>}
+                        {isUnavailable  && <Badge className="bg-slate-100 text-slate-600">Indisponible</Badge>}
                         {!isUnavailable && !hasReservation && <Badge className="bg-emerald-100 text-emerald-800">Disponible</Badge>}
                         {!isUnavailable && hasReservation && confirmed  && <Badge>Confirmée</Badge>}
-                        {!isUnavailable && hasReservation && !confirmed && <Badge variant="secondary">En attente</Badge>}
+                        {!isUnavailable && hasReservation && completed  && <Badge className="bg-green-100 text-green-800">Terminée</Badge>}
+                        {!isUnavailable && hasReservation && cancelled  && <Badge className="bg-red-100 text-red-700">Annulée</Badge>}
+                        {!isUnavailable && hasReservation && !confirmed && !completed && !cancelled && <Badge variant="secondary">En attente</Badge>}
                       </div>
                     </div>
                     {client && (
