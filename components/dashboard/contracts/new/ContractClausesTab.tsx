@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef, useEffect, useCallback } from "react"
 import {
   Plus, Trash2, GripVertical, ChevronUp, ChevronDown,
   Pencil, Copy, Loader2, AlertCircle,
@@ -18,6 +18,76 @@ import {
 } from "@/components/ui/dialog"
 import { useCatalogClauses } from "@/hooks/contracts/useCatalogClauses"
 import type { ContractClause, CatalogClause, ContractType } from "@/types/contractNew"
+
+// ─── ClauseContentEditor — tokens non-éditables ───────────────────────────────
+
+const TOKEN_SPLIT = /(\{[^}]+\})/g
+
+function tokenToHtml(text: string): string {
+  return text
+    .split(TOKEN_SPLIT)
+    .map((part) =>
+      /^\{[^}]+\}$/.test(part)
+        ? `<span data-token="true" contenteditable="false" style="display:inline;padding:1px 6px;border-radius:4px;font-size:11px;font-family:ui-monospace,monospace;background:#f1f5f9;color:#64748b;border:1px solid #cbd5e1;cursor:not-allowed;user-select:none;">${part}</span>`
+        : part.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>")
+    )
+    .join("")
+}
+
+function divToText(el: HTMLElement): string {
+  let out = ""
+  el.childNodes.forEach((node) => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      out += node.textContent ?? ""
+    } else if (node instanceof HTMLElement) {
+      if (node.tagName === "BR") out += "\n"
+      else if (node.tagName === "DIV" || node.tagName === "P") out += "\n" + divToText(node)
+      else out += node.textContent ?? ""
+    }
+  })
+  return out
+}
+
+function ClauseContentEditor({
+  clauseId,
+  value,
+  onChange,
+}: {
+  clauseId: string
+  value: string
+  onChange: (v: string) => void
+}) {
+  const divRef      = useRef<HTMLDivElement>(null)
+  const prevId      = useRef<string>("")
+
+  useEffect(() => {
+    if (!divRef.current) return
+    if (clauseId !== prevId.current) {
+      divRef.current.innerHTML = tokenToHtml(value)
+      prevId.current = clauseId
+    }
+  })
+
+  const handleInput = useCallback(() => {
+    if (divRef.current) onChange(divToText(divRef.current))
+  }, [onChange])
+
+  return (
+    <div className="space-y-1.5">
+      <div
+        ref={divRef}
+        contentEditable
+        suppressContentEditableWarning
+        onInput={handleInput}
+        className="min-h-[140px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 whitespace-pre-wrap break-words cursor-text"
+      />
+      <p className="text-xs text-muted-foreground flex items-center gap-1">
+        <span className="inline-block px-1.5 py-0.5 rounded font-mono text-[10px] bg-muted text-muted-foreground border border-border">{"{valeur}"}</span>
+        Les champs dynamiques sont générés automatiquement et ne peuvent pas être modifiés.
+      </p>
+    </div>
+  )
+}
 
 // ─── Badge source ──────────────────────────────────────────────────────────────
 
@@ -290,12 +360,12 @@ export function ContractClausesTab({
                             </div>
                             <div className="space-y-2">
                               <Label>Contenu</Label>
-                              <Textarea
+                              <ClauseContentEditor
+                                clauseId={editingClause.id}
                                 value={editingClause.content}
-                                onChange={(e) =>
-                                  setEditingClause({ ...editingClause, content: e.target.value })
+                                onChange={(v) =>
+                                  setEditingClause({ ...editingClause, content: v })
                                 }
-                                className="min-h-[140px]"
                               />
                             </div>
                           </div>
