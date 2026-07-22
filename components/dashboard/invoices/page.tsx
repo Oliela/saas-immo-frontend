@@ -51,10 +51,10 @@ function getDestinataireName(facture: Facture): string {
 
 function getStatusConfig(statut: string) {
   const config: Record<string, { variant: "default" | "secondary" | "outline" | "destructive"; label: string }> = {
-    non_payee:           { variant: "secondary",   label: "Non Payée" },
-    partiellement_payee: { variant: "outline",     label: "Partiellement Payée" },
-    soldee:              { variant: "default",     label: "Soldée" },
-    annulee:             { variant: "destructive", label: "Annulée" },
+    non_payee: { variant: "secondary", label: "Non Payée" },
+    partiellement_payee: { variant: "outline", label: "Partiellement Payée" },
+    soldee: { variant: "default", label: "Soldée" },
+    annulee: { variant: "destructive", label: "Annulée" },
   }
   return config[statut] || { variant: "outline", label: statut }
 }
@@ -67,12 +67,12 @@ function formatCurrency(amount: number, devise = "XOF") {
 }
 
 const paymentMethods = [
-  { value: "virement",      label: "Virement",      Icon: Building2 },
-  { value: "cheque",        label: "Chèque",         Icon: FileText },
-  { value: "especes",       label: "Espèces",        Icon: Banknote },
-  { value: "carte_bancaire",label: "Carte",          Icon: CreditCard },
-  { value: "wave",          label: "Wave",           Icon: Smartphone },
-  { value: "orange_money",  label: "Orange Money",   Icon: Smartphone },
+  { value: "virement", label: "Virement", Icon: Building2 },
+  { value: "cheque", label: "Chèque", Icon: FileText },
+  { value: "especes", label: "Espèces", Icon: Banknote },
+  { value: "carte_bancaire", label: "Carte", Icon: CreditCard },
+  { value: "wave", label: "Wave", Icon: Smartphone },
+  { value: "orange_money", label: "Orange Money", Icon: Smartphone },
 ]
 
 interface Props { agencyId: number }
@@ -81,18 +81,18 @@ export default function ListingInvoicesPage({ agencyId }: Props) {
   const { factures, stats, loading, error } = useFactures(agencyId)
   const { open: openPdf, isLoading: isPdfLoading } = usePdfDownload() // ← AJOUT
 
-  const [searchTerm, setSearchTerm]               = useState("")
-  const [typeFilter, setTypeFilter]               = useState("all")
-  const [statusFilter, setStatusFilter]           = useState("all")
-  const [paymentOpen, setPaymentOpen]             = useState(false)
-  const [isSubmitting, setIsSubmitting]           = useState(false)
-  const [selectedInvoice, setSelectedInvoice]     = useState<Facture | null>(null)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [typeFilter, setTypeFilter] = useState("all")
+  const [statusFilter, setStatusFilter] = useState("all")
+  const [paymentOpen, setPaymentOpen] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [selectedInvoice, setSelectedInvoice] = useState<Facture | null>(null)
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("")
-  const [paymentAmount, setPaymentAmount]         = useState("")
-  const [paymentDate, setPaymentDate]             = useState(new Date().toISOString().split("T")[0])
-  const [paymentRef, setPaymentRef]               = useState("")
-  const [paymentError, setPaymentError]           = useState("")
-  const [invoiceToDelete, setInvoiceToDelete]     = useState<Facture | null>(null)
+  const [paymentAmount, setPaymentAmount] = useState("")
+  const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split("T")[0])
+  const [paymentRef, setPaymentRef] = useState("")
+  const [paymentError, setPaymentError] = useState("")
+  const [invoiceToDelete, setInvoiceToDelete] = useState<Facture | null>(null)
 
   const filtered = factures.filter((f) => {
     if (searchTerm && !f.numero_facture.toLowerCase().includes(searchTerm.toLowerCase())) return false
@@ -102,10 +102,10 @@ export default function ListingInvoicesPage({ agencyId }: Props) {
   })
 
   const statCards = [
-    { label: "Total Revenus CFA",         value: stats?.total_revenue ?? "—",        change: stats ? `${stats.factures_non_payee + stats.factures_partiellement_payee} en attente` : "", icon: TrendingUp },
-    { label: "Non Payées CFA",            value: stats?.non_payee ?? "—",            change: stats ? `${stats.factures_non_payee} factures` : "",                                         icon: Clock },
-    { label: "Partiellement Payées CFA",  value: stats?.partiellement_payee ?? "—",  change: stats ? `${stats.factures_partiellement_payee} factures` : "",                               icon: AlertTriangle },
-    { label: "Soldées CFA",               value: stats?.soldee ?? "—",               change: stats ? `${stats.pourcentage_avancement}% recouvrement` : "",                                icon: CheckCircle },
+    { label: "Total Revenus CFA", value: stats?.total_revenue ?? "—", change: stats ? `${stats.factures_non_payee + stats.factures_partiellement_payee} en attente` : "", icon: TrendingUp },
+    { label: "Non Payées CFA", value: stats?.non_payee ?? "—", change: stats ? `${stats.factures_non_payee} factures` : "", icon: Clock },
+    { label: "Partiellement Payées CFA", value: stats?.partiellement_payee ?? "—", change: stats ? `${stats.factures_partiellement_payee} factures` : "", icon: AlertTriangle },
+    { label: "Soldées CFA", value: stats?.soldee ?? "—", change: stats ? `${stats.pourcentage_avancement}% recouvrement` : "", icon: CheckCircle },
   ]
 
   const handleOpenPayment = (facture: Facture) => {
@@ -130,12 +130,13 @@ export default function ListingInvoicesPage({ agencyId }: Props) {
     setIsSubmitting(true)
     try {
       const response = await axiosInstance.post(`/api/factures/reglements/${selectedInvoice?.id}`, payload)
-      toast.success("Règlement enregistré avec succès !")
-      if (response.data?.message) { setPaymentError(response.data.message); toast.error(response.data.message); return }
+      toast.success(response.data?.message || "Règlement enregistré avec succès !")
       setPaymentOpen(false)
+      window.location.reload() // ← recharge la page après succès
     } catch (err: any) {
-      setPaymentError("Erreur réseau, veuillez réessayer.")
-      toast.error(err?.message || "Erreur réseau, veuillez réessayer.")
+      const backendMessage = err?.response?.data?.message
+      setPaymentError(backendMessage || "Erreur réseau, veuillez réessayer.")
+      toast.error(backendMessage || "Erreur réseau, veuillez réessayer.")
     } finally {
       setIsSubmitting(false)
     }
@@ -278,9 +279,9 @@ export default function ListingInvoicesPage({ agencyId }: Props) {
                   </tr>
                 )}
                 {filtered.map((facture) => {
-                  const statusConfig    = getStatusConfig(facture.statut)
+                  const statusConfig = getStatusConfig(facture.statut)
                   const destinataireName = getDestinataireName(facture)
-                  const montantTtc      = parseFloat(facture.montant_ttc)
+                  const montantTtc = parseFloat(facture.montant_ttc)
 
                   return (
                     <tr key={facture.id} className="border-b border-border last:border-0 hover:bg-muted/50 transition-colors">

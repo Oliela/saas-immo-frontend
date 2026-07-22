@@ -321,7 +321,7 @@ export default function CreateInvoice({
 
     // TODO: décommenter pour l'appel réel
     try {
-      const token = localStorage.getItem("token")
+      // const token = localStorage.getItem("token")
       const response = await axiosInstance.post(`/api/factures`, payload)
       const data = await response.data
       toast.success("Facture créée avec succès !")

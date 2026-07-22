@@ -23,7 +23,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils"
 import axiosInstance from "@/lib/axios"
 import { toast } from "sonner"
-import { redirect } from "next/navigation"
+import { redirect, useRouter } from "next/navigation"
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -162,6 +162,7 @@ function SearchSelect<T>({
 
 export default function NewVisitForm({ clients, properties, agents, timeSlots, agencyId, creneaux }: Props) {
     const STORAGE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
+    const router = useRouter()
 
 
     const [selectedClient, setSelectedClient] = useState<Client | null>(null)
@@ -236,11 +237,11 @@ export default function NewVisitForm({ clients, properties, agents, timeSlots, a
         }
         try {
             const res = await axiosInstance.post("/api/visit-reservations/planification", playload)
-            res.status === 201 && toast.success("Visite planifiée avec succès !")
-            redirect("/dashboard/visits")
-
-        } catch (error) {
-            toast.error("Une erreur est survenue lors de la planification de la visite.")
+            toast.success("Visite planifiée avec succès !")
+            router.push("/dashboard/visits") // ← redirection côté client, ne lève pas d'exception
+        } catch (error: any) {
+            const backendMessage = error?.response?.data?.message
+            toast.error(backendMessage || "Une erreur est survenue lors de la planification de la visite.")
         }
 
     }
