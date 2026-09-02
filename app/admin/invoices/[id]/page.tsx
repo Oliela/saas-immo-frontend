@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/table"
 import { StatusBadge } from "@/components/admin/status-badge"
 import { StatsCard } from "@/components/admin/stats-card"
-import { useAdminInvoiceDetail } from "@/hooks/useAdminInvoiceDetail"
+import { useAdminInvoiceDetail } from "@/hooks/admin/useAdminInvoiceDetail"
 
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("fr-FR", {

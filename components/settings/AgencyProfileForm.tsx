@@ -9,6 +9,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { Separator } from "@/components/ui/separator"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Switch } from "@/components/ui/switch"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { africanTimezones, DEFAULT_AGENCY_TIMEZONE } from "@/data/africanTimezones"
 import { useRef, useState, useEffect } from "react"
 import axiosInstance from "@/lib/axios"
 import { toast } from "sonner"
@@ -27,6 +29,7 @@ interface Agency {
   web_site?: string | null
   address: string
   city: string
+  timezone?: string | null
   description: string
   specializations: Specialty[]
   logo?: string | null
@@ -52,6 +55,7 @@ export default function AgencyProfileForm({ agency }: Props) {
   const [website, setWebsite] = useState("")
   const [address, setAddress] = useState("")
   const [city, setCity] = useState("")
+  const [timezone, setTimezone] = useState(DEFAULT_AGENCY_TIMEZONE)
   const [description, setDescription] = useState("")
   const [selectedSpecialties, setSelectedSpecialties] = useState<number[]>([])
   const [logoFile, setLogoFile] = useState<File | null>(null)
@@ -68,6 +72,7 @@ export default function AgencyProfileForm({ agency }: Props) {
       setAddress(agency.address)
       setDescription(agency.description)
       setCity(agency.city) // Assuming city is part of the address for now
+      setTimezone(agency.timezone || DEFAULT_AGENCY_TIMEZONE)
       setSelectedSpecialties(agency.specializations.map((s) => s.id) || [])
     }
   }, [agency])
@@ -114,6 +119,7 @@ export default function AgencyProfileForm({ agency }: Props) {
       formData.append("website", website)
       formData.append("address", address)
       formData.append("city", city)
+      formData.append("timezone", timezone)
       formData.append("description", description)
       formData.append("specialties", JSON.stringify(selectedSpecialties))
       if (logoFile) formData.append("logo", logoFile)
@@ -201,6 +207,22 @@ export default function AgencyProfileForm({ agency }: Props) {
             <div className="space-y-2 ">
               <Label htmlFor="city">Ville</Label>
               <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} />
+            </div>
+            <div className="space-y-2 sm:col-span-2">
+              <Label htmlFor="timezone">Fuseau horaire</Label>
+              <Select value={timezone} onValueChange={setTimezone}>
+                <SelectTrigger id="timezone">
+                  <SelectValue placeholder="Sélectionnez le pays de l’agence" />
+                </SelectTrigger>
+                <SelectContent>
+                  {africanTimezones.map(({ country, timezone: value }) => (
+                    <SelectItem key={value} value={value}>{country}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Les automatisations seront exécutées selon l’heure locale de ce pays.
+              </p>
             </div>
             <div className="space-y-2 sm:col-span-2">
               <Label htmlFor="description">Description de l'agence</Label>

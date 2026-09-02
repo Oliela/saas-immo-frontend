@@ -92,11 +92,25 @@ export const defaultClauses: CatalogClause[] = [
       "Les réparations majeures et les problèmes structurels incombent au Bailleur.",
   },
   {
-    id: "system-rental-8", type: "rental", source: "system",
-    title: "Utilisation du Bien",
+    id: "system-rental-habitation-1", type: "rental", usage_case: "habitation", source: "system", isDefault: true,
+    title: "Usage d'habitation",
     content:
       "Le bien ne peut être utilisé qu'à titre résidentiel exclusif. " +
       "Aucune activité commerciale n'est autorisée sans consentement écrit du Bailleur.",
+  },
+  {
+    id: "system-rental-professionnel-1", type: "rental", usage_case: "professionnel", source: "system", isDefault: true,
+    title: "Usage professionnel",
+    content:
+      "Le bien est loué pour l'exercice exclusif de l'activité professionnelle déclarée par le Locataire. " +
+      "Toute modification de cette activité requiert l'accord écrit préalable du Bailleur.",
+  },
+  {
+    id: "system-rental-commercial-1", type: "rental", usage_case: "commercial", source: "system", isDefault: true,
+    title: "Destination commerciale",
+    content:
+      "Le bien est loué à usage commercial pour l'activité déclarée par le Locataire. " +
+      "Tout changement de destination ou d'activité requiert l'accord écrit préalable du Bailleur.",
   },
   {
     id: "system-rental-9", type: "rental", source: "system",
@@ -115,7 +129,7 @@ export const defaultClauses: CatalogClause[] = [
     id: "system-sale-1", type: "sale", source: "system", isDefault: true,
     title: "Parties",
     content:
-      "Le présent compromis de vente est conclu entre {client_name} " +
+      "Le présent contrat de vente est conclu entre {client_name} " +
       "(ci-après « l'Acquéreur ») et {agency_name} (ci-après « le Vendeur »).",
   },
   {
@@ -136,7 +150,7 @@ export const defaultClauses: CatalogClause[] = [
     id: "system-sale-4", type: "sale", source: "system", isDefault: true,
     title: "Dépôt de Garantie",
     content:
-      "À la signature du présent compromis, l'Acquéreur verse un dépôt de garantie " +
+      "À la signature du présent contrat, l'Acquéreur verse un dépôt de garantie " +
       "de {deposit}. Cette somme sera déduite du prix lors de la signature " +
       "de l'acte authentique.",
   },
@@ -146,7 +160,7 @@ export const defaultClauses: CatalogClause[] = [
   // ══════════════════════════════════════════
 
   {
-    id: "system-sale-5", type: "sale", source: "system",
+    id: "system-sale-compromis-1", type: "sale", usage_case: "compromis", source: "system", isDefault: true,
     title: "Conditions Suspensives",
     content:
       "La présente vente est conclue sous condition suspensive d'obtention " +
@@ -154,7 +168,7 @@ export const defaultClauses: CatalogClause[] = [
       "dans un délai de [DELAI_PRET] jours à compter de la signature.",
   },
   {
-    id: "system-sale-6", type: "sale", source: "system",
+    id: "system-sale-compromis-2", type: "sale", usage_case: "compromis", source: "system",
     title: "État du Bien et Diagnostics",
     content:
       "Le Vendeur déclare que le bien est vendu en l'état. " +
@@ -162,11 +176,11 @@ export const defaultClauses: CatalogClause[] = [
       "ont été réalisés et sont annexés au présent contrat.",
   },
   {
-    id: "system-sale-7", type: "sale", source: "system",
-    title: "Date de Signature de l'Acte Authentique",
+    id: "system-sale-vente-1", type: "sale", usage_case: "vente", source: "system", isDefault: true,
+    title: "Transfert de propriété",
     content:
-      "Les parties conviennent que la signature de l'acte authentique interviendra " +
-      "au plus tard le [DATE_ACTE] chez le notaire désigné d'un commun accord.",
+      "Le transfert de propriété intervient selon les conditions prévues au présent contrat " +
+      "et après complet paiement du prix de vente, sauf stipulation contraire des parties.",
   },
 ]
 

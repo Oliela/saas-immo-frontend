@@ -1,335 +1,163 @@
 "use client"
 
-import { useState } from "react"
+import { FormEvent, useMemo, useState } from "react"
 import Link from "next/link"
-import { format } from "date-fns"
-import {
-  Search,
-  Filter,
-  MoreHorizontal,
-  Eye,
-  ChevronLeft,
-  ChevronRight,
-  Crown,
-} from "lucide-react"
-import { Input } from "@/components/ui/input"
+import { Crown, Eye, Plus, Search } from "lucide-react"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { StatusBadge } from "@/components/admin/status-badge"
 import { StatsCard } from "@/components/admin/stats-card"
-import { mockSubscriptions, mockAgencies } from "@/lib/admin-mock-data"
+import { useAdminAgencies } from "@/hooks/admin/useAdminAgencies"
+import { useAdminSubscriptions } from "@/hooks/admin/useAdminSubscriptions"
+import UpgradeRequestsTable from "@/components/admin/UpgradeRequestsTable"
+import { saveSubscription } from "@/services/adminSubscriptionService"
+import type { SubscriptionInput, SubscriptionPlan } from "@/types/subscription"
 
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("fr-FR", {
-    style: "currency",
-    currency: "EUR",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount)
+const labels = { starter: "Starter", business: "Business", pro: "Pro" }
+const limits = { starter: 3, business: 6, pro: 10 }
+const statusLabels =
+{
+  scheduled: "Planifié",
+  active: "Actif",
+  expired: "Expiré",
+  grace: "En prolongation",
+  replaced: "Remplacé"
 }
-
-const planColors: Record<string, string> = {
-  starter: "bg-slate-100 text-slate-700 border-slate-200",
-  professional: "bg-blue-50 text-blue-700 border-blue-200",
-  enterprise: "bg-amber-50 text-amber-700 border-amber-200",
-}
+const money = (value: number) => new Intl.NumberFormat("fr-FR", { style: "currency", currency: "XOF", maximumFractionDigits: 0 }).format(value)
 
 export default function AdminSubscriptionsPage() {
-  const [searchQuery, setSearchQuery] = useState("")
-  const [statusFilter, setStatusFilter] = useState<string>("all")
-  const [planFilter, setPlanFilter] = useState<string>("all")
-  const [currentPage, setCurrentPage] = useState(1)
-  const [perPage, setPerPage] = useState(10)
+  const { subscriptions, stats, loading, error, refresh } = useAdminSubscriptions()
+  const { agencies } = useAdminAgencies()
+  const [search, setSearch] = useState("")
+  const [open, setOpen] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [form, setForm] = useState<SubscriptionInput>({ agency_id: 0, plan: "starter", starts_at: "", expires_at: "", amount_paid: 0 })
+  const filtered = useMemo(() => subscriptions.filter((item) => item.agencyName.toLowerCase().includes(search.toLowerCase())), [subscriptions, search])
 
-  const filteredSubscriptions = mockSubscriptions.filter((sub) => {
-    const matchesSearch = sub.agencyName.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesStatus = statusFilter === "all" || sub.status === statusFilter
-    const matchesPlan = planFilter === "all" || sub.plan === planFilter
-    return matchesSearch && matchesStatus && matchesPlan
-  })
-
-  const totalPages = Math.ceil(filteredSubscriptions.length / perPage)
-  const paginatedSubscriptions = filteredSubscriptions.slice(
-    (currentPage - 1) * perPage,
-    currentPage * perPage
-  )
-
-  const activeCount = mockSubscriptions.filter((s) => s.status === "active").length
-  const expiredCount = mockSubscriptions.filter((s) => s.status === "expired").length
-  const totalMRR = mockSubscriptions
-    .filter((s) => s.status === "active" && s.billingCycle === "monthly")
-    .reduce((sum, s) => sum + s.price, 0)
+  async function submit(event: FormEvent) {
+    event.preventDefault()
+    setSaving(true)
+    try {
+      await saveSubscription(form)
+      toast.success("Abonnement enregistré")
+      setOpen(false)
+      await refresh()
+    } catch {
+      toast.error("Impossible d’enregistrer l’abonnement")
+    } finally { setSaving(false) }
+  }
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-2xl font-bold text-foreground">Abonnements</h1>
-        <p className="text-muted-foreground">Gestion des abonnements des agences</p>
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold">Abonnements</h1>
+          <p className="text-muted-foreground">Gestion manuelle des abonnements des agences</p></div>
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />Nouvel abonnement</Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Enregistrer ou renouveler un abonnement</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={submit} className="space-y-4">
+              <div className="space-y-2"><Label>Agence</Label><Select required onValueChange={(v) => setForm({ ...form, agency_id: Number(v) })}><SelectTrigger><SelectValue placeholder="Choisir une agence" /></SelectTrigger><SelectContent>{agencies.filter(a => a.approvalStatus === "approved").map(a => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}</SelectContent></Select></div>
+              <div className="space-y-2"><Label>Plan</Label><Select value={form.plan} onValueChange={(v: SubscriptionPlan) => setForm({ ...form, plan: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{Object.entries(labels).map(([value, label]) => <SelectItem key={value} value={value}>{label} — {limits[value as SubscriptionPlan]} utilisateurs</SelectItem>)}</SelectContent></Select></div>
+              <div className="grid grid-cols-2 gap-4"><div className="space-y-2"><Label>Date de début</Label><Input required type="date" value={form.starts_at} onChange={e => setForm({ ...form, starts_at: e.target.value })} /></div><div className="space-y-2"><Label>Date d’expiration</Label><Input required type="date" value={form.expires_at} onChange={e => setForm({ ...form, expires_at: e.target.value })} /></div></div>
+              <div className="space-y-2"><Label>Montant payé (FCFA)</Label><Input required min={0} type="number" value={form.amount_paid || ""} onChange={e => setForm({ ...form, amount_paid: Number(e.target.value) })} /></div>
+              <Button className="w-full" disabled={saving || !form.agency_id}>{saving ? "Enregistrement…" : "Enregistrer"}</Button>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
-
-      {/* Summary Stats */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatsCard
-          title="Abonnements actifs"
-          value={activeCount}
-          trend="up"
-          trendValue={`${activeCount} agences`}
-          icon={<Crown className="h-4 w-4" />}
-        />
-        <StatsCard
-          title="Expirés"
-          value={expiredCount}
-          icon={<Crown className="h-4 w-4" />}
-        />
-        <StatsCard
-          title="MRR (mensuel)"
-          value={formatCurrency(totalMRR)}
-          trend="up"
-          trendValue="+22%"
-          description="vs mois précédent"
-          icon={<Crown className="h-4 w-4" />}
-        />
-        <StatsCard
-          title="Plans Enterprise"
-          value={mockSubscriptions.filter((s) => s.plan === "enterprise").length}
-          icon={<Crown className="h-4 w-4" />}
-        />
-      </div>
-
-      <Card>
-        <CardHeader className="pb-4">
-          <CardTitle className="text-base">Filtres</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col gap-4 sm:flex-row">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Rechercher par agence..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
-              />
-            </div>
-            <Select value={planFilter} onValueChange={setPlanFilter}>
-              <SelectTrigger className="w-full sm:w-[180px]">
-                <Crown className="h-4 w-4 mr-2" />
-                <SelectValue placeholder="Forfait" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tous les forfaits</SelectItem>
-                <SelectItem value="starter">Starter</SelectItem>
-                <SelectItem value="professional">Professional</SelectItem>
-                <SelectItem value="enterprise">Enterprise</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full sm:w-[180px]">
-                <Filter className="h-4 w-4 mr-2" />
-                <SelectValue placeholder="Statut" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tous les statuts</SelectItem>
-                <SelectItem value="active">Actif</SelectItem>
-                <SelectItem value="expired">Expiré</SelectItem>
-                <SelectItem value="cancelled">Annulé</SelectItem>
-                <SelectItem value="suspended">Suspendu</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
-
+      <div className="grid gap-4 md:grid-cols-3">
+        <StatsCard title="Actifs" value={stats.active} icon={<Crown className="h-4 w-4" />} />
+        <StatsCard title="Expirés" value={stats.expired} icon={<Crown className="h-4 w-4" />} />
+        <StatsCard title="Montant total" value={money(stats.revenue)} icon={<Crown className="h-4 w-4" />} /></div>
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Tous les abonnements</CardTitle>
-              <CardDescription>
-                {filteredSubscriptions.length} abonnement{filteredSubscriptions.length !== 1 ? "s" : ""} trouvé{filteredSubscriptions.length !== 1 ? "s" : ""}
-              </CardDescription>
-            </div>
+          <CardTitle>Liste des abonnements</CardTitle>
+          <div className="relative max-w-sm"><Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Input className="pl-9" placeholder="Rechercher une agence" value={search} onChange={e => setSearch(e.target.value)} />
           </div>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
+          {error && <p className="text-destructive">{error}</p>}
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Agence</TableHead>
+                <TableHead>Plan</TableHead>
+                <TableHead>Date de début</TableHead>
+                <TableHead>Date d’expiration</TableHead>
+                <TableHead>Montant</TableHead>
+                <TableHead>Utilisateurs</TableHead>
+                <TableHead>Statut</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {!loading && filtered.length === 0 &&
                 <TableRow>
-                  <TableHead>Agence</TableHead>
-                  <TableHead>Forfait</TableHead>
-                  <TableHead className="hidden md:table-cell text-right">Prix</TableHead>
-                  <TableHead className="hidden lg:table-cell">Période</TableHead>
-                  <TableHead className="hidden xl:table-cell">Expiration</TableHead>
-                  <TableHead className="hidden xl:table-cell">Utilisation</TableHead>
-                  <TableHead>Statut</TableHead>
-                  <TableHead className="w-[50px]"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginatedSubscriptions.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
-                      Aucun abonnement trouvé.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  paginatedSubscriptions.map((sub) => {
-                    const agency = mockAgencies.find((a) => a.id === sub.agencyId)
-                    const usagePercent =
-                      sub.limits.properties > 0
-                        ? (sub.usage.properties / sub.limits.properties) * 100
-                        : 0
-
-                    return (
-                      <TableRow key={sub.id}>
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            <Avatar className="h-8 w-8">
-                              <AvatarImage src={agency?.logo} alt={sub.agencyName} />
-                              <AvatarFallback>
-                                {sub.agencyName.substring(0, 2).toUpperCase()}
-                              </AvatarFallback>
-                            </Avatar>
-                            <p className="font-medium">{sub.agencyName}</p>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant="outline"
-                            className={planColors[sub.plan] || ""}
-                          >
-                            {sub.planName}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="hidden md:table-cell text-right">
-                          <div>
-                            <p className="font-medium">{formatCurrency(sub.price)}</p>
-                            <p className="text-xs text-muted-foreground capitalize">
-                              /{sub.billingCycle === "monthly" ? "mois" : "an"}
-                            </p>
-                          </div>
-                        </TableCell>
-                        <TableCell className="hidden lg:table-cell">
-                          <p className="text-sm">{format(new Date(sub.startDate), "dd/MM/yy")}</p>
-                          <p className="text-xs text-muted-foreground capitalize">
-                            {sub.billingCycle === "monthly" ? "Mensuel" : "Annuel"}
-                          </p>
-                        </TableCell>
-                        <TableCell className="hidden xl:table-cell">
-                          <p className="text-sm">{format(new Date(sub.expiryDate), "dd/MM/yyyy")}</p>
-                        </TableCell>
-                        <TableCell className="hidden xl:table-cell">
-                          {sub.limits.properties > 0 ? (
-                            <div className="w-24">
-                              <Progress value={usagePercent} className="h-1.5" />
-                              <p className="text-xs text-muted-foreground mt-1">
-                                {sub.usage.properties}/{sub.limits.properties} biens
-                              </p>
-                            </div>
-                          ) : (
-                            <span className="text-xs text-muted-foreground">Illimité</span>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <StatusBadge status={sub.status} />
-                        </TableCell>
-                        <TableCell>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <MoreHorizontal className="h-4 w-4" />
-                                <span className="sr-only">Actions</span>
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem asChild>
-                                <Link href={`/admin/subscriptions/${sub.id}`}>
-                                  <Eye className="h-4 w-4 mr-2" />
-                                  Voir le détail
-                                </Link>
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    )
-                  })
-                )}
-              </TableBody>
-            </Table>
-          </div>
-
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mt-4">
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Lignes par page :</span>
-              <Select value={String(perPage)} onValueChange={(v) => setPerPage(Number(v))}>
-                <SelectTrigger className="w-[70px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="10">10</SelectItem>
-                  <SelectItem value="25">25</SelectItem>
-                  <SelectItem value="50">50</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">
-                Page {currentPage} sur {totalPages || 1}
-              </span>
-              <div className="flex gap-1">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                  disabled={currentPage === 1}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                  disabled={currentPage === totalPages || totalPages === 0}
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          </div>
+                  <TableCell colSpan={8} className="text-center text-muted-foreground">Aucun abonnement</TableCell>
+                </TableRow>}
+              {filtered.map(item =>
+                <TableRow key={item.id}>
+                  <TableCell>
+                    <Link className="font-medium hover:underline" href={`/admin/subscriptions/${item.id}`}>{item.agencyName}</Link>
+                  </TableCell>
+                  <TableCell>{labels[item.plan]}</TableCell>
+                  <TableCell>{item.startsAt}</TableCell>
+                  <TableCell>{item.expiresAt}</TableCell>
+                  <TableCell>{money(item.amountPaid)}</TableCell>
+                  <TableCell>
+                    <div className="w-28">
+                      <span className="text-xs">{item.agentsUsed}/{item.agentLimit}</span>
+                      <Progress value={(item.agentsUsed / item.agentLimit) * 100} />
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      variant="outline"
+                      className={
+                        item.status === "active"
+                          ? "border-green-200 bg-green-50 text-green-700"
+                          : item.status === "grace"
+                            ? "border-amber-200 bg-amber-50 text-amber-700"
+                            : item.status === "expired"
+                              ? "border-red-200 bg-red-50 text-red-700"
+                              : item.status === "scheduled"
+                                ? "border-blue-200 bg-blue-50 text-blue-700"
+                                : "border-slate-200 bg-slate-50 text-slate-600"
+                      }
+                    >
+                      {statusLabels[item.status]}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button variant="outline" size="sm" asChild>
+                      <Link href={`/admin/subscriptions/${item.id}`}>
+                        <Eye className="mr-2 h-4 w-4" />
+                        Voir les détails
+                      </Link>
+                    </Button>
+                  </TableCell>
+                </TableRow>)}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
+      <UpgradeRequestsTable />
+
     </div>
   )
 }

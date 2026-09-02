@@ -49,6 +49,10 @@ const propertyTypeMap: Record<string, Property["type"]> = {
   maison: "house",
 }
 
+type BienWithFavori = Bien & {
+  favori_count?: number
+}
+
 function bienToProperty(bien: Bien): Property {
   return {
     id: String(bien.id),
@@ -71,7 +75,7 @@ export default function HomePage() {
   const { data: biens, loading } = useBiens()
 
   const featuredProperties = [...biens]
-    .sort((a, b) => ((b as any).favori_count ?? 0) - ((a as any).favori_count ?? 0))
+    .sort((a, b) => ((b as BienWithFavori).favori_count ?? 0) - ((a as BienWithFavori).favori_count ?? 0))
     .slice(0, 3)
     .map((bien) => ({ ...bienToProperty(bien), featured: true }))
 

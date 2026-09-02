@@ -41,7 +41,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { StatusBadge } from "@/components/admin/status-badge"
-import { useAdminClients } from "@/hooks/useAdminClients"
+import { useAdminClients } from "@/hooks/admin/useAdminClients"
 
 export default function AdminClientsPage() {
   const { clients, agencies, loading, error } = useAdminClients()

@@ -4,11 +4,18 @@ import React, { useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
+import type { LoginResponse } from "@/types/auth"
+import axios from "axios"
 import axiosInstance from "@/lib/axios"
 import Link from "next/link"
 
 interface LoginFormProps {
   onSuccess?: () => void
+}
+
+interface LoginErrorResponse {
+  error?: string
+  message?: string
 }
 
 export default function LoginForm({ onSuccess }: LoginFormProps) {
@@ -24,17 +31,24 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
 
     try {
       await axiosInstance.get("/sanctum/csrf-cookie")
-      const res = await axiosInstance.post("/api/login", { email, password })
+      const res = await axiosInstance.post<LoginResponse>(
+        "/api/login",
+        { email, password }
+      )
       if (res.status === 200) {
         onSuccess?.()
-        window.location.href = res.data.redirect || "/portal"
+        window.location.assign(res.data.redirect)
       }
-    } catch (err: any) {
-      setError(
-        err.response?.data?.error ||
-        err.response?.data?.message ||
-        "Impossible de se connecter."
-      )
+    } catch (error: unknown) {
+      if (axios.isAxiosError<LoginErrorResponse>(error)) {
+        setError(
+          error.response?.data?.error ||
+          error.response?.data?.message ||
+          "Impossible de se connecter."
+        )
+      } else {
+        setError("Impossible de se connecter.")
+      }
     } finally {
       setSubmitting(false)
     }

@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/button"
 import { StatsCard } from "@/components/admin/stats-card"
 import { ActivityTimeline } from "@/components/admin/activity-timeline"
 import { StatusBadge } from "@/components/admin/status-badge"
-import { useAdminDashboard } from "@/hooks/useAdminDashboard"
+import { useAdminDashboard } from "@/hooks/admin/useAdminDashboard"
 import {
   LineChart,
   Line,

@@ -35,7 +35,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { StatusBadge } from "@/components/admin/status-badge"
 import { StatsCard } from "@/components/admin/stats-card"
-import { useAdminPayments } from "@/hooks/useAdminPayments"
+import { useAdminPayments } from "@/hooks/admin/useAdminPayments"
 
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("fr-FR", {

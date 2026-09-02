@@ -1,10 +1,34 @@
 "use client"
 
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { useAuth } from "@/hooks/useAuth"
-import { redirect } from "next/navigation"
 
-export default function AdminGuard({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth()
+export default function AdminGuard({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  const {
+    user,
+    redirectPath,
+    loading,
+  } = useAuth()
+
+  const router = useRouter()
+
+  useEffect(() => {
+    if (loading) return
+
+    if (!user) {
+      router.replace("/login")
+      return
+    }
+
+    if (user.account_type !== "super_admin") {
+      router.replace(redirectPath ?? "/")
+    }
+  }, [user, redirectPath, loading, router])
 
   if (loading) {
     return (
@@ -15,7 +39,7 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
   }
 
   if (!user || user.account_type !== "super_admin") {
-    redirect("/login")
+    return null
   }
 
   return <>{children}</>

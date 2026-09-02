@@ -41,7 +41,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress"
 import { StatusBadge } from "@/components/admin/status-badge"
 import { StatsCard } from "@/components/admin/stats-card"
-import { useAdminInvoices } from "@/hooks/useAdminInvoices"
+import { useAdminInvoices } from "@/hooks/admin/useAdminInvoices"
 
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("fr-FR", {

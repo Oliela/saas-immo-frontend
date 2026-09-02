@@ -17,7 +17,8 @@ import {
   DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog"
 import { useCatalogClauses } from "@/hooks/contracts/useCatalogClauses"
-import type { ContractClause, CatalogClause, ContractType } from "@/types/contractNew"
+import type { ContractClause, CatalogClause, ContractType, UsageCase } from "@/types/contractNew"
+
 
 // ─── ClauseContentEditor — tokens non-éditables ───────────────────────────────
 
@@ -103,6 +104,7 @@ function SourceBadge({ source }: { source: ContractClause["source"] }) {
 
 interface Props {
   contractType:     ContractType
+  usageCase:        UsageCase
   agencyId:         number
   activeClauses:    ContractClause[]
   onAddFromCatalog: (clause: CatalogClause) => void
@@ -114,11 +116,11 @@ interface Props {
 }
 
 export function ContractClausesTab({
-  contractType, agencyId, activeClauses,
+  contractType, usageCase, agencyId, activeClauses,
   onAddFromCatalog, onAddInline,
   onUpdate, onRemove, onMove, onDuplicate,
 }: Props) {
-  const { catalog, isLoading, error } = useCatalogClauses(contractType, agencyId)
+  const { catalog, isLoading, error } = useCatalogClauses(contractType, usageCase, agencyId)
 
   const [showInlineDialog, setShowInlineDialog] = useState(false)
   const [inlineTitle,      setInlineTitle]      = useState("")
@@ -154,7 +156,7 @@ export function ContractClausesTab({
         <CardHeader>
           <CardTitle className="text-base">Bibliothèque de clauses</CardTitle>
           <CardDescription>
-            Clauses disponibles — {contractType === "rental" ? "location" : "vente"}
+           Clauses disponibles — {contractType === "rental" ? "location" : "vente"}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">

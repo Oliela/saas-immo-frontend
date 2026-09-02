@@ -158,6 +158,8 @@ function EditForm({ data, agencyName }: EditFormProps) {
                 formData={formData}
                 onContractTypeChange={() => { }}
                 onFormDataChange={setFormData}
+                lockContractNature
+                agencyId={data.agencyId}
               />
             </TabsContent>
 
@@ -175,6 +177,7 @@ function EditForm({ data, agencyName }: EditFormProps) {
             <TabsContent value="clauses" className="mt-6">
               <ContractClausesTab
                 contractType={contractType}
+                usageCase={formData.usageCase}
                 agencyId={data.agencyId}
                 activeClauses={clauses}
                 onAddFromCatalog={addClauseFromCatalog}

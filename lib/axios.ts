@@ -38,19 +38,50 @@ function clearSessionAndRedirect() {
   window.location.href = "/login?expired=1";
 }
 
+const agencyBlockingCodes = new Set([
+  "agency_pending",
+  "agency_rejected",
+  "agency_suspended",
+  "agency_not_found",
+]);
+
+function redirectBlockedAgency(redirectPath: string) {
+  if (isRedirecting) return;
+
+  if (window.location.pathname === redirectPath) {
+    return;
+  }
+
+  isRedirecting = true;
+  window.location.assign(redirectPath);
+}
+
 // Un seul intercepteur response
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (
-      error.response?.status === 401 &&
-      typeof window !== "undefined" &&
-      isLoggedIn() // seulement si la personne était connectée
-    ) {
-      clearSessionAndRedirect();
+    if (typeof window === "undefined") {
+      return Promise.reject(error);
     }
+
+    if (error.response?.status === 401 && isLoggedIn()) {
+      clearSessionAndRedirect();
+      return Promise.reject(error);
+    }
+
+    const code = error.response?.data?.code;
+    const redirectPath = error.response?.data?.redirect;
+
+    if (
+      error.response?.status === 403 &&
+      agencyBlockingCodes.has(code) &&
+      typeof redirectPath === "string"
+    ) {
+      redirectBlockedAgency(redirectPath);
+    }
+
     return Promise.reject(error);
-  }
+  },
 );
 
 export default axiosInstance;

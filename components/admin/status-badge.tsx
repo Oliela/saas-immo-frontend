@@ -1,12 +1,14 @@
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 
-type StatusType = 
+type StatusType =
   | "active" | "inactive" | "pending" | "suspended"
   | "paid" | "unpaid" | "partially_paid" | "overdue"
   | "signed" | "draft" | "cancelled" | "expired"
   | "completed" | "failed" | "refunded"
   | "certified"
+  | "approved"
+  | "rejected"
 
 interface StatusBadgeProps {
   status: StatusType | string
@@ -48,11 +50,15 @@ const statusConfig: Record<string, { label: string; variant: "default" | "second
   en_negociation: { label: "En négociation", variant: "outline", className: "border-orange-500 text-orange-600" },
   converti: { label: "Converti", variant: "default", className: "bg-green-100 text-green-700 hover:bg-green-100" },
   perdu: { label: "Perdu", variant: "destructive" },
+
+  // Statuts approbation agence
+  approved: { label: "Approuvé", variant: "default", className: "bg-green-100 text-green-700 hover:bg-green-100" },
+  rejected: { label: "Rejeté", variant: "destructive" },
 }
 
 export function StatusBadge({ status, className }: StatusBadgeProps) {
   const config = statusConfig[status] || { label: status, variant: "secondary" as const }
-  
+
   return (
     <Badge
       variant={config.variant}

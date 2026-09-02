@@ -9,8 +9,10 @@ import {
   Eye,
   BadgeCheck,
   BadgeX,
-  ShieldOff,
+  CircleCheck,
+  CircleX,
   ShieldCheck,
+  ShieldOff,
   ChevronLeft,
   ChevronRight,
   Building2,
@@ -46,10 +48,29 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { StatusBadge } from "@/components/admin/status-badge"
 import { ConfirmModal } from "@/components/admin/confirm-modal"
-import { useAdminAgencies } from "@/hooks/useAdminAgencies"
+import { useAdminAgencies } from "@/hooks/admin/useAdminAgencies"
 import type { Agency } from "@/lib/admin-types"
+import axios from "axios"
+import { toast } from "sonner"
+import {
+  approveAgency,
+  certifyAgency,
+  reactivateAgency,
+  rejectAgency,
+  suspendAgency,
+  uncertifyAgency,
+} from "@/services/adminAgencyApprovalService"
+import { RejectAgencyModal } from "@/components/admin/reject-agency-modal"
 
-type ActionType = "activate" | "suspend" | "certify" | "uncertify"
+type ActionType =
+  | "approve"
+  | "reject"
+  | "suspend"
+  | "reactivate"
+  | "certify"
+  | "uncertify"
+
+type OperationalAction = Exclude<ActionType, "approve" | "reject">
 
 interface PendingAction {
   agencyId: string
@@ -57,28 +78,47 @@ interface PendingAction {
   type: ActionType
 }
 
-const ACTION_CONFIG: Record<ActionType, { title: string; message: string; confirmLabel: string; variant: "default" | "destructive" }> = {
-  activate: {
-    title: "Activer le compte",
-    message: "Voulez-vous activer ce compte agence ? L'agence pourra de nouveau accéder à la plateforme.",
-    confirmLabel: "Activer",
-    variant: "default",
-  },
+function getErrorMessage(error: unknown): string {
+  if (axios.isAxiosError(error)) {
+    return (
+      error.response?.data?.message ??
+      "Une erreur est survenue pendant l’opération."
+    )
+  }
+
+  return "Une erreur est survenue pendant l’opération."
+}
+
+const OPERATIONAL_ACTION_CONFIG: Record<
+  OperationalAction,
+  {
+    title: string
+    message: string
+    confirmLabel: string
+    variant: "default" | "destructive"
+  }
+> = {
   suspend: {
-    title: "Suspendre le compte",
-    message: "Voulez-vous suspendre ce compte agence ? L'agence ne pourra plus accéder à la plateforme.",
+    title: "Suspendre le compte ?",
+    message: "L’agence ne pourra plus accéder à son dashboard et recevra un email de suspension.",
     confirmLabel: "Suspendre",
     variant: "destructive",
   },
+  reactivate: {
+    title: "Réactiver le compte ?",
+    message: "L’agence pourra de nouveau accéder à son dashboard et recevra un email de réactivation.",
+    confirmLabel: "Réactiver",
+    variant: "default",
+  },
   certify: {
-    title: "Certifier l'agence",
-    message: "Voulez-vous certifier cette agence ? Le badge de certification sera affiché sur son profil.",
+    title: "Certifier l’agence ?",
+    message: "Le badge de certification sera affiché pour cette agence.",
     confirmLabel: "Certifier",
     variant: "default",
   },
   uncertify: {
-    title: "Retirer la certification",
-    message: "Voulez-vous retirer la certification de cette agence ? Le badge sera supprimé de son profil.",
+    title: "Retirer la certification ?",
+    message: "Le badge de certification sera retiré de cette agence.",
     confirmLabel: "Retirer",
     variant: "destructive",
   },
@@ -100,7 +140,7 @@ export default function AdminAgenciesPage() {
       agency.name.toLowerCase().includes(q) ||
       agency.city.toLowerCase().includes(q) ||
       agency.email.toLowerCase().includes(q)
-    const matchesStatus = statusFilter === "all" || agency.status === statusFilter
+    const matchesStatus = statusFilter === "all" || agency.approvalStatus === statusFilter
     const matchesCertified =
       certifiedFilter === "all" ||
       (certifiedFilter === "certified" && agency.isCertified) ||
@@ -118,39 +158,133 @@ export default function AdminAgenciesPage() {
     setPendingAction({ agencyId: agency.id, agencyName: agency.name, type })
   }
 
-  async function handleConfirm() {
-    if (!pendingAction) return
+  async function handleApprove() {
+    if (!pendingAction || pendingAction.type !== "approve") return
+
     setActionLoading(true)
 
-    // Simulate API call — replace with:
-    // await fetch(`/api/admin/agencies/${pendingAction.agencyId}`, {
-    //   method: "PATCH",
-    //   body: JSON.stringify(payload),
-    // })
-    await new Promise((r) => setTimeout(r, 800))
+    try {
+      await approveAgency(pendingAction.agencyId)
 
-    // Optimistic update
-    setAgencies((prev) =>
-      prev.map((a) => {
-        if (a.id !== pendingAction.agencyId) return a
-        switch (pendingAction.type) {
-          case "activate":
-            return { ...a, status: "active" }
-          case "suspend":
-            return { ...a, status: "suspended" }
-          case "certify":
-            return { ...a, isCertified: true, certifiedAt: new Date().toISOString() }
-          case "uncertify":
-            return { ...a, isCertified: false, certifiedAt: undefined }
-        }
-      })
-    )
+      setAgencies((agencies) =>
+        agencies.map((agency) =>
+          agency.id === pendingAction.agencyId
+            ? {
+                ...agency,
+                approvalStatus: "approved",
+                rejectionReason: null,
+              }
+            : agency
+        )
+      )
 
-    setActionLoading(false)
-    setPendingAction(null)
+      toast.success(`L’agence ${pendingAction.agencyName} a été validée.`)
+      setPendingAction(null)
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error))
+    } finally {
+      setActionLoading(false)
+    }
   }
 
-  const actionConfig = pendingAction ? ACTION_CONFIG[pendingAction.type] : null
+  async function handleReject(reason: string) {
+    if (!pendingAction || pendingAction.type !== "reject") return
+
+    setActionLoading(true)
+
+    try {
+      await rejectAgency(pendingAction.agencyId, reason)
+
+      setAgencies((agencies) =>
+        agencies.map((agency) =>
+          agency.id === pendingAction.agencyId
+            ? {
+                ...agency,
+                approvalStatus: "rejected",
+                rejectionReason: reason,
+              }
+            : agency
+        )
+      )
+
+      toast.success(`La demande de l’agence ${pendingAction.agencyName} a été refusée.`)
+      setPendingAction(null)
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error))
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  async function handleOperationalAction() {
+    if (
+      !pendingAction ||
+      pendingAction.type === "approve" ||
+      pendingAction.type === "reject"
+    ) {
+      return
+    }
+
+    setActionLoading(true)
+
+    try {
+      switch (pendingAction.type) {
+        case "suspend":
+          await suspendAgency(pendingAction.agencyId)
+          setAgencies((agencies) =>
+            agencies.map((agency) =>
+              agency.id === pendingAction.agencyId
+                ? { ...agency, status: "suspended" }
+                : agency
+            )
+          )
+          toast.success(`Le compte de l’agence ${pendingAction.agencyName} a été suspendu.`)
+          break
+
+        case "reactivate":
+          await reactivateAgency(pendingAction.agencyId)
+          setAgencies((agencies) =>
+            agencies.map((agency) =>
+              agency.id === pendingAction.agencyId
+                ? { ...agency, status: "active" }
+                : agency
+            )
+          )
+          toast.success(`Le compte de l’agence ${pendingAction.agencyName} a été réactivé.`)
+          break
+
+        case "certify":
+          await certifyAgency(pendingAction.agencyId)
+          setAgencies((agencies) =>
+            agencies.map((agency) =>
+              agency.id === pendingAction.agencyId
+                ? { ...agency, isCertified: true }
+                : agency
+            )
+          )
+          toast.success(`L’agence ${pendingAction.agencyName} a été certifiée.`)
+          break
+
+        case "uncertify":
+          await uncertifyAgency(pendingAction.agencyId)
+          setAgencies((agencies) =>
+            agencies.map((agency) =>
+              agency.id === pendingAction.agencyId
+                ? { ...agency, isCertified: false }
+                : agency
+            )
+          )
+          toast.success(`La certification de l’agence ${pendingAction.agencyName} a été retirée.`)
+          break
+      }
+
+      setPendingAction(null)
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error))
+    } finally {
+      setActionLoading(false)
+    }
+  }
 
   if (loading) {
     return (
@@ -199,9 +333,9 @@ export default function AdminAgenciesPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tous les statuts</SelectItem>
-                <SelectItem value="active">Actif</SelectItem>
-                <SelectItem value="inactive">Inactif</SelectItem>
-                <SelectItem value="suspended">Suspendu</SelectItem>
+                <SelectItem value="pending">En attente</SelectItem>
+                <SelectItem value="approved">Validée</SelectItem>
+                <SelectItem value="rejected">Refusée</SelectItem>
               </SelectContent>
             </Select>
             <Select value={certifiedFilter} onValueChange={(v) => { setCertifiedFilter(v); setCurrentPage(1) }}>
@@ -253,7 +387,8 @@ export default function AdminAgenciesPage() {
                       <Users className="h-3.5 w-3.5" /> Agents
                     </span>
                   </TableHead>
-                  <TableHead>Statut</TableHead>
+                  <TableHead>Validation</TableHead>
+                  <TableHead>Compte</TableHead>
                   <TableHead className="hidden sm:table-cell">Certification</TableHead>
                   <TableHead className="w-[50px]"></TableHead>
                 </TableRow>
@@ -261,7 +396,7 @@ export default function AdminAgenciesPage() {
               <TableBody>
                 {paginatedAgencies.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
+                    <TableCell colSpan={9} className="h-24 text-center text-muted-foreground">
                       Aucune agence trouvée.
                     </TableCell>
                   </TableRow>
@@ -299,6 +434,9 @@ export default function AdminAgenciesPage() {
                         {agency.agentsCount}
                       </TableCell>
                       <TableCell>
+                        <StatusBadge status={agency.approvalStatus} />
+                      </TableCell>
+                      <TableCell>
                         <StatusBadge status={agency.status} />
                       </TableCell>
                       <TableCell className="hidden sm:table-cell">
@@ -326,34 +464,59 @@ export default function AdminAgenciesPage() {
                               </Link>
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            {agency.status === "suspended" || agency.status === "inactive" ? (
-                              <DropdownMenuItem onClick={() => openAction(agency, "activate")}>
-                                <ShieldCheck className="h-4 w-4 mr-2" />
-                                Activer le compte
-                              </DropdownMenuItem>
-                            ) : (
-                              <DropdownMenuItem
-                                className="text-destructive focus:text-destructive"
-                                onClick={() => openAction(agency, "suspend")}
-                              >
-                                <ShieldOff className="h-4 w-4 mr-2" />
-                                Suspendre le compte
+                            {agency.approvalStatus === "pending" && (
+                              <>
+                                <DropdownMenuItem onClick={() => openAction(agency, "approve")}>
+                                  <CircleCheck className="h-4 w-4 mr-2" />
+                                  Valider la demande
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  className="text-destructive focus:text-destructive"
+                                  onClick={() => openAction(agency, "reject")}
+                                >
+                                  <CircleX className="h-4 w-4 mr-2" />
+                                  Refuser la demande
+                                </DropdownMenuItem>
+                              </>
+                            )}
+                            {agency.approvalStatus === "rejected" && (
+                              <DropdownMenuItem onClick={() => openAction(agency, "approve")}>
+                                <CircleCheck className="h-4 w-4 mr-2" />
+                                Valider finalement l&apos;agence
                               </DropdownMenuItem>
                             )}
-                            <DropdownMenuSeparator />
-                            {agency.isCertified ? (
-                              <DropdownMenuItem
-                                className="text-destructive focus:text-destructive"
-                                onClick={() => openAction(agency, "uncertify")}
-                              >
-                                <BadgeX className="h-4 w-4 mr-2" />
-                                Retirer la certification
-                              </DropdownMenuItem>
-                            ) : (
-                              <DropdownMenuItem onClick={() => openAction(agency, "certify")}>
-                                <BadgeCheck className="h-4 w-4 mr-2" />
-                                Certifier l&apos;agence
-                              </DropdownMenuItem>
+                            {agency.approvalStatus === "approved" && (
+                              <>
+                                {agency.status === "suspended" || agency.status === "inactive" ? (
+                                  <DropdownMenuItem onClick={() => openAction(agency, "reactivate")}>
+                                    <ShieldCheck className="h-4 w-4 mr-2" />
+                                    Réactiver le compte
+                                  </DropdownMenuItem>
+                                ) : (
+                                  <DropdownMenuItem
+                                    className="text-destructive focus:text-destructive"
+                                    onClick={() => openAction(agency, "suspend")}
+                                  >
+                                    <ShieldOff className="h-4 w-4 mr-2" />
+                                    Suspendre le compte
+                                  </DropdownMenuItem>
+                                )}
+                                <DropdownMenuSeparator />
+                                {agency.isCertified ? (
+                                  <DropdownMenuItem
+                                    className="text-destructive focus:text-destructive"
+                                    onClick={() => openAction(agency, "uncertify")}
+                                  >
+                                    <BadgeX className="h-4 w-4 mr-2" />
+                                    Retirer la certification
+                                  </DropdownMenuItem>
+                                ) : (
+                                  <DropdownMenuItem onClick={() => openAction(agency, "certify")}>
+                                    <BadgeCheck className="h-4 w-4 mr-2" />
+                                    Certifier l&apos;agence
+                                  </DropdownMenuItem>
+                                )}
+                              </>
                             )}
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -409,19 +572,44 @@ export default function AdminAgenciesPage() {
         </CardContent>
       </Card>
 
-      {/* Modale de confirmation */}
-      {pendingAction && actionConfig && (
+      {pendingAction?.type === "approve" && (
         <ConfirmModal
-          open={!!pendingAction}
-          title={actionConfig.title}
-          message={`${actionConfig.message.replace("cette agence", `"${pendingAction.agencyName}"`).replace("ce compte agence", `"${pendingAction.agencyName}"`)}`}
-          confirmLabel={actionConfig.confirmLabel}
-          variant={actionConfig.variant}
+          open
+          title="Valider cette agence ?"
+          message={`L’agence ${pendingAction.agencyName} pourra accéder à son dashboard. Un email de validation lui sera envoyé.`}
+          confirmLabel="Valider l’agence"
+          variant="default"
           loading={actionLoading}
-          onConfirm={handleConfirm}
+          onConfirm={handleApprove}
           onCancel={() => setPendingAction(null)}
         />
       )}
+
+      {pendingAction?.type === "reject" && (
+        <RejectAgencyModal
+          key={pendingAction.agencyId}
+          open
+          agencyName={pendingAction.agencyName}
+          loading={actionLoading}
+          onCancel={() => setPendingAction(null)}
+          onConfirm={handleReject}
+        />
+      )}
+
+      {pendingAction &&
+        pendingAction.type !== "approve" &&
+        pendingAction.type !== "reject" && (
+          <ConfirmModal
+            open
+            title={OPERATIONAL_ACTION_CONFIG[pendingAction.type].title}
+            message={`${OPERATIONAL_ACTION_CONFIG[pendingAction.type].message} Agence concernée : ${pendingAction.agencyName}.`}
+            confirmLabel={OPERATIONAL_ACTION_CONFIG[pendingAction.type].confirmLabel}
+            variant={OPERATIONAL_ACTION_CONFIG[pendingAction.type].variant}
+            loading={actionLoading}
+            onConfirm={handleOperationalAction}
+            onCancel={() => setPendingAction(null)}
+          />
+        )}
     </div>
   )
 }

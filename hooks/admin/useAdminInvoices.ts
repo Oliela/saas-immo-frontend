@@ -19,6 +19,19 @@ const statutMap: Record<string, Invoice["status"]> = {
   en_retard: "overdue",
 };
 
+type AdminInvoiceResponse = {
+  id?: number | string;
+  reference?: string;
+  client?: string;
+  agence?: string;
+  montant?: number;
+  resteAPayer?: number;
+  statut?: string;
+  echeance?: string;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
 export function useAdminInvoices() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [stats, setStats] = useState<AdminInvoiceStats | null>(null);
@@ -32,7 +45,7 @@ export function useAdminInvoices() {
         if (res.data.stats) setStats(res.data.stats);
 
         const raw = Array.isArray(res.data.factures) ? res.data.factures : [];
-        const mapped: Invoice[] = raw.map((f: any) => ({
+        const mapped: Invoice[] = raw.map((f: AdminInvoiceResponse) => ({
           id: String(f.id),
           number: f.reference ?? "",
           clientId: "",

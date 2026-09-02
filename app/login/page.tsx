@@ -47,16 +47,16 @@ export default function LoginPage() {
               
               <LoginForm />
 
-              <div className="relative my-6">
+              {/* <div className="relative my-6">
                 <div className="absolute inset-0 flex items-center">
                   <Separator />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
                   <span className="bg-card px-2 text-muted-foreground">Ou continuer avec</span>
                 </div>
-              </div>
+              </div> */}
 
-              <div className="grid grid-cols-2 gap-4">
+              {/* <div className="grid grid-cols-2 gap-4">
                 <Button variant="outline" className="w-full bg-transparent">
                   <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
                     <path
@@ -84,7 +84,7 @@ export default function LoginPage() {
                   </svg>
                   GitHub
                 </Button>
-              </div>
+              </div> */}
 
               <p className="mt-6 text-center text-sm text-muted-foreground">
                 Vous n'avez pas de compte ? {" "}

@@ -6,7 +6,8 @@ import {
   Plus, Search, Download, MoreHorizontal, Eye,
   Trash2, CreditCard, TrendingUp, AlertTriangle,
   CheckCircle, Clock, Building2, Banknote,
-  FileText, Smartphone,
+  FileText, Smartphone, CalendarClock,
+  Pause, Play, Ban,
 } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -35,6 +36,19 @@ import axiosInstance from "@/lib/axios"
 import { toast } from "sonner"
 import { Skeleton } from "@/components/ui/skeleton"
 import { usePdfDownload } from "@/hooks/usePdfDownload" // ← AJOUT
+import {
+  createRecurringInvoice,
+  getRecurringInvoice,
+  updateRecurringInvoice,
+  pauseRecurringInvoice,
+  resumeRecurringInvoice,
+  stopRecurringInvoice,
+  type RecurringInvoice,
+} from "@/hooks/agence/useRecurringInvoice"
+
+type ApiErrorResponse = {
+  message?: string
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────
 
@@ -49,7 +63,7 @@ function getDestinataireName(facture: Facture): string {
   return "—"
 }
 
-function getStatusConfig(statut: string) {
+function getStatusConfig(statut: string): { variant: "default" | "secondary" | "outline" | "destructive"; label: string } {
   const config: Record<string, { variant: "default" | "secondary" | "outline" | "destructive"; label: string }> = {
     non_payee: { variant: "secondary", label: "Non Payée" },
     partiellement_payee: { variant: "outline", label: "Partiellement Payée" },
@@ -93,6 +107,17 @@ export default function ListingInvoicesPage({ agencyId }: Props) {
   const [paymentRef, setPaymentRef] = useState("")
   const [paymentError, setPaymentError] = useState("")
   const [invoiceToDelete, setInvoiceToDelete] = useState<Facture | null>(null)
+  const [recurrenceOpen, setRecurrenceOpen] = useState(false)
+  const [recurrenceInvoice, setRecurrenceInvoice] = useState<Facture | null>(null)
+  const [recurrenceDay, setRecurrenceDay] = useState(new Date().getDate().toString(),)
+  const [recurrenceTime, setRecurrenceTime] = useState("08:00")
+  const [recurrenceStartsOn, setRecurrenceStartsOn] = useState(new Date().toLocaleDateString("en-CA"),)
+  const [recurrenceEndsOn, setRecurrenceEndsOn] = useState("")
+  const [recurrenceError, setRecurrenceError] = useState("")
+  const [recurrenceSubmitting, setRecurrenceSubmitting] = useState(false)
+  const [recurrenceLoading, setRecurrenceLoading] = useState(false)
+  const [existingRecurrence, setExistingRecurrence] = useState<RecurringInvoice | null>(null)
+  const [recurrenceAction, setRecurrenceAction] = useState<"pause" | "resume" | "stop" | null>(null)
 
   const filtered = factures.filter((f) => {
     if (searchTerm && !f.numero_facture.toLowerCase().includes(searchTerm.toLowerCase())) return false
@@ -133,8 +158,8 @@ export default function ListingInvoicesPage({ agencyId }: Props) {
       toast.success(response.data?.message || "Règlement enregistré avec succès !")
       setPaymentOpen(false)
       window.location.reload() // ← recharge la page après succès
-    } catch (err: any) {
-      const backendMessage = err?.response?.data?.message
+    } catch (err: unknown) {
+      const backendMessage = getErrorMessage(err) || undefined
       setPaymentError(backendMessage || "Erreur réseau, veuillez réessayer.")
       toast.error(backendMessage || "Erreur réseau, veuillez réessayer.")
     } finally {
@@ -148,10 +173,250 @@ export default function ListingInvoicesPage({ agencyId }: Props) {
       await axiosInstance.delete(`/api/factures/${invoiceToDelete.id}`)
       toast.success("Facture supprimée avec succès.")
       window.location.reload()
-    } catch (err: any) {
-      toast.error(err?.message || "Erreur lors de la suppression.")
+    } catch (err: unknown) {
+      const msg = getErrorMessage(err) || "Erreur lors de la suppression."
+      toast.error(msg)
     } finally {
       setInvoiceToDelete(null)
+    }
+  }
+
+  function getErrorMessage(err: unknown): string | undefined {
+    if (!err) return undefined
+    // axios error shape
+    const e = err as { response?: { data?: { message?: string } }; message?: string }
+    return e.response?.data?.message || e.message
+  }
+
+  const handleOpenRecurrence = async (facture: Facture) => {
+    if (
+      facture.destinataire_type !== "client" ||
+      !facture.destinataire_id
+    ) {
+      toast.error(
+        "Seules les factures destinées à un client peuvent être récurrentes.",
+      )
+      return
+    }
+
+    const today = new Date().toLocaleDateString("en-CA")
+
+    setRecurrenceInvoice(facture)
+    setExistingRecurrence(null)
+    setRecurrenceDay(new Date().getDate().toString())
+    setRecurrenceTime("08:00")
+    setRecurrenceStartsOn(today)
+    setRecurrenceEndsOn("")
+    setRecurrenceError("")
+    setRecurrenceLoading(true)
+    setRecurrenceOpen(true)
+
+    try {
+      const recurrence = await getRecurringInvoice(facture.id)
+
+      setExistingRecurrence(recurrence)
+
+      if (recurrence) {
+        setRecurrenceDay(
+          recurrence.day_of_month.toString(),
+        )
+
+        setRecurrenceTime(
+          recurrence.send_time.slice(0, 5),
+        )
+
+        setRecurrenceStartsOn(
+          recurrence.starts_on.slice(0, 10),
+        )
+
+        setRecurrenceEndsOn(
+          recurrence.ends_on
+            ? recurrence.ends_on.slice(0, 10)
+            : "",
+        )
+      }
+    } catch (error: unknown) {
+      const message =
+        getErrorMessage(error) ||
+        "Impossible de charger la programmation."
+
+      setRecurrenceError(message)
+      toast.error(message)
+    } finally {
+      setRecurrenceLoading(false)
+    }
+  }
+
+  const handleSaveRecurrence = async () => {
+    if (!recurrenceInvoice) return
+
+    const day = Number(recurrenceDay)
+
+    if (!Number.isInteger(day) || day < 1 || day > 31) {
+      setRecurrenceError(
+        "Le jour de génération doit être compris entre 1 et 31.",
+      )
+      return
+    }
+
+    if (!recurrenceTime) {
+      setRecurrenceError(
+        "L’heure d’envoi est obligatoire.",
+      )
+      return
+    }
+
+    if (!existingRecurrence && !recurrenceStartsOn) {
+      setRecurrenceError(
+        "La date de début est obligatoire.",
+      )
+      return
+    }
+
+    if (
+      recurrenceEndsOn &&
+      recurrenceEndsOn < recurrenceStartsOn
+    ) {
+      setRecurrenceError(
+        "La date de fin ne peut pas précéder la date de début.",
+      )
+      return
+    }
+
+    if (existingRecurrence?.status === "stopped") {
+      setRecurrenceError(
+        "Une programmation arrêtée ne peut plus être modifiée.",
+      )
+      return
+    }
+
+    setRecurrenceSubmitting(true)
+    setRecurrenceError("")
+
+    try {
+      let recurrence: RecurringInvoice
+
+      if (existingRecurrence) {
+        recurrence = await updateRecurringInvoice(
+          existingRecurrence.id,
+          {
+            day_of_month: day,
+            send_time: recurrenceTime,
+            ends_on: recurrenceEndsOn || null,
+          },
+        )
+
+        toast.success(
+          "La programmation a été mise à jour.",
+        )
+      } else {
+        recurrence = await createRecurringInvoice(
+          recurrenceInvoice.id,
+          {
+            day_of_month: day,
+            send_time: recurrenceTime,
+            starts_on: recurrenceStartsOn,
+            ends_on: recurrenceEndsOn || null,
+          },
+        )
+
+        toast.success(
+          "La facturation automatique a été activée.",
+        )
+      }
+
+      setExistingRecurrence(recurrence)
+      setRecurrenceOpen(false)
+      setRecurrenceInvoice(null)
+    } catch (error: unknown) {
+      const responseData = (
+        error as {
+          response?: {
+            data?: {
+              message?: string
+              errors?: Record<string, string[]>
+            }
+          }
+          message?: string
+        }
+      ).response?.data
+
+      const validationErrors = responseData?.errors
+        ? Object.values(responseData.errors)
+          .flat()
+          .join(" ")
+        : null
+
+      const message =
+        validationErrors ||
+        responseData?.message ||
+        getErrorMessage(error) ||
+        "Impossible d’enregistrer la programmation."
+
+      setRecurrenceError(message)
+      toast.error(message)
+    } finally {
+      setRecurrenceSubmitting(false)
+    }
+  }
+
+  const handleRecurrenceStatusChange = async (
+    action: "pause" | "resume" | "stop",
+  ) => {
+    if (!existingRecurrence) return
+
+    if (action === "stop") {
+      const confirmed = window.confirm(
+        "Voulez-vous vraiment arrêter définitivement cette programmation ? Une programmation arrêtée ne pourra plus être reprise ni modifiée.",
+      )
+
+      if (!confirmed) return
+    }
+
+    setRecurrenceAction(action)
+    setRecurrenceError("")
+
+    try {
+      let updatedRecurrence: RecurringInvoice
+
+      if (action === "pause") {
+        updatedRecurrence = await pauseRecurringInvoice(
+          existingRecurrence.id,
+        )
+      } else if (action === "resume") {
+        updatedRecurrence = await resumeRecurringInvoice(
+          existingRecurrence.id,
+        )
+      } else {
+        updatedRecurrence = await stopRecurringInvoice(
+          existingRecurrence.id,
+        )
+      }
+
+      setExistingRecurrence(updatedRecurrence)
+
+      if (action === "pause") {
+        toast.success(
+          "La facturation automatique a été suspendue.",
+        )
+      } else if (action === "resume") {
+        toast.success(
+          "La facturation automatique a été réactivée.",
+        )
+      } else {
+        toast.success(
+          "La facturation automatique a été arrêtée définitivement.",
+        )
+      }
+    } catch (error: unknown) {
+      const message =
+        getErrorMessage(error) ||
+        "Impossible de modifier l’état de la programmation."
+
+      setRecurrenceError(message)
+      toast.error(message)
+    } finally {
+      setRecurrenceAction(null)
     }
   }
 
@@ -332,6 +597,19 @@ export default function ListingInvoicesPage({ agencyId }: Props) {
                               {isPdfLoading(facture.id) ? "Ouverture..." : "Télécharger PDF"}
                             </DropdownMenuItem>
                             {/* ── FIN MODIFIÉ ── */}
+                            {facture.destinataire_type === "client" &&
+                              facture.destinataire_id && (
+                                <>
+                                  <DropdownMenuSeparator />
+
+                                  <DropdownMenuItem
+                                    onSelect={() => handleOpenRecurrence(facture)}
+                                  >
+                                    <CalendarClock className="mr-2 h-4 w-4" />
+                                    Rendre récurrente
+                                  </DropdownMenuItem>
+                                </>
+                              )}
 
                             {!["soldee", "annulee"].includes(facture.statut) && (
                               <>
@@ -427,6 +705,310 @@ export default function ListingInvoicesPage({ agencyId }: Props) {
             <Button variant="outline" className="bg-transparent" onClick={() => setPaymentOpen(false)} disabled={isSubmitting}>Annuler</Button>
             <Button onClick={handleAddPayment} disabled={!selectedInvoice || isSubmitting}>
               <CreditCard className="mr-2 h-4 w-4" />{isSubmitting ? "Enregistrement..." : "Enregistrer"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal facturation récurrente */}
+      <Dialog
+        open={recurrenceOpen}
+        onOpenChange={(open) => {
+          if (
+            recurrenceSubmitting ||
+            recurrenceLoading ||
+            recurrenceAction !== null
+          ) {
+            return
+          }
+
+          setRecurrenceOpen(open)
+
+          if (!open) {
+            setRecurrenceInvoice(null)
+            setExistingRecurrence(null)
+            setRecurrenceError("")
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CalendarClock className="h-5 w-5" />
+              {existingRecurrence
+                ? "Gérer la facturation automatique"
+                : "Activer la facturation automatique"}
+            </DialogTitle>
+
+            <DialogDescription>
+              {recurrenceInvoice &&
+                (existingRecurrence
+                  ? `Programmation de la facture ${recurrenceInvoice.numero_facture}.`
+                  : `La facture ${recurrenceInvoice.numero_facture} servira de modèle. Une nouvelle facture sera créée et envoyée automatiquement au client chaque mois.`)}
+            </DialogDescription>
+          </DialogHeader>
+          {recurrenceLoading && (
+            <div className="py-8 text-center">
+              <p className="text-sm text-muted-foreground">
+                Vérification de la programmation...
+              </p>
+            </div>
+          )}
+
+          {!recurrenceLoading && (
+            <div className="space-y-5 py-2">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="recurrence-day">
+                    Jour du mois
+                    <span className="text-destructive"> *</span>
+                  </Label>
+
+                  <Input
+                    id="recurrence-day"
+                    type="number"
+                    min={1}
+                    max={31}
+                    value={recurrenceDay}
+                    onChange={(event) => {
+                      setRecurrenceDay(event.target.value)
+                      setRecurrenceError("")
+                    }}
+                  />
+
+                  <p className="text-xs text-muted-foreground">
+                    Pour les mois plus courts, le dernier jour du mois
+                    sera utilisé.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="recurrence-time">
+                    Heure d’envoi
+                    <span className="text-destructive"> *</span>
+                  </Label>
+
+                  <Input
+                    id="recurrence-time"
+                    type="time"
+                    value={recurrenceTime}
+                    onChange={(event) => {
+                      setRecurrenceTime(event.target.value)
+                      setRecurrenceError("")
+                    }}
+                  />
+
+                  <p className="text-xs text-muted-foreground">
+                    L’heure utilisera le fuseau horaire de l’agence.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="recurrence-start">
+                    Date de début
+                    <span className="text-destructive"> *</span>
+                  </Label>
+
+                  <Input
+                    id="recurrence-start"
+                    type="date"
+                    min={new Date().toLocaleDateString("en-CA")}
+                    value={recurrenceStartsOn}
+                    disabled={
+                      recurrenceLoading ||
+                      recurrenceSubmitting ||
+                      existingRecurrence !== null
+                    }
+                    onChange={(event) => {
+                      setRecurrenceStartsOn(event.target.value)
+                      setRecurrenceError("")
+                    }}
+                  />
+                  {existingRecurrence && (
+                    <p className="text-xs text-muted-foreground">
+                      La date de début ne peut plus être modifiée après
+                      l’activation.
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="recurrence-end">
+                    Date de fin
+                    <span className="text-xs text-muted-foreground">
+                      {" "}(optionnelle)
+                    </span>
+                  </Label>
+
+                  <Input
+                    id="recurrence-end"
+                    type="date"
+                    min={recurrenceStartsOn}
+                    value={recurrenceEndsOn}
+                    onChange={(event) => {
+                      setRecurrenceEndsOn(event.target.value)
+                      setRecurrenceError("")
+                    }}
+                  />
+                </div>
+              </div>
+
+              {existingRecurrence && (
+                <div className="flex items-center justify-between rounded-lg border p-3">
+                  <div>
+                    <p className="text-sm font-medium">
+                      État de la programmation
+                    </p>
+
+                    <p className="text-xs text-muted-foreground">
+                      Prochaine génération :{" "}
+                      {new Date(
+                        existingRecurrence.next_run_on,
+                      ).toLocaleDateString("fr-FR")}
+                    </p>
+                  </div>
+
+                  <Badge
+                    variant={
+                      existingRecurrence.status === "active"
+                        ? "default"
+                        : existingRecurrence.status === "paused"
+                          ? "secondary"
+                          : "destructive"
+                    }
+                  >
+                    {existingRecurrence.status === "active"
+                      ? "Active"
+                      : existingRecurrence.status === "paused"
+                        ? "Suspendue"
+                        : "Arrêtée"}
+                  </Badge>
+                </div>
+              )}
+
+              {existingRecurrence &&
+                existingRecurrence.status !== "stopped" && (
+                  <div className="flex flex-wrap gap-2">
+                    {existingRecurrence.status === "active" && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() =>
+                          handleRecurrenceStatusChange("pause")
+                        }
+                        disabled={recurrenceAction !== null}
+                      >
+                        <Pause className="mr-2 h-4 w-4" />
+
+                        {recurrenceAction === "pause"
+                          ? "Suspension..."
+                          : "Mettre en pause"}
+                      </Button>
+                    )}
+
+                    {existingRecurrence.status === "paused" && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() =>
+                          handleRecurrenceStatusChange("resume")
+                        }
+                        disabled={recurrenceAction !== null}
+                      >
+                        <Play className="mr-2 h-4 w-4" />
+
+                        {recurrenceAction === "resume"
+                          ? "Réactivation..."
+                          : "Reprendre"}
+                      </Button>
+                    )}
+
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      onClick={() =>
+                        handleRecurrenceStatusChange("stop")
+                      }
+                      disabled={recurrenceAction !== null}
+                    >
+                      <Ban className="mr-2 h-4 w-4" />
+
+                      {recurrenceAction === "stop"
+                        ? "Arrêt..."
+                        : "Arrêter définitivement"}
+                    </Button>
+                  </div>
+                )
+              }
+
+              {existingRecurrence?.status === "stopped" && (
+                <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3">
+                  <p className="text-sm font-medium text-destructive">
+                    Programmation arrêtée définitivement
+                  </p>
+
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Aucune nouvelle facture ne sera générée. Cette
+                    programmation ne peut plus être reprise ni modifiée.
+                  </p>
+                </div>
+              )}
+
+
+              <div className="rounded-lg border bg-muted/40 p-3">
+                <p className="text-sm font-medium">
+                  Programmation mensuelle
+                </p>
+
+                <p className="mt-1 text-xs text-muted-foreground">
+                  La date d’échéance conservera automatiquement le même
+                  délai que celui de la facture modèle.
+                </p>
+              </div>
+
+              {recurrenceError && (
+                <p className="flex items-start gap-2 text-sm text-destructive">
+                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                  {recurrenceError}
+                </p>
+              )}
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setRecurrenceOpen(false)}
+              disabled={
+                recurrenceSubmitting ||
+                recurrenceLoading ||
+                recurrenceAction !== null
+              }
+            >
+              Annuler
+            </Button>
+
+            <Button
+              type="button"
+              onClick={handleSaveRecurrence}
+              disabled={
+                !recurrenceInvoice ||
+                recurrenceLoading ||
+                recurrenceSubmitting ||
+                recurrenceAction !== null ||
+                existingRecurrence?.status === "stopped"
+              }
+            >
+              <CalendarClock className="mr-2 h-4 w-4" />
+
+              {recurrenceSubmitting
+                ? "Enregistrement..."
+                : existingRecurrence
+                  ? "Enregistrer les modifications"
+                  : "Activer la récurrence"}
             </Button>
           </DialogFooter>
         </DialogContent>

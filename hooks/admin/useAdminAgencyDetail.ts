@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import axiosInstance from "@/lib/axios";
+import type { AgencyApprovalStatus, AgencyReviewer } from "@/lib/admin-types";
 
 export interface AdminAgencyDetailInfo {
   name: string;
@@ -17,6 +18,10 @@ export interface AdminAgencyDetailInfo {
   informationCertified: boolean;
   isActive: boolean;
   abonnement: string;
+  approvalStatus: AgencyApprovalStatus;
+  rejectionReason: string | null;
+  reviewedAt: string | null;
+  reviewedBy: AgencyReviewer | null;
 }
 
 export interface AdminAgencyDetailStats {

@@ -1,4 +1,5 @@
 "use client"
+import { useState } from "react"
 
 
 import { Bell, Lock, Building2, CreditCard, Users } from "lucide-react"
@@ -11,7 +12,6 @@ import SecurityForm from "@/components/settings/SecurityForm"
 import TeamSettings from "@/components/settings/TeamSettings"
 import BillingSettings from "@/components/settings/BillingSettings"
 import { useAgency } from "@/hooks/agence/useAgency"
-import { useState } from "react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 
@@ -134,11 +134,12 @@ export default function SettingsPage() {
                         <span className="hidden sm:inline">Équipe</span>
                         <span className="sm:hidden">Équipe</span>
                     </TabsTrigger>
-                    {/* <TabsTrigger value="billing" className="gap-2">
+                    
+                    <TabsTrigger value="billing" className="gap-2">
                         <CreditCard className="h-4 w-4" />
-                        <span className="hidden sm:inline">Facturation</span>
-                        <span className="sm:hidden">Facturation</span>
-                    </TabsTrigger> */}
+                        <span className="hidden sm:inline">Abonnement</span>
+                        <span className="sm:hidden">Abonnement</span>
+                    </TabsTrigger>
                 </TabsList>
 
                 {/* Agency Profile */}
@@ -162,9 +163,9 @@ export default function SettingsPage() {
                 </TabsContent>
 
                 {/* Billing */}
-                {/* <TabsContent value="billing" className="space-y-6">
+                <TabsContent value="billing" className="space-y-6">
                     <BillingSettings />
-                </TabsContent> */}
+                </TabsContent>
             </Tabs>
         </div>
     )

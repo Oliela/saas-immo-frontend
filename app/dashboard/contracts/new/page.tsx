@@ -189,6 +189,7 @@ function NewContractContent() {
                 formData={formData}
                 onContractTypeChange={handleContractTypeChange}
                 onFormDataChange={setFormData}
+                agencyId={Number(AGENCY_ID)}
               />
             </TabsContent>
 
@@ -208,6 +209,7 @@ function NewContractContent() {
             <TabsContent value="clauses" className="mt-6">
               <ContractClausesTab
                 contractType={contractType}
+                usageCase={formData.usageCase}
                 agencyId={AGENCY_ID}
                 activeClauses={clauses}
                 onAddFromCatalog={addClauseFromCatalog}

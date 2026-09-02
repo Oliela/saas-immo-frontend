@@ -18,7 +18,7 @@ import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
 import { StatusBadge } from "@/components/admin/status-badge"
 import { StatsCard } from "@/components/admin/stats-card"
-import { useAdminOwnerDetail } from "@/hooks/useAdminOwnerDetail"
+import { useAdminOwnerDetail } from "@/hooks/admin/useAdminOwnerDetail"
 
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("fr-FR", {

@@ -21,13 +21,23 @@ import {
   Heart,
   ClipboardList,
   PlayCircle,
+  AlertTriangle,
 } from "lucide-react"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import axiosInstance from "@/lib/axios"
 import { useTache } from "@/hooks/agence/useTache"
+import { useAgency } from "@/hooks/agence/useAgency"
 
 const navigation = [
   { name: "Tableau de bord", href: "/dashboard", icon: LayoutDashboard },
@@ -51,6 +61,42 @@ const secondaryNavigation = [
 
 export function DashboardSidebar() {
   const pathname = usePathname()
+  const { data: agencyData } = useAgency()
+
+  const currentSubscription =
+    agencyData?.agency?.current_subscription
+
+  const paymentInformation =
+    agencyData?.subscription_payment
+
+  const expirationDate = currentSubscription?.expires_at
+    ? new Date(currentSubscription.expires_at)
+    : null
+
+  const remainingDays = expirationDate
+    ? Math.ceil(
+      (expirationDate.getTime() - Date.now()) /
+      (1000 * 60 * 60 * 24)
+    )
+    : null
+
+  const shouldDisplayRenewalAlert =
+    currentSubscription &&
+    remainingDays !== null &&
+    remainingDays <= 10
+
+
+  const renewalAlertMessage =
+    remainingDays === null
+      ? ""
+      : remainingDays > 1
+        ? `Votre abonnement expire dans ${remainingDays} jours.`
+        : remainingDays === 1
+          ? "Votre abonnement expire demain."
+          : remainingDays === 0
+            ? "Votre abonnement expire aujourd’hui."
+            : "Votre abonnement a expiré."
+
   const { data: tache, loading: tacheLoading } = useTache()
   // console.log("Tâches :", tache) // Debug: log tache data
 
@@ -135,6 +181,100 @@ export function DashboardSidebar() {
         </div>
 
         {/* Spacer */}
+        {shouldDisplayRenewalAlert && (
+          <div className="mt-4 rounded-lg border border-amber-300 bg-amber-50 p-3">
+            <div className="flex items-start gap-2">
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+
+              <div className="min-w-0 space-y-2">
+                <div>
+                  <p className="text-sm font-semibold text-amber-900">
+                    Renouvellement
+                  </p>
+
+                  <p className="text-xs text-amber-800">
+                    {renewalAlertMessage}
+                  </p>
+                </div>
+
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button
+                      size="sm"
+                      className="h-8 w-full"
+                    >
+                      Renouveler
+                    </Button>
+                  </DialogTrigger>
+
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>
+                        Renouveler votre abonnement
+                      </DialogTitle>
+
+                      <DialogDescription>
+                        Effectuez le paiement sur le numéro ci-dessous.
+                        Le renouvellement sera validé manuellement après
+                        vérification du paiement.
+                      </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="space-y-4">
+                      <div className="rounded-lg border bg-muted/50 p-4">
+                        <p className="text-sm text-muted-foreground">
+                          Plan actuel
+                        </p>
+
+                        <p className="font-semibold capitalize">
+                          {currentSubscription.plan}
+                        </p>
+                      </div>
+
+                      <div className="rounded-lg border p-4">
+                        <p className="text-sm text-muted-foreground">
+                          Moyen de paiement
+                        </p>
+
+                        <p className="font-semibold">
+                          {paymentInformation?.method ||
+                            "Non configuré"}
+                        </p>
+                      </div>
+
+                      <div className="rounded-lg border p-4">
+                        <p className="text-sm text-muted-foreground">
+                          Numéro de paiement
+                        </p>
+
+                        <p className="text-lg font-bold">
+                          {paymentInformation?.number ||
+                            "Non configuré"}
+                        </p>
+                      </div>
+
+                      <div className="rounded-lg border p-4">
+                        <p className="text-sm text-muted-foreground">
+                          Nom du compte
+                        </p>
+
+                        <p className="font-semibold">
+                          {paymentInformation?.account_name ||
+                            "Non configuré"}
+                        </p>
+                      </div>
+
+                      <p className="text-sm text-muted-foreground">
+                        Utilisez le nom de votre agence comme référence
+                        du paiement.
+                      </p>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </div>
+          </div>
+        )}
         <div className="flex-1" />
 
         {/* User Profile */}

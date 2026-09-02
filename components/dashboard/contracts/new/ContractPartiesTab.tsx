@@ -5,20 +5,22 @@ import { User, Building2, Check, Loader2, AlertCircle } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
-import { useClients }    from "@/hooks/contracts/useClients"
+import { useClients } from "@/hooks/contracts/useClients"
 import { useProperties } from "@/hooks/contracts/useProperties"
 import type { Client, Property, ContractType } from "@/types/contractNew"
 
 interface Props {
-  contractType:     ContractType
-  agencyId:         number
-  selectedClient:   Client | null
+ 
+  contractType: ContractType
+  agencyId: number
+  selectedClient: Client | null
   selectedProperty: Property | null
-  onSelectClient:   (client: Client) => void
+  onSelectClient: (client: Client) => void
   onSelectProperty: (property: Property) => void
   // ── Pré-sélection optionnelle (depuis une tâche) ──
   preClientId?: string   // ex: "4"
-  preBienId?:   string   // ex: "12"
+  preBienId?: string   // ex: "12"
+
 }
 
 export function ContractPartiesTab({
@@ -27,7 +29,8 @@ export function ContractPartiesTab({
   onSelectClient, onSelectProperty,
   preClientId, preBienId,
 }: Props) {
-  const { clients,    isLoading: clientsLoading,    error: clientsError    } = useClients(agencyId)
+
+  const { clients, isLoading: clientsLoading, error: clientsError } = useClients(agencyId)
   const { properties, isLoading: propertiesLoading, error: propertiesError } = useProperties(agencyId, contractType)
 
   // ── Pré-sélection client ─────────────────────────────────────────
@@ -52,63 +55,64 @@ export function ContractPartiesTab({
     <div className="space-y-6">
 
       {/* ── Clients ───────────────────────────────────────────────────────── */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Informations du Client</CardTitle>
-          <CardDescription>Sélectionnez le client pour ce contrat</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
+      
+        <Card>
+          <CardHeader>
+            <CardTitle>Informations du Client</CardTitle>
+            <CardDescription>Sélectionnez le client pour ce contrat</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
 
-          {clientsLoading && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground py-6 justify-center">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Chargement des clients…
-            </div>
-          )}
-
-          {clientsError && !clientsLoading && (
-            <div className="flex items-center gap-2 text-sm text-destructive py-2">
-              <AlertCircle className="h-4 w-4" />
-              Impossible de charger les clients — {clientsError}
-            </div>
-          )}
-
-          {!clientsLoading && !clientsError && clients.length === 0 && (
-            <p className="text-sm text-muted-foreground text-center py-6">
-              Aucun client avec un intérêt confirmé
-            </p>
-          )}
-
-          {clients.map((client) => (
-            <button
-              key={client.id}
-              type="button"
-              onClick={() => onSelectClient(client)}
-              className={cn(
-                "w-full flex items-center gap-4 p-4 rounded-lg border-2 transition-all text-left",
-                selectedClient?.id === client.id
-                  ? "border-primary bg-primary/5"
-                  : "border-border hover:border-primary/50"
-              )}
-            >
-              <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center shrink-0">
-                <User className="h-5 w-5 text-muted-foreground" />
+            {clientsLoading && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground py-6 justify-center">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Chargement des clients…
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-foreground truncate">{client.name}</p>
-                <p className="text-sm text-muted-foreground truncate">{client.phone}</p>
+            )}
+
+            {clientsError && !clientsLoading && (
+              <div className="flex items-center gap-2 text-sm text-destructive py-2">
+                <AlertCircle className="h-4 w-4" />
+                Impossible de charger les clients — {clientsError}
               </div>
-              <Badge variant="secondary">Vérifié</Badge>
-              {selectedClient?.id === client.id && (
-                <div className="h-6 w-6 rounded-full bg-primary flex items-center justify-center shrink-0">
-                  <Check className="h-4 w-4 text-primary-foreground" />
+            )}
+
+            {!clientsLoading && !clientsError && clients.length === 0 && (
+              <p className="text-sm text-muted-foreground text-center py-6">
+                Aucun client avec un intérêt confirmé
+              </p>
+            )}
+
+            {clients.map((client) => (
+              <button
+                key={client.id}
+                type="button"
+                onClick={() => onSelectClient(client)}
+                className={cn(
+                  "w-full flex items-center gap-4 p-4 rounded-lg border-2 transition-all text-left",
+                  selectedClient?.id === client.id
+                    ? "border-primary bg-primary/5"
+                    : "border-border hover:border-primary/50"
+                )}
+              >
+                <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center shrink-0">
+                  <User className="h-5 w-5 text-muted-foreground" />
                 </div>
-              )}
-            </button>
-          ))}
-        </CardContent>
-      </Card>
-
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-foreground truncate">{client.name}</p>
+                  <p className="text-sm text-muted-foreground truncate">{client.phone}</p>
+                </div>
+                <Badge variant="secondary">Vérifié</Badge>
+                {selectedClient?.id === client.id && (
+                  <div className="h-6 w-6 rounded-full bg-primary flex items-center justify-center shrink-0">
+                    <Check className="h-4 w-4 text-primary-foreground" />
+                  </div>
+                )}
+              </button>
+            ))}
+          </CardContent>
+        </Card>
+      
       {/* ── Propriétés ────────────────────────────────────────────────────── */}
       <Card>
         <CardHeader>

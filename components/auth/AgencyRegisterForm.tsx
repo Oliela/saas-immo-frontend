@@ -26,6 +26,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@radix-ui/react-separator"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { africanTimezones, DEFAULT_AGENCY_TIMEZONE } from "@/data/africanTimezones"
 import Link from "next/link"
 import { toast } from "sonner"
 import axiosInstance from "@/lib/axios"
@@ -41,6 +43,7 @@ interface AgencyFormData {
   agencyPhone: string
   agencyAddress: string
   agencyCity: string
+  agencyTimezone: string
   licenseNumber: string
 
   adminFirst: string
@@ -80,6 +83,7 @@ export default function AgencyRegisterForm({ onBack }: AgencyRegisterFormProps):
     agencyPhone: "",
     agencyAddress: "",
     agencyCity: "",
+    agencyTimezone: DEFAULT_AGENCY_TIMEZONE,
     licenseNumber: "",
 
     adminFirst: "",
@@ -146,6 +150,7 @@ export default function AgencyRegisterForm({ onBack }: AgencyRegisterFormProps):
       "agencyPhone",
       "agencyAddress",
       "agencyCity",
+      "agencyTimezone",
     ].filter((k) => !(formData as any)[k])
 
     const missingAdmin = [
@@ -315,6 +320,27 @@ export default function AgencyRegisterForm({ onBack }: AgencyRegisterFormProps):
                   </div>
                 </div>
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="agencyTimezone">
+                  Fuseau horaire <span className="text-destructive">*</span>
+                </Label>
+                <Select
+                  value={formData.agencyTimezone}
+                  onValueChange={(value) => setFormData((prev) => ({ ...prev, agencyTimezone: value }))}
+                >
+                  <SelectTrigger id="agencyTimezone">
+                    <SelectValue placeholder="Sélectionnez le pays de l’agence" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {africanTimezones.map(({ country, timezone }) => (
+                      <SelectItem key={timezone} value={timezone}>{country}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Les automatisations seront exécutées selon l’heure locale de ce pays.
+                </p>
+              </div>
               <Button type="button" onClick={() => setStep(2)} className="w-full" size="lg">
                 Continuer
                 <ArrowRight className="ml-2 h-4 w-4" />
@@ -446,4 +472,3 @@ export default function AgencyRegisterForm({ onBack }: AgencyRegisterFormProps):
     </>
   )
 }
-

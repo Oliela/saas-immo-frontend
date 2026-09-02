@@ -1,6 +1,14 @@
 // types/contractNew.ts
 
-export type ContractType = "rental" | "sale"
+export type ContractType = "rental" | "sale" 
+
+
+export type UsageCase =
+  | "habitation"
+  | "professionnel"
+  | "commercial"
+  | "compromis"
+  | "vente"
 
 export interface CatalogClause {
   id: string
@@ -8,6 +16,7 @@ export interface CatalogClause {
   title: string
   content: string
   type: "rental" | "sale" | "both"
+  usage_case?: UsageCase
   source: "system" | "agency"
   is_default?: boolean
   isDefault?: boolean  // pré-sélectionné automatiquement dans le contrat
@@ -20,6 +29,7 @@ export interface ContractClause {
   title: string
   content: string
   type: "rental" | "sale" | "both"
+  usage_case?: UsageCase
   source: "system" | "agency" | "inline"
   isModified: boolean
   originalContent?: string
@@ -34,6 +44,7 @@ export interface Client {
   status: string
 }
 
+
 export interface Property {
   id: string
   title: string
@@ -43,6 +54,9 @@ export interface Property {
 }
 
 export interface FormData {
+  agentId: string
+  usageCase: UsageCase
+  title: string
   city: string
   startDate: string
   duration: string
@@ -59,6 +73,7 @@ export interface ApiClause {
   title: string
   content: string
   type: "rental" | "sale" | "both"
+  usage_case?: UsageCase | null
   is_default: number
   created_at: string
   updated_at: string
@@ -68,13 +83,17 @@ export interface ContractClausePayload {
   clause_id?: number
   title: string
   content: string
+  source: "system" | "agency" | "inline"
 }
 
 export interface ContractPayload {
-  client_id:         number
+  client_id?:        number
   bien_id:           number
   agency_id:         number
+  agent_id?:         number
   type:              ContractType
+  usage_case:        UsageCase
+  title:             string
   city:              string
   start_date:        string
   duration:          number

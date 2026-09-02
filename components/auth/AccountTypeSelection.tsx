@@ -57,7 +57,7 @@ export default function AccountTypeSelection({ setAccountType }: AccountTypeSele
                     </div>
                 </button>
 
-                <div className="relative my-2">
+                {/* <div className="relative my-2">
                     <div className="absolute inset-0 flex items-center">
                         <Separator />
                     </div>
@@ -82,7 +82,7 @@ export default function AccountTypeSelection({ setAccountType }: AccountTypeSele
                         </svg>
                         GitHub
                     </Button>
-                </div>
+                </div> */}
 
                 <p className="text-center text-sm text-muted-foreground">
                     Vous avez déjà un compte ? {" "}

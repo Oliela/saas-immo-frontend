@@ -46,8 +46,15 @@ import { StatusBadge } from "@/components/admin/status-badge"
 import { StatsCard } from "@/components/admin/stats-card"
 import { ConfirmModal } from "@/components/admin/confirm-modal"
 import { EmptyState } from "@/components/admin/empty-state"
-import { useAdminAgencyDetail } from "@/hooks/useAdminAgencyDetail"
-import axiosInstance from "@/lib/axios"
+import { useAdminAgencyDetail } from "@/hooks/admin/useAdminAgencyDetail"
+import axios from "axios"
+import { toast } from "sonner"
+import {
+  certifyAgency,
+  reactivateAgency,
+  suspendAgency,
+  uncertifyAgency,
+} from "@/services/adminAgencyApprovalService"
 
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("fr-FR", {
@@ -81,7 +88,7 @@ const STATUT_REGLEMENT: Record<string, string> = {
   rembourse: "refunded",
 }
 
-type ActionType = "activate" | "suspend" | "certify" | "uncertify"
+type ActionType = "reactivate" | "suspend" | "certify" | "uncertify"
 
 const ACTION_CONFIG: Record<ActionType, {
   title: string
@@ -89,10 +96,10 @@ const ACTION_CONFIG: Record<ActionType, {
   confirmLabel: string
   variant: "default" | "destructive"
 }> = {
-  activate: {
-    title: "Activer le compte",
-    message: (name) => `Voulez-vous activer le compte de "${name}" ? L'agence pourra de nouveau accéder à la plateforme.`,
-    confirmLabel: "Activer",
+  reactivate: {
+    title: "Réactiver le compte",
+    message: (name) => `Voulez-vous réactiver le compte de "${name}" ? L'agence pourra de nouveau accéder à la plateforme et recevra un email.`,
+    confirmLabel: "Réactiver",
     variant: "default",
   },
   suspend: {
@@ -113,6 +120,17 @@ const ACTION_CONFIG: Record<ActionType, {
     confirmLabel: "Retirer",
     variant: "destructive",
   },
+}
+
+function getErrorMessage(error: unknown): string {
+  if (axios.isAxiosError(error)) {
+    return (
+      error.response?.data?.message ??
+      "Une erreur est survenue pendant l’opération."
+    )
+  }
+
+  return "Une erreur est survenue pendant l’opération."
 }
 
 export default function AdminAgencyDetailPage({
@@ -164,28 +182,32 @@ export default function AdminAgencyDetailPage({
     setActionLoading(true)
     try {
       switch (pendingAction) {
-        case "activate":
-          await axiosInstance.patch(`/api/admin/agencies/${id}/status`, { isActive: true })
+        case "reactivate":
+          await reactivateAgency(id)
           setIsActive(true)
+          toast.success(`Le compte de l’agence ${informations.name} a été réactivé.`)
           break
         case "suspend":
-          await axiosInstance.patch(`/api/admin/agencies/${id}/status`, { isActive: false })
+          await suspendAgency(id)
           setIsActive(false)
+          toast.success(`Le compte de l’agence ${informations.name} a été suspendu.`)
           break
         case "certify":
-          await axiosInstance.patch(`/api/admin/agencies/${id}/certify`, { certified: true })
+          await certifyAgency(id)
           setIsCertified(true)
+          toast.success(`L’agence ${informations.name} a été certifiée.`)
           break
         case "uncertify":
-          await axiosInstance.patch(`/api/admin/agencies/${id}/certify`, { certified: false })
+          await uncertifyAgency(id)
           setIsCertified(false)
+          toast.success(`La certification de l’agence ${informations.name} a été retirée.`)
           break
       }
-    } catch {
-      // pas d'update optimiste en cas d'erreur
+      setPendingAction(null)
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error))
     } finally {
       setActionLoading(false)
-      setPendingAction(null)
     }
   }
 
@@ -216,28 +238,32 @@ export default function AdminAgencyDetailPage({
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
-          <StatusBadge status={activeStatus ? "active" : "inactive"} />
-          {!activeStatus ? (
-            <Button size="sm" onClick={() => setPendingAction("activate")}>
-              <ShieldCheck className="h-4 w-4 mr-2" />
-              Activer
-            </Button>
-          ) : (
-            <Button variant="outline" size="sm" onClick={() => setPendingAction("suspend")}>
-              <ShieldOff className="h-4 w-4 mr-2" />
-              Suspendre
-            </Button>
-          )}
-          {certifiedStatus ? (
-            <Button variant="outline" size="sm" onClick={() => setPendingAction("uncertify")}>
-              <BadgeX className="h-4 w-4 mr-2" />
-              Retirer certification
-            </Button>
-          ) : (
-            <Button size="sm" onClick={() => setPendingAction("certify")}>
-              <BadgeCheck className="h-4 w-4 mr-2" />
-              Certifier
-            </Button>
+          <StatusBadge status={activeStatus ? "active" : "suspended"} />
+          {informations.approvalStatus === "approved" && (
+            <>
+              {!activeStatus ? (
+                <Button size="sm" onClick={() => setPendingAction("reactivate")}>
+                  <ShieldCheck className="h-4 w-4 mr-2" />
+                  Réactiver
+                </Button>
+              ) : (
+                <Button variant="outline" size="sm" onClick={() => setPendingAction("suspend")}>
+                  <ShieldOff className="h-4 w-4 mr-2" />
+                  Suspendre
+                </Button>
+              )}
+              {certifiedStatus ? (
+                <Button variant="outline" size="sm" onClick={() => setPendingAction("uncertify")}>
+                  <BadgeX className="h-4 w-4 mr-2" />
+                  Retirer certification
+                </Button>
+              ) : (
+                <Button size="sm" onClick={() => setPendingAction("certify")}>
+                  <BadgeCheck className="h-4 w-4 mr-2" />
+                  Certifier
+                </Button>
+              )}
+            </>
           )}
         </div>
       </div>
