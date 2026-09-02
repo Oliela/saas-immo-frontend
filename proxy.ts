@@ -4,14 +4,14 @@ const PROTECTED_ROUTES: Record<string, string[]> = {
   client:      ['/portal'],
   agency_user: ['/dashboard'],
   agent:       ['/dashboard'],
-  super_admin: ['/portal', '/dashboard', '/super-admin'],
+  super_admin: ['/admin'],
 }
 
 const HOME_ROUTES: Record<string, string> = {
   client:      '/portal',
   agency_user: '/dashboard',
   agent:       '/dashboard',
-  super_admin: '/super-admin',
+  super_admin: '/admin',
 }
 
 export function proxy(req: NextRequest) {
@@ -66,6 +66,6 @@ export const config = {
     '/login',
     '/portal/:path*',
     '/dashboard/:path*',
-    '/super-admin/:path*',
+    '/admin/:path*',
   ],
 }
